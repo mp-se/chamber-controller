@@ -1,0 +1,9 @@
+[wokwi]
+version = 1
+firmware = '.pio/build/brewpi-unit/firmware_merged.bin'
+elf = '.pio/build/brewpi-unit/firmware.elf'
+gdbServerPort = 3333
+
+[[net.forward]]
+from = "localhost:8180"
+to = "target:80"
