@@ -32,8 +32,8 @@ class OneWireTempSensor : public BasicTempSensor {
  public:
   OneWireTempSensor(OneWire* bus, DeviceAddress address,
                     fixed4_4 calibrationOffset) {
-    Log.verbose(F("TEMP: Creating OneWireTempSensor with offset %d." CR),
-                calibrationOffset);
+    // Log.verbose(F("TEMP: Creating OneWireTempSensor with offset %d." CR),
+    //             calibrationOffset);
 
     _oneWire = bus;
     _sensor = NULL;

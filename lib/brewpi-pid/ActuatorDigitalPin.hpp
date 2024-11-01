@@ -31,8 +31,8 @@ class DigitalPinActuator : public Actuator {
 
  public:
   DigitalPinActuator(uint8_t pin, bool invert) {
-    Log.verbose(F("BREW: Creating DigitalPinActuator pin=%d invert=%s." CR),
-                pin, invert ? "true" : "false");
+    // Log.verbose(F("BREW: Creating DigitalPinActuator pin=%d invert=%s." CR),
+    //             pin, invert ? "true" : "false");
     _invert = invert;
     _pin = pin;
     setActive(false);
@@ -40,13 +40,13 @@ class DigitalPinActuator : public Actuator {
   }
 
   inline virtual void setActive(bool active_setting) {
-    Log.info(F("BREW: Set DigitalPinActuator pin=%d to valule=%s." CR), _pin,
-             active_setting ? "true" : "false");
+    // Log.info(F("BREW: Set DigitalPinActuator pin=%d to valule=%s." CR), _pin,
+    //          active_setting ? "true" : "false");
     _active = active_setting;
     digitalWrite(_pin, active_setting ^ _invert ? HIGH : LOW);
   }
 
-  bool isActive() { return _active; }
+  bool isActive() const { return _active; }
 };
 
 #endif  // SRC_ACTUATORDIGITALPIN_HPP_

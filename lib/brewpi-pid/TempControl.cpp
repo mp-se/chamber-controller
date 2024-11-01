@@ -20,12 +20,9 @@
 #include <Config.h>
 #include <limits.h>
 
-#include <ActuatorValue.hpp>
 #include <Config.hpp>
 #include <MinTimes.hpp>
 #include <TempControl.hpp>
-#include <TempSensor.hpp>
-#include <TempSensorDisconnected.hpp>
 #include <TemperatureFormats.hpp>
 #include <Ticks.hpp>
 #include <log.hpp>
@@ -56,10 +53,10 @@ void TempControl::loop() {
   tempControl.updateOutputs();
 }
 
-void TempControl::init(MinTimesSettingsChoice choise) {
-  Log.verbose(F("BREW: Initialize TempControl using MinTime=%d" CR), choise);
+void TempControl::init(MinTimesSettingsChoice choice) {
+  Log.verbose(F("BREW: Initialize TempControl using MinTime=%d" CR), choice);
 
-  _minTimes.setDefaults(choise);
+  _minTimes.setDefaults(choice);
 #if defined(DEV_TESTING)
   _minTimes.setDefaults(MIN_TIMES_DEVELOP);
 #endif
@@ -75,6 +72,7 @@ void TempControl::init(MinTimesSettingsChoice choise) {
 
   loadDefaultConstants();
   loadDefaultSettings();
+  initFilters();
 
   _state = ControllerState::IDLE;
   _cs.mode = ControllerMode::off;
@@ -109,14 +107,14 @@ void TempControl::updateSensor(TempSensor* sensor) {
 }
 
 void TempControl::updateTemperatures() {
-  Log.verbose(F("BREW: Updating temp sensors" CR));
+  // Log.verbose(F("BREW: Updating temp sensors" CR));
 
   updateSensor(_beerSensor);
   updateSensor(_fridgeSensor);
 }
 
 void TempControl::updatePID() {
-  Log.verbose(F("BREW: Updating PID for TempControl" CR));
+  // Log.verbose(F("BREW: Updating PID for TempControl" CR));
 
   static unsigned char integralUpdateCounter = 0;
   if (modeIsBeer()) {
@@ -232,7 +230,7 @@ void TempControl::updatePID() {
 }
 
 void TempControl::updateState() {
-  Log.verbose(F("BREW: Updating TempControl state" CR));
+  // Log.verbose(F("BREW: Updating TempControl state" CR));
 
   // update state
   bool stayIdle = false;
@@ -552,7 +550,7 @@ void TempControl::increaseEstimator(temperature* estimator, temperature error) {
   if (*estimator < 25) {
     *estimator = intToTempDiff(5) / 100;  // make estimator at least 0.05
   }
-  TempControl::storeSettings();
+  // TempControl::storeSettings();
 }
 
 void TempControl::decreaseEstimator(temperature* estimator, temperature error) {
@@ -561,7 +559,7 @@ void TempControl::decreaseEstimator(temperature* estimator, temperature error) {
                 (temperature)abs(error) >> 5, 0,
                 85);  // 0.833 - 3.1% of error, limit between 0.667 and 0.833
   *estimator = multiplyFactorTemperatureDiff(factor, *estimator);
-  TempControl::storeSettings();
+  // TempControl::storeSettings();
 }
 
 uint16_t TempControl::timeSinceCooling() {
@@ -581,33 +579,33 @@ void TempControl::loadDefaultSettings() {
   setMode(ControllerMode::off);
 }
 
-void TempControl::storeConstants() {
-  Log.verbose(F("BREW: Storing contants for TempControl" CR));
+// void TempControl::storeConstants() {
+//   Log.verbose(F("BREW: Storing contants for TempControl" CR));
 
-  _cc.save();
-}
+//   _cc.save();
+// }
 
-void TempControl::loadConstants() {
-  Log.verbose(F("BREW: Loading constants for TempControl" CR));
+// void TempControl::loadConstants() {
+//   Log.verbose(F("BREW: Loading constants for TempControl" CR));
 
-  _cc.load();
-  initFilters();
-}
+//   _cc.load();
+//   initFilters();
+// }
 
-void TempControl::storeSettings() {
-  Log.verbose(F("BREW: Saving settings for TempControl" CR));
+// void TempControl::storeSettings() {
+//   Log.verbose(F("BREW: Saving settings for TempControl" CR));
 
-  _cs.save();
-  _storedBeerSetting = _cs.beerSetting;
-}
+//   _cs.save();
+//   _storedBeerSetting = _cs.beerSetting;
+// }
 
-void TempControl::loadSettings() {
-  Log.verbose(F("BREW: Loading settings for TempControl" CR));
+// void TempControl::loadSettings() {
+//   Log.verbose(F("BREW: Loading settings for TempControl" CR));
 
-  _cs.load();
-  _storedBeerSetting = _cs.beerSetting;
-  setMode(_cs.mode, true);  // force the mode update
-}
+//   _cs.load();
+//   _storedBeerSetting = _cs.beerSetting;
+//   setMode(_cs.mode, true);  // force the mode update
+// }
 
 void TempControl::loadDefaultConstants() {
   Log.verbose(F("BREW: Loading default constants for TempControl" CR));
@@ -642,7 +640,7 @@ void TempControl::setMode(char newMode, bool force) {
       _cs.beerSetting = INVALID_TEMP;
       _cs.fridgeSetting = INVALID_TEMP;
     }
-    TempControl::storeSettings();
+    // TempControl::storeSettings();
   }
 }
 
@@ -684,7 +682,7 @@ void TempControl::setBeerTemp(temperature newTemp) {
     // writes If Raspberry Pi is connected, it will update the settings anyway.
     // This is just a safety feature.
 
-    TempControl::storeSettings();
+    // TempControl::storeSettings();
   }
 }
 
@@ -693,7 +691,7 @@ void TempControl::setFridgeTemp(temperature newTemp) {
   reset();  // reset peak detection and PID
   updatePID();
   updateState();
-  TempControl::storeSettings();
+  // TempControl::storeSettings();
 }
 
 bool TempControl::stateIsCooling() {

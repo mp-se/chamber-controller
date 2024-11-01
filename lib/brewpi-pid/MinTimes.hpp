@@ -21,6 +21,7 @@
 #define SRC_MINTIMES_HPP_
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
 enum MinTimesSettingsChoice {
   MIN_TIMES_DEFAULT = 0,
@@ -48,8 +49,8 @@ class MinTimes {
   uint16_t HEAT_PEAK_DETECT_TIME;
 
   void setDefaults(MinTimesSettingsChoice choise = MIN_TIMES_DEFAULT);
-  bool save();
-  bool load();
+  // bool save();
+  // bool load();
   void toJsonReadable(JsonObject& doc) const;
 };
 

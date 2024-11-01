@@ -25,11 +25,12 @@
 #include <TempSensorOneWire.hpp>
 #include <TemperatureFormats.hpp>
 #include <Ticks.hpp>
+#include <log.hpp>
 
 OneWireTempSensor::~OneWireTempSensor() { delete _sensor; }
 
 bool OneWireTempSensor::init() {
-  Log.info(F("TEMP: Initializing OneWireTempSensor" CR));
+  // Log.info(F("BREW: Initializing OneWireTempSensor" CR));
 
   char addressString[17] = "";
   printBytes(_sensorAddress, 8, addressString);
@@ -39,7 +40,7 @@ bool OneWireTempSensor::init() {
   if (_sensor == NULL) {
     _sensor = new DallasTemperature(_oneWire);
     if (_sensor == NULL) {
-      Log.error(F("TEMP: Failed to create DallasTempSensor ." CR));
+      Log.error(F("BREW: Failed to create DallasTempSensor ." CR));
     }
   }
 
@@ -48,16 +49,16 @@ bool OneWireTempSensor::init() {
   // seconds scanning each sensor since this brings things to a halt.
   if (_sensor && initConnection(*_sensor, _sensorAddress) &&
       requestConversion()) {
-    Log.verbose(F("TEMP: Waiting for OneWire sensor to respond." CR));
+    // Log.verbose(F("BREW: Waiting for OneWire sensor to respond." CR));
     waitForConversion();
     temperature temp = readAndConstrainTemp();
-    Log.verbose(F("TEMP: Reading temp %F from sensor at %s." CR),
-                tempToDouble(temp, Config::TempFormat::tempDecimals),
-                addressString);
+    // Log.verbose(F("BREW: Reading temp %F from sensor at %s." CR),
+    //             tempToDouble(temp, Config::TempFormat::tempDecimals),
+    //             addressString);
     success = temp != TEMP_SENSOR_DISCONNECTED && requestConversion();
   }
   setConnected(success);
-  Log.verbose(F("TEMP: OneWire sensor initialized correctly." CR));
+  // Log.verbose(F("BREW: OneWire sensor initialized correctly." CR));
   return success;
 }
 
@@ -73,7 +74,7 @@ void OneWireTempSensor::setConnected(bool connected) {
   char addressString[17];
   printBytes(_sensorAddress, 8, addressString);
   _connected = connected;
-  Log.info(F("TEMP: TempSensor with adress %s %s." CR), addressString,
+  Log.info(F("BREW: TempSensor with adress %s %s." CR), addressString,
            connected ? "connected" : "disconnected");
 }
 

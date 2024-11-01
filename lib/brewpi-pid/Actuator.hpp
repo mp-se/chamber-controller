@@ -24,7 +24,7 @@ class Actuator {
  public:
   Actuator() {}
   virtual void setActive(bool active) = 0;
-  virtual bool isActive();
+  virtual bool isActive() const;
   virtual ~Actuator() {}
 };
 

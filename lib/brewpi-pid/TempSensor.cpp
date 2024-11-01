@@ -56,8 +56,8 @@ void TempSensor::update() {
     return;
   }
 
-  Log.info(F("BREW: Updating TempSensor filters with temp %F." CR),
-           tempToDouble(temp, Config::TempFormat::tempDecimals));
+  // Log.info(F("BREW: Updating TempSensor filters with temp %F." CR),
+  //          tempToDouble(temp, Config::TempFormat::tempDecimals));
 
   fastFilter.add(temp);
   slowFilter.add(temp);

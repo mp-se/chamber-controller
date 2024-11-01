@@ -66,6 +66,15 @@ extern ValueActuator defaultActuator;
  * - Fridge: Heat & Cool are applied to keep a probe in the chamber surrounding
  * the beer at a target.
  */
+#include <ActuatorValue.hpp>
+#include <TempSensor.hpp>
+#include <TempSensorDisconnected.hpp>
+
+extern ValueActuator defaultActuator;
+extern DisconnectedTempSensor defaultTempSensor;
+extern TempSensor defaultBeerSensor;
+extern TempSensor defaultFridgeSensor;
+
 class TempControl {
  public:
   TempControl();
@@ -79,25 +88,31 @@ class TempControl {
   void setMode(char newMode, bool force = false);
   char getMode() { return _cs.mode; }
 
-  void setHeatActuator(Actuator* actuator) {
+  void setHeatingActuator(Actuator* actuator) {
     Log.verbose(F("BREW: TempControl new heatActuator %x" CR), actuator);
     _heater = actuator;
   }
+  const Actuator* getHeatingActuator() { return _heater; }
+  bool isDefaultHeatingActator() { return _heater == &defaultActuator; }
 
   void setCoolActuator(Actuator* actuator) {
     Log.verbose(F("BREW: TempControl new coolActuator %x" CR), actuator);
     _cooler = actuator;
   }
+  const Actuator* getCoolingActuator() { return _cooler; }
+  bool isDefaultCoolingActator() { return _cooler == &defaultActuator; }
 
   void setBeerSensor(TempSensor* sensor) {
     Log.verbose(F("BREW: TempControl new beerSensor %x" CR), sensor);
     _beerSensor = sensor;
   }
+  bool isDefaultBeerSensor() { return _beerSensor == &defaultBeerSensor; }
 
   void setFridgeSensor(TempSensor* sensor) {
     Log.verbose(F("BREW: TempControl new fridgeSensor %x" CR), sensor);
     _fridgeSensor = sensor;
   }
+  bool isDefaultFridgeSensor() { return _fridgeSensor == &defaultFridgeSensor; }
 
   // Status methods
   unsigned char getState() { return _state; }
@@ -149,9 +164,13 @@ class TempControl {
     return tempToDouble(getFridgeSetting(), Config::TempFormat::tempDecimals);
   }
   void setBeerTargetTemperature(double newTemp) {
+    Log.info(F("BREW: Setting new beer target temperature to %F" CR), newTemp);
+
     setBeerTemp(doubleToTemp(newTemp));
   }
   void setFridgeTargetTemperature(double newTemp) {
+    Log.info(F("BREW: Setting new fridge target temperature to %F" CR), newTemp);
+
     setFridgeTemp(doubleToTemp(newTemp));
   }
 
@@ -162,14 +181,14 @@ class TempControl {
   const MinTimes& getMinTimes() { return _minTimes; }
 
   // Load from disk
-  void loadSettings();
-  void loadConstants();
+  // void loadSettings();
+  // void loadConstants();
 
  private:
-  void storeSettings();
+  // void storeSettings();
   void loadDefaultSettings();
 
-  void storeConstants();
+  // void storeConstants();
   void loadDefaultConstants();
 
   temperature getBeerTemp();
