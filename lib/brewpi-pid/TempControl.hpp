@@ -95,7 +95,7 @@ class TempControl {
   const Actuator* getHeatingActuator() { return _heater; }
   bool isDefaultHeatingActator() { return _heater == &defaultActuator; }
 
-  void setCoolActuator(Actuator* actuator) {
+  void setCoolingActuator(Actuator* actuator) {
     Log.verbose(F("BREW: TempControl new coolActuator %x" CR), actuator);
     _cooler = actuator;
   }

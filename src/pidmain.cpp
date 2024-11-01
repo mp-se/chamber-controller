@@ -179,7 +179,7 @@ void configureTempControl() {
 
   if (myConfig.isCoolingEnabled()) {
     Log.notice(F("Main: Configuring cooling actuator." CR));
-    tempControl.setCoolActuator(actuatorCooling);
+    tempControl.setCoolingActuator(actuatorCooling);
   }
 
   if (myConfig.isHeatingEnabled()) {
