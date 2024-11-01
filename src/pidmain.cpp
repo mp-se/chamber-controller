@@ -84,17 +84,42 @@ void setup() {
 
   configureTempControl();
 
-  EspSerial.println("Setup() complete");
   Log.notice(F("Main: Setup is completed." CR));
 }
 
 LoopTimer intLoop(1000);
+LoopTimer pushLoop(5000);
 
 void loop() {
   if (intLoop.hasExipred()) {
     intLoop.reset();
-
     tempControl.loop();
+  }
+
+  if (pushLoop.hasExipred()) {
+    pushLoop.reset();
+
+    if(myConfig.hasTargetInfluxDb2()) {
+      char buf[250];
+
+      snprintf(buf, sizeof(buf),
+               "chamber,host=%s,device=%s,mode=%c "
+               "beer-temp=%f,"
+               "chamber-temp=%f,"
+               "beer-target-temp=%f,"
+               "chamber-target-temp=%f,"
+               "actuator-cool=%d,"
+               "actuator-heat=%d",
+               myConfig.getMDNS(), myConfig.getID(), tempControl.getMode(), tempControl.getBeerTemperature(), tempControl.getFridgeTemperature(),
+               tempControl.getBeerTemperatureSetting(), tempControl.getFridgeTemperatureSetting(), tempControl.getCoolingActuator()->isActive() ? 1 : 0, 
+               tempControl.getHeatingActuator()->isActive() ? 1 : 0);
+
+      Log.notice(F("Main: Pushing data to influxdb2." CR));
+      // EspSerial.println(buf);
+
+      String s = buf;
+      myPush.sendInfluxDb2(s);
+    }
   }
 
   myUptime.calculate();
