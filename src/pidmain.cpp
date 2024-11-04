@@ -72,6 +72,7 @@ void setup() {
     myWebServer.setWifiSetup(true);
     myWifi.startAP();
   } else {
+    myConfig.setWifiScanAP(true);
     myWifi.connect(WIFI_AP_STA);
     myWifi.timeSync();
   }
@@ -91,6 +92,12 @@ LoopTimer intLoop(1000);
 LoopTimer pushLoop(5000);
 
 void loop() {
+  if(!myWifi.isConnected()) {
+    Log.notice(F("Main: No wifi connection, attempting to reconnect." CR));
+    myWifi.connect(WIFI_AP_STA);
+    myWifi.timeSync();
+  }
+
   if (intLoop.hasExipred()) {
     intLoop.reset();
     tempControl.loop();
