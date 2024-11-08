@@ -38,6 +38,7 @@ SOFTWARE.
 #include <serialws.hpp>
 #include <uptime.hpp>
 #include <wificonnection.hpp>
+#include <display.hpp>
 
 SerialDebug mySerial(115200L);
 PidConfig myConfig("chamber", "/chamber.cfg");
@@ -55,6 +56,7 @@ OneWireTempSensor *oneWireFridge = NULL;
 OneWireTempSensor *oneWireBeer = NULL;
 TempSensor *fridgeSensor = NULL;
 TempSensor *beerSensor = NULL;
+Display myDisplay;
 
 void setup() {
   delay(2000);
@@ -63,6 +65,17 @@ void setup() {
 
   myConfig.checkFileSystem();
   myConfig.loadFile();
+
+  // PINS: MISO=-1, MOSI=23, SCLK=18, CS=14, DC=27, RST=33, TOUCH_DS=12
+
+  Log.notice(F("Main: Initialize display." CR));
+  myDisplay.setup();
+  myDisplay.setFont(FontSize::FONT_12);
+  myDisplay.printLineCentered(1, "Chamber Controller");
+  myDisplay.printLineCentered(2, "Starting");
+
+  myDisplay.calibrateTouch();
+  myDisplay.printLineCentered(2, "Connecting to WIFI");
 
   myWifi.init();
   if (!myWifi.hasConfig() || myWifi.isDoubleResetDetected()) {
@@ -77,31 +90,101 @@ void setup() {
     myWifi.timeSync();
   }
 
+  myDisplay.printLineCentered(2, "Configuring Temp Control");
+
   myWebServer.setupWebServer();
   mySerialWebSocket.begin(myWebServer.getWebServer(), &EspSerial);
   mySerial.begin(&mySerialWebSocket);
 
   oneWire.begin(Config::Pins::oneWirePin);
 
+  // Configure temp controller
   configureTempControl();
 
+  // Create graphical UI
+  myDisplay.createUI();
+  myDisplay.setTargetTemperature(myConfig.getTargetTemperature());
+  myDisplay.setMode(myConfig.getControllerMode());
   Log.notice(F("Main: Setup is completed." CR));
 }
 
-LoopTimer intLoop(1000);
-LoopTimer pushLoop(5000);
+LoopTimer tempControlLoop(1000);
+LoopTimer validateLoop(10000);
+LoopTimer pushLoop(30000);
 
 void loop() {
   if(!myWifi.isConnected()) {
-    Log.notice(F("Main: No wifi connection, attempting to reconnect." CR));
+    Log.notice(F("Loop: No wifi connection, attempting to reconnect." CR));
     myWifi.connect(WIFI_AP_STA);
     myWifi.timeSync();
   }
 
-  if (intLoop.hasExipred()) {
-    intLoop.reset();
+  if (tempControlLoop.hasExipred()) {
+    tempControlLoop.reset();
+
+    // Log.notice(F("Loop: Running temp control." CR));
+
+    float beer = NAN, fridge = NAN;
+
+    if(!tempControl.isDefaultBeerSensor() && tempControl.getBeerSensor()->isConnected()) {
+      beer = tempControl.getBeerTemperature();
+    }
+
+    if(!tempControl.isDefaultFridgeSensor() && tempControl.getFridgeSensor()->isConnected()) {
+      fridge = tempControl.getFridgeTemperature();
+    }
+
+    if(tempControl.getMode() != myDisplay.getMode() || myConfig.getTargetTemperature() != myDisplay.getTargetTemperature()) {
+      Log.info(F("Loop: New mode/temperature selected from display %c %F." CR), myDisplay.getMode(), myDisplay.getTargetTemperature());
+      myConfig.setControllerMode(myDisplay.getMode());
+      myConfig.setTargetTemperature(myDisplay.getTargetTemperature());
+      myConfig.saveFile();
+
+      tempControl.setMode(myDisplay.getMode());
+      tempControl.setBeerTargetTemperature(myDisplay.getTargetTemperature());
+      tempControl.setFridgeTargetTemperature(myDisplay.getTargetTemperature());
+    }
+
+    char state[40] = "", mode[40] = "Off";
+
+    switch(tempControl.getMode()) {
+      case ControllerMode::beerConstant:
+      snprintf(mode, sizeof(mode), "Beer -> %.1F°%c", tempControl.getBeerTemperatureSetting(), myConfig.getTempFormat());
+      break;
+      case ControllerMode::fridgeConstant:
+      snprintf(mode, sizeof(mode), "Chamber -> %.1F°%c", tempControl.getFridgeTemperatureSetting(), myConfig.getTempFormat());
+      break;
+    }
+
+    switch(tempControl.getState()) {
+      case ControllerState::IDLE:
+        snprintf(state, sizeof(state), "Idle %02dm %02ds", tempControl.timeSinceIdle()/60, tempControl.timeSinceIdle()%60);
+      break;
+      case ControllerState::STATE_OFF:
+      break;
+      case ControllerState::HEATING:
+        snprintf(state, sizeof(state), "Heating %02dm %02ds", tempControl.timeSinceHeating()/60, tempControl.timeSinceHeating()%60);
+      break;
+      case ControllerState::COOLING:
+        snprintf(state, sizeof(state), "Cooling %02dm %02ds", tempControl.timeSinceCooling()/60, tempControl.timeSinceCooling()%60);
+      break;
+      case ControllerState::WAITING_TO_HEAT:
+      case ControllerState::WAITING_TO_COOL:
+      case ControllerState::WAITING_FOR_PEAK_DETECT:
+      case ControllerState::COOLING_MIN_TIME:
+      case ControllerState::HEATING_MIN_TIME:
+        snprintf(state, sizeof(state), "Waiting %02dm %02ds", tempControl.getWaitTime()/60, tempControl.getWaitTime()%60);
+      break;
+    }
+
+    myDisplay.updateTemperatures(mode, state, beer, fridge, myConfig.getTempFormat());  
     tempControl.loop();
   }
+
+  // if (validateLoop.hasExipred()) {
+  //   validateLoop.reset();
+  //   validateTempControl();
+  // }
 
   if (pushLoop.hasExipred()) {
     pushLoop.reset();
@@ -116,12 +199,13 @@ void loop() {
                "beer-target-temp=%f,"
                "chamber-target-temp=%f,"
                "actuator-cool=%d,"
-               "actuator-heat=%d",
+               "actuator-heat=%d,"
+               "state=%d",
                myConfig.getMDNS(), myConfig.getID(), tempControl.getMode(), tempControl.getBeerTemperature(), tempControl.getFridgeTemperature(),
                tempControl.getBeerTemperatureSetting(), tempControl.getFridgeTemperatureSetting(), tempControl.getCoolingActuator()->isActive() ? 1 : 0, 
-               tempControl.getHeatingActuator()->isActive() ? 1 : 0);
+               tempControl.getHeatingActuator()->isActive() ? 1 : 0, tempControl.getState());
 
-      Log.notice(F("Main: Pushing data to influxdb2." CR));
+      Log.info(F("Main: Pushing data to influxdb2." CR));
       // EspSerial.println(buf);
 
       String s = buf;
@@ -135,14 +219,63 @@ void loop() {
   mySerialWebSocket.loop();
 }
 
+void validateTempControl() {
+  // Check that sensors and control mode is correct
+  Log.info(F("Main: Validate temp control settings." CR));
+
+  bool needInitialize = false;
+
+  // Check cooling actuator if settings are correct
+  if(myConfig.isCoolingEnabled() && tempControl.isDefaultCoolingActator()) { 
+    Log.warning(F("Main: Cooling actutor is enabled but not configured!" CR));
+    needInitialize = true; 
+  }
+
+  // Check heating actuator if settings are correct
+  if(myConfig.isHeatingEnabled() && tempControl.isDefaultHeatingActator()) { 
+    Log.warning(F("Main: Heating actutor is enabled but not configured!" CR));
+    needInitialize = true; 
+  }
+
+  bool fridge = tempControl.getFridgeSensor()->isConnected();
+  bool beer = tempControl.getBeerSensor()->isConnected();
+
+  // Check fridge sensor if settings are correct
+  if(myConfig.isFridgeSensorEnabled() && fridge) { 
+    Log.warning(F("Main: Fridge sensor is enabled but sensor is not connected!" CR));
+    needInitialize = true; 
+  }
+
+  // Check beer sensor if settings are correct
+  if(myConfig.isBeerSensorEnabled() && beer) { 
+    Log.warning(F("Main: Beer sensor is enabled but sensor is not connected!" CR));
+    needInitialize = true; 
+  }
+
+  switch(myConfig.getControllerMode()) {
+    case ControllerMode::off:
+    break;
+    case ControllerMode::beerConstant:
+      // TODO: Add validation options
+    break;
+    case ControllerMode::fridgeConstant:
+      // TODO: Add validation options
+    break;
+  }
+
+  if(needInitialize) {
+    configureTempControl();    
+  }
+}
+
 void configureTempControl() {
   // Set controller to default; mode, actuators and sensors
-  Log.notice(F("Main: Initializing temp control." CR));
+  Log.info(F("Main: Initializing temp control." CR));
   tempControl.init(MIN_TIMES_DEFAULT);
 
   // Create the temperature sensors
   if (myConfig.isFridgeSensorEnabled()) {
-    Log.notice(F("Main: Configuring fridge sensor %s." CR),
+    Log.info(F("Main: Configuring fridge sensor %s." CR),
                myConfig.getFridgeSensorId());
 
     DeviceAddress daFridge;
@@ -159,7 +292,7 @@ void configureTempControl() {
   }
 
   if (myConfig.isBeerSensorEnabled()) {
-    Log.notice(F("Main: Configuring beer sensor %s." CR),
+    Log.info(F("Main: Configuring beer sensor %s." CR),
                myConfig.getBeerSensorId());
 
     DeviceAddress daBeer;
@@ -185,26 +318,26 @@ void configureTempControl() {
   }
 
   if (myConfig.isCoolingEnabled()) {
-    Log.notice(F("Main: Configuring cooling actuator." CR));
+    Log.info(F("Main: Configuring cooling actuator." CR));
     tempControl.setCoolingActuator(actuatorCooling);
   }
 
   if (myConfig.isHeatingEnabled()) {
-    Log.notice(F("Main: Configuring cooling actuator." CR));
+    Log.info(F("Main: Configuring cooling actuator." CR));
     tempControl.setHeatingActuator(actuatorHeating);
   }
 
   if (myConfig.isControllerFridgeConstant()) {
-    Log.notice(F("Main: Setting fridge target temperature %F." CR),
+    Log.info(F("Main: Setting fridge target temperature %F." CR),
                myConfig.getTargetTemperature());
     tempControl.setFridgeTargetTemperature(myConfig.getTargetTemperature());
   } else if (myConfig.isControllerBeerConstant()) {
-    Log.notice(F("Main: Setting beer target temperature %F." CR),
+    Log.info(F("Main: Setting beer target temperature %F." CR),
                myConfig.getTargetTemperature());
     tempControl.setBeerTargetTemperature(myConfig.getTargetTemperature());
   }
 
-  Log.notice(F("Main: Setting mode %c." CR), myConfig.getControllerMode());
+  Log.info(F("Main: Setting mode %c." CR), myConfig.getControllerMode());
   tempControl.setMode(myConfig.getControllerMode());
 }
 

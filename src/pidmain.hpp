@@ -25,8 +25,9 @@ SOFTWARE.
 #define SRC_PIDMAIN_HPP_
 
 void configureTempControl();
+void validateTempControl();
 
-constexpr auto PARAM_FRIDGE_SENSOR_ID = "fride_sensor_id";
+constexpr auto PARAM_FRIDGE_SENSOR_ID = "fridge_sensor_id";
 constexpr auto PARAM_BEER_SENSOR_ID = "beer_sensor_id";
 constexpr auto PARAM_CONTROLLER_MODE = "controller_mode";
 constexpr auto PARAM_TARGET_TEMPERATURE = "target_temperature";
