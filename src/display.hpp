@@ -74,13 +74,12 @@ class Display {
   TFT_eSPI* _tft = NULL;
   FontSize _fontSize = FontSize::FONT_9;
   uint16_t _touchCalibrationlData[5] = {0, 0, 0, 0, 0};
-  Rotation _rotation =
-      ROTATION_90;
+  Rotation _rotation = ROTATION_90;
   uint32_t _backgroundColor = TFT_BLACK;
 
  public:
   Display() {}
- 
+
   // Basic TFT methods
   void setup();
   void calibrateTouch();
@@ -96,18 +95,21 @@ class Display {
   void setTargetTemperature(float t) { lvglData._targetTemperature = t; }
   char getMode() { return lvglData._mode; }
   void setMode(char m) { lvglData._mode = m; }
-  void updateTemperatures(const char* mode, const char* state, float beerTemp, float chamberTemp, char tempFormat);
+  void updateTemperatures(const char* mode, const char* state, float beerTemp,
+                          float chamberTemp, char tempFormat);
 
   // LVGL methods
-  bool getTouch(uint16_t* x, uint16_t* y); // Check for touch callback
-  void handleButtonEvent(char btn); 
+  bool getTouch(uint16_t* x, uint16_t* y);  // Check for touch callback
+  void handleButtonEvent(char btn);
   void createUI();
 };
 
 #if defined(ENABLE_LVGL)
 // Wrappers to simplify interaction with LVGL
-lv_obj_t* createButton(const char* label, int32_t x, int32_t y, int32_t w, int32_t h, lv_event_cb_t handler);
-lv_obj_t* createLabel(const char* label, int32_t x, int32_t y, int32_t w, int32_t h, lv_style_t* style);
+lv_obj_t* createButton(const char* label, int32_t x, int32_t y, int32_t w,
+                       int32_t h, lv_event_cb_t handler);
+lv_obj_t* createLabel(const char* label, int32_t x, int32_t y, int32_t w,
+                      int32_t h, lv_style_t* style);
 void updateLabel(lv_obj_t* obj, const char* label);
 void setStyle(lv_obj_t* obj, lv_style_t* style);
 
@@ -118,8 +120,8 @@ void btnUpEventHandler(lv_event_t* e);
 void btnDownEventHandler(lv_event_t* e);
 
 void touchscreenHandler(lv_indev_t* indev, lv_indev_data_t* data);
-void log_print(lv_log_level_t level, const char *buf);
-void lvgl_loop_handler(void * parameter);
+void log_print(lv_log_level_t level, const char* buf);
+void lvgl_loop_handler(void* parameter);
 #endif
 
 extern Display myDisplay;

@@ -60,8 +60,10 @@ constexpr auto PARAM_PID_FRIDGE_TEMP_CONNECTED = "pid_fridge_temp_connected";
 constexpr auto PARAM_PID_BEER_TARGET_TEMP = "pid_beer_target_temp";
 constexpr auto PARAM_PID_FRIDGE_TARGET_TEMP = "pid_fridge_target_temp";
 constexpr auto PARAM_PID_TEMP_FORMAT = "pid_temp_format";
-constexpr auto PARAM_PID_COOLING_ACTUATOR_ACTIVE = "pid_cooling_actuator_active";
-constexpr auto PARAM_PID_HEATING_ACTUATOR_ACTIVE = "pid_heating_actuator_active";
+constexpr auto PARAM_PID_COOLING_ACTUATOR_ACTIVE =
+    "pid_cooling_actuator_active";
+constexpr auto PARAM_PID_HEATING_ACTUATOR_ACTIVE =
+    "pid_heating_actuator_active";
 constexpr auto PARAM_PID_WAIT_TIME = "pid_wait_time";
 constexpr auto PARAM_PID_TIME_SINCE_COOLING = "pid_time_since_cooling";
 constexpr auto PARAM_PID_TIME_SINCE_HEATING = "pid_time_since_heating";
@@ -190,9 +192,11 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
   obj[PARAM_PID_STATE] = tempControl.getState();
   obj[PARAM_PID_STATE_STRING] = tempControl.getStateAsString();
   obj[PARAM_PID_BEER_TEMP] = tempControl.getBeerTemperature();
-  obj[PARAM_PID_BEER_TEMP_CONNECTED] = tempControl.getBeerSensor()->isConnected();
+  obj[PARAM_PID_BEER_TEMP_CONNECTED] =
+      tempControl.getBeerSensor()->isConnected();
   obj[PARAM_PID_FRIDGE_TEMP] = tempControl.getFridgeTemperature();
-  obj[PARAM_PID_FRIDGE_TEMP_CONNECTED] = tempControl.getFridgeSensor()->isConnected();
+  obj[PARAM_PID_FRIDGE_TEMP_CONNECTED] =
+      tempControl.getFridgeSensor()->isConnected();
   obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
   obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
   obj[PARAM_PID_TEMP_FORMAT] =

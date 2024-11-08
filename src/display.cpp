@@ -25,10 +25,11 @@ SOFTWARE.
 #include <FS.h>
 #include <LittleFS.h>
 #include <Wire.h>
+
 #include <display.hpp>
 #include <fonts.hpp>
-#include <log.hpp>
 #include <functional>
+#include <log.hpp>
 #include <looptimer.hpp>
 
 constexpr auto TTF_CALIBRATION_FILENAME = "/tft.dat";
@@ -40,17 +41,18 @@ struct LVGL_Data lvglData;
 #endif
 
 void Display::setup() {
-  Log.notice(F("DISP: TFT Config: MISO=%d, MOSI=%d, SCLK=%d, CS=%d, DC=%d, RST=%d, "
-               "TOUCH_CS=%d" CR),
-             TFT_MISO, TFT_MOSI, TFT_SCLK, TFT_CS, TFT_DC, TFT_RST, TOUCH_CS);
+  Log.notice(
+      F("DISP: TFT Config: MISO=%d, MOSI=%d, SCLK=%d, CS=%d, DC=%d, RST=%d, "
+        "TOUCH_CS=%d" CR),
+      TFT_MISO, TFT_MOSI, TFT_SCLK, TFT_CS, TFT_DC, TFT_RST, TOUCH_CS);
 
 #if defined(ENABLE_TFT)
   _tft = new TFT_eSPI();
 #endif
 
-  if (!_tft) { 
+  if (!_tft) {
     Log.warning(F("DISP: No TFT_eSPI driver is created!" CR));
-    return; 
+    return;
   }
 
   _tft->init();
@@ -60,8 +62,8 @@ void Display::setup() {
 }
 
 void Display::setRotation(Rotation r) {
-  if (!_tft) { 
-    return; 
+  if (!_tft) {
+    return;
   }
 
   _rotation = r;
@@ -113,7 +115,9 @@ void Display::clear(uint32_t color) {
   delay(1);
 }
 
-void Display::updateTemperatures(const char* mode, const char* state, float beerTemp, float chamberTemp, char tempFormat) {
+void Display::updateTemperatures(const char *mode, const char *state,
+                                 float beerTemp, float chamberTemp,
+                                 char tempFormat) {
 #if defined(ENABLE_LVGL)
   if (!_tft) return;
 
@@ -124,7 +128,7 @@ void Display::updateTemperatures(const char* mode, const char* state, float beer
   char s[20];
 
   // Beer Temp
-  if(isnan(beerTemp))
+  if (isnan(beerTemp))
     snprintf(s, sizeof(s), "-- %c", tempFormat);
   else
     snprintf(s, sizeof(s), "%0.1F°%c", beerTemp, tempFormat);
@@ -132,7 +136,7 @@ void Display::updateTemperatures(const char* mode, const char* state, float beer
   lvglData._dataBeerTemp = s;
 
   // Beer Temp
-  if(isnan(chamberTemp))
+  if (isnan(chamberTemp))
     snprintf(s, sizeof(s), "-- %c", tempFormat);
   else
     snprintf(s, sizeof(s), "%0.1F°%c", chamberTemp, tempFormat);
@@ -206,10 +210,10 @@ bool Display::getTouch(uint16_t *x, uint16_t *y) {
     if (xt < 0) xt = 0;
     if (yt < 0) yt = 0;
 
-    if(_rotation == Rotation::ROTATION_90) {
+    if (_rotation == Rotation::ROTATION_90) {
       *x = yt;
       *y = TFT_HEIGHT - xt;
-    } else  { // Rotation::ROTATION_270
+    } else {  // Rotation::ROTATION_270
       *x = yt;
       *y = TFT_HEIGHT - xt;
     }
@@ -228,26 +232,29 @@ void Display::createUI() {
   lv_init();
   lv_log_register_print_cb(log_print);
 
-  #define DRAW_BUF_SIZE (TFT_WIDTH * TFT_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
+#define DRAW_BUF_SIZE (TFT_WIDTH * TFT_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
 
-  void* draw_buf = ps_malloc(DRAW_BUF_SIZE);
+  void *draw_buf = ps_malloc(DRAW_BUF_SIZE);
 
-  if(!draw_buf) {
-    Log.error(F("DISP: Failed to allocate ps ram for display buffer, size=%d" CR), DRAW_BUF_SIZE);  
+  if (!draw_buf) {
+    Log.error(
+        F("DISP: Failed to allocate ps ram for display buffer, size=%d" CR),
+        DRAW_BUF_SIZE);
   }
 
-  lvglData._display = lv_tft_espi_create(TFT_WIDTH, TFT_HEIGHT, draw_buf, DRAW_BUF_SIZE);
+  lvglData._display =
+      lv_tft_espi_create(TFT_WIDTH, TFT_HEIGHT, draw_buf, DRAW_BUF_SIZE);
 
-  if(_rotation == Rotation::ROTATION_90) {
+  if (_rotation == Rotation::ROTATION_90) {
     lv_display_set_rotation(lvglData._display, LV_DISPLAY_ROTATION_90);
-  } else { // Rotation::ROTATION_270
+  } else {  // Rotation::ROTATION_270
     lv_display_set_rotation(lvglData._display, LV_DISPLAY_ROTATION_270);
   }
 
   // Initialize an LVGL input device object (Touchscreen)
   lv_indev_t *indev = lv_indev_create();
   lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
-  lv_indev_set_read_cb(indev, touchscreenHandler); 
+  lv_indev_set_read_cb(indev, touchscreenHandler);
 
   // Create components
   lv_style_init(&lvglData._styleLeft);
@@ -256,7 +263,7 @@ void Display::createUI() {
   lv_style_set_text_font(&lvglData._styleCenter, &lv_font_montserrat_18);
   lv_style_set_text_align(&lvglData._styleLeft, LV_TEXT_ALIGN_LEFT);
   lv_style_set_text_align(&lvglData._styleCenter, LV_TEXT_ALIGN_CENTER);
-  // lv_style_set_outline_width(&_styleLeft, 1); 
+  // lv_style_set_outline_width(&_styleLeft, 1);
   // lv_style_set_outline_width(&_styleCenter, 1);
 
   Log.notice(F("DISP: Creating UI components." CR));
@@ -266,48 +273,53 @@ void Display::createUI() {
 
   lvglData._txtState = createLabel("", 5, 10, 195, 26, &lvglData._styleLeft);
   lvglData._txtMode = createLabel("", 5, 44, 195, 26, &lvglData._styleLeft);
-  lvglData._txtBeerTemp = createLabel("", 110, 82, 90, 26, &lvglData._styleLeft);
-  lvglData._txtChamberTemp = createLabel("", 110, 119, 90, 26, &lvglData._styleLeft);
-  lvglData._txtTargetTemp = createLabel("", 110, 180, 90, 26, &lvglData._styleCenter);
+  lvglData._txtBeerTemp =
+      createLabel("", 110, 82, 90, 26, &lvglData._styleLeft);
+  lvglData._txtChamberTemp =
+      createLabel("", 110, 119, 90, 26, &lvglData._styleLeft);
+  lvglData._txtTargetTemp =
+      createLabel("", 110, 180, 90, 26, &lvglData._styleCenter);
 
-  lvglData._btnBeer = createButton("Beer", 205, 10, 100, 44, btnBeerEventHandler);
-  lvglData._btnChamber = createButton("Chamber", 205, 60, 100, 44, btnChamberEventHandler);
+  lvglData._btnBeer =
+      createButton("Beer", 205, 10, 100, 44, btnBeerEventHandler);
+  lvglData._btnChamber =
+      createButton("Chamber", 205, 60, 100, 44, btnChamberEventHandler);
   lvglData._btnOff = createButton("Off", 205, 110, 100, 44, btnOffEventHandler);
   lvglData._btnUp = createButton("+", 230, 170, 44, 44, btnUpEventHandler);
   lvglData._btnDown = createButton("-", 30, 170, 44, 44, btnDownEventHandler);
 
-  xTaskCreatePinnedToCore(
-      lvgl_loop_handler, // Function to implement the task 
-      "LVGL_Handler", // Name of the task 
-      10000, // Stack size in words 
-      NULL, // Task input parameter 
-      0, // Priority of the task 
-      &lvglTaskHandler, // Task handle. 
-      0); // Core where the task should run 
+  xTaskCreatePinnedToCore(lvgl_loop_handler,  // Function to implement the task
+                          "LVGL_Handler",     // Name of the task
+                          10000,              // Stack size in words
+                          NULL,               // Task input parameter
+                          0,                  // Priority of the task
+                          &lvglTaskHandler,   // Task handle.
+                          0);                 // Core where the task should run
 #endif
 }
 
 void Display::handleButtonEvent(char btn) {
-  Log.info(F("DISP: Button pressed, char=%c" CR), btn);  
+  Log.info(F("DISP: Button pressed, char=%c" CR), btn);
 
-  switch(btn) {
+  switch (btn) {
     case 'o':
     case 'b':
     case 'f':
       lvglData._mode = btn;
-    break;
+      break;
 
     case '+':
       lvglData._targetTemperature += 0.5;
-    break;
+      break;
 
     case '-':
       lvglData._targetTemperature -= 0.5;
-    break;
+      break;
   }
 }
 
-// LVGL Wrappers and Handlers **************************************************************************************************
+// LVGL Wrappers and Handlers
+// **************************************************************************************************
 
 #if defined(ENABLE_LVGL)
 void log_print(lv_log_level_t level, const char *buf) {
@@ -326,40 +338,41 @@ void touchscreenHandler(lv_indev_t *indev, lv_indev_data_t *data) {
     // Log.notice(F("LVGL : %d:%d." CR), x, y);
   } else {
     data->state = LV_INDEV_STATE_RELEASED;
-  }  
+  }
 }
 
-void btnBeerEventHandler(lv_event_t * e) {
+void btnBeerEventHandler(lv_event_t *e) {
   if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
     myDisplay.handleButtonEvent('b');
   }
 }
 
-void btnChamberEventHandler(lv_event_t * e) {
+void btnChamberEventHandler(lv_event_t *e) {
   if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
     myDisplay.handleButtonEvent('f');
   }
 }
 
-void btnOffEventHandler(lv_event_t * e) {
+void btnOffEventHandler(lv_event_t *e) {
   if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
     myDisplay.handleButtonEvent('o');
   }
 }
 
-void btnUpEventHandler(lv_event_t * e) {
+void btnUpEventHandler(lv_event_t *e) {
   if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
     myDisplay.handleButtonEvent('+');
   }
 }
 
-void btnDownEventHandler(lv_event_t * e) {
+void btnDownEventHandler(lv_event_t *e) {
   if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
     myDisplay.handleButtonEvent('-');
   }
 }
 
-lv_obj_t* createLabel(const char* label, int32_t x, int32_t y, int32_t w, int32_t h, lv_style_t* style) {
+lv_obj_t *createLabel(const char *label, int32_t x, int32_t y, int32_t w,
+                      int32_t h, lv_style_t *style) {
   lv_obj_t *lbl = lv_label_create(lv_screen_active());
   lv_label_set_text(lbl, label);
   lv_obj_set_size(lbl, w, h);
@@ -368,11 +381,12 @@ lv_obj_t* createLabel(const char* label, int32_t x, int32_t y, int32_t w, int32_
   return lbl;
 }
 
-void updateLabel(lv_obj_t *obj, const char* label) {
+void updateLabel(lv_obj_t *obj, const char *label) {
   lv_label_set_text(obj, label);
 }
 
-lv_obj_t* createButton(const char* label, int32_t x, int32_t y, int32_t w, int32_t h, lv_event_cb_t handler) {
+lv_obj_t *createButton(const char *label, int32_t x, int32_t y, int32_t w,
+                       int32_t h, lv_event_cb_t handler) {
   lv_obj_t *btn;
   btn = lv_button_create(lv_screen_active());
   lv_obj_set_size(btn, w, h);
@@ -384,15 +398,16 @@ lv_obj_t* createButton(const char* label, int32_t x, int32_t y, int32_t w, int32
   return btn;
 }
 
-void lvgl_loop_handler(void * parameter) {
+void lvgl_loop_handler(void *parameter) {
   LoopTimer taskLoop(500);
 
-  for(;;) {    
-    if(taskLoop.hasExipred()) {
+  for (;;) {
+    if (taskLoop.hasExipred()) {
       taskLoop.reset();
 
       char s[20];
-      snprintf(s, sizeof(s), "%0.1F°%c", lvglData._targetTemperature, lvglData._tempFormat);
+      snprintf(s, sizeof(s), "%0.1F°%c", lvglData._targetTemperature,
+               lvglData._tempFormat);
       updateLabel(lvglData._txtTargetTemp, s);
 
       updateLabel(lvglData._txtState, lvglData._dataState.c_str());
@@ -403,7 +418,7 @@ void lvgl_loop_handler(void * parameter) {
 
     lv_task_handler();
     lv_tick_inc(5);
-    delay(5);  
+    delay(5);
   }
 }
 #endif
