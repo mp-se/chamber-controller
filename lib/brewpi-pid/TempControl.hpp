@@ -107,12 +107,14 @@ class TempControl {
     _beerSensor = sensor;
   }
   bool isDefaultBeerSensor() { return _beerSensor == &defaultBeerSensor; }
+  const TempSensor* getBeerSensor() { return _beerSensor; }
 
   void setFridgeSensor(TempSensor* sensor) {
     Log.verbose(F("BREW: TempControl new fridgeSensor %x" CR), sensor);
     _fridgeSensor = sensor;
   }
   bool isDefaultFridgeSensor() { return _fridgeSensor == &defaultFridgeSensor; }
+  const TempSensor* getFridgeSensor() { return _fridgeSensor; }
 
   // Status methods
   unsigned char getState() { return _state; }

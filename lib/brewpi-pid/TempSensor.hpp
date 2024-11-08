@@ -55,7 +55,7 @@ class TempSensor {
   bool hasFastFilter() { return true; }
   bool hasSlopeFilter() { return true; }
   void init();
-  bool isConnected() {
+  bool isConnected() const {
     return _sensor == NULL ? false : _sensor->isConnected();
   }
   void update();

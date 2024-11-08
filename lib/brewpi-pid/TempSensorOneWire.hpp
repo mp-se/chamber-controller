@@ -44,7 +44,7 @@ class OneWireTempSensor : public BasicTempSensor {
 
   ~OneWireTempSensor();
 
-  bool isConnected() { return _connected; }
+  bool isConnected() const { return _connected; }
 
   bool init();
   temperature read();

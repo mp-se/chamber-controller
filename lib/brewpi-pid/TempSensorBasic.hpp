@@ -28,7 +28,7 @@ class BasicTempSensor {
  public:
   BasicTempSensor() {}
   virtual ~BasicTempSensor() {}
-  virtual bool isConnected() = 0;
+  virtual bool isConnected() const = 0;
   virtual bool init() = 0;
   virtual temperature read() = 0;
 };

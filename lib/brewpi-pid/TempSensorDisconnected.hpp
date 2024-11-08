@@ -27,7 +27,7 @@
 // installed.
 class DisconnectedTempSensor : public BasicTempSensor {
  public:
-  bool isConnected() { return false; }
+  bool isConnected() const { return false; }
 
   bool init() { return read() != TEMP_SENSOR_DISCONNECTED; }
 

@@ -49,16 +49,16 @@ bool OneWireTempSensor::init() {
   // seconds scanning each sensor since this brings things to a halt.
   if (_sensor && initConnection(*_sensor, _sensorAddress) &&
       requestConversion()) {
-    // Log.verbose(F("BREW: Waiting for OneWire sensor to respond." CR));
+    Log.verbose(F("BREW: Waiting for OneWire sensor to respond." CR));
     waitForConversion();
     temperature temp = readAndConstrainTemp();
-    // Log.verbose(F("BREW: Reading temp %F from sensor at %s." CR),
-    //             tempToDouble(temp, Config::TempFormat::tempDecimals),
-    //             addressString);
+    Log.verbose(F("BREW: Reading temp %F from sensor at %s." CR),
+                tempToDouble(temp, Config::TempFormat::tempDecimals),
+                addressString);
     success = temp != TEMP_SENSOR_DISCONNECTED && requestConversion();
   }
   setConnected(success);
-  // Log.verbose(F("BREW: OneWire sensor initialized correctly." CR));
+  Log.verbose(F("BREW: OneWire sensor initialized correctly." CR));
   return success;
 }
 
