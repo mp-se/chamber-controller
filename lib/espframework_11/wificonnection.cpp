@@ -48,7 +48,7 @@ WifiConnection::WifiConnection(WifiConfig *cfg, String apSSID, String apPWD,
 
 void WifiConnection::init() {
   readReset();
-  Log.notice(F("WIFI: Current reset counter %u." CR), _resetCounter);
+  Log.notice(F("WIFI: Current reset counter %d." CR), _resetCounter);
   _resetCounter++;
   writeReset();
 }

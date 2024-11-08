@@ -24,6 +24,7 @@ SOFTWARE.
 #ifndef SRC_OTA_HPP_
 #define SRC_OTA_HPP_
 
+#if !defined(ESPFWK_DISABLE_OTA)
 #if defined(ESP8266)
 #include <ESP8266HTTPClient.h>
 #else
@@ -48,6 +49,7 @@ class OtaUpdate {
   bool checkFirmwareVersion();
 };
 
+#endif  // ESPFWK_DISABLE_OTA
 #endif  // SRC_OTA_HPP_
 
 // EOF

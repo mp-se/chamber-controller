@@ -26,8 +26,9 @@ SOFTWARE.
 #else
 #include <ESPmDNS.h>
 #endif
+#if !defined(ESPFWK_DISABLE_MQTT)
 #include <MQTT.h>
-
+#endif
 #include <basepush.hpp>
 #include <log.hpp>
 #include <utils.hpp>
@@ -240,7 +241,7 @@ String BasePush::sendHttpGet(String& payload, const char* target,
 void BasePush::sendMqtt(String& payload, const char* target, int port,
                         const char* user, const char* pass) {
   // payload=: topic1,data1|topic2,data2|...
-
+#if !defined(ESPFWK_DISABLE_MQTT)
   Log.notice(F("PUSH: Sending values to mqtt." CR));
   _lastResponseCode = 0;
   _lastSuccess = false;
@@ -314,6 +315,7 @@ void BasePush::sendMqtt(String& payload, const char* target, int port,
   }
 
   tcp_cleanup();
+#endif // ESPFWK_DISABLE_MQTT
 }
 
 bool BasePush::sendHttpPost(String& payload) {
