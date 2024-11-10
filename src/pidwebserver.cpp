@@ -235,8 +235,8 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
       case ControllerMode::beerConstant:
         if (myConfig.isBeerSensorEnabled() &&
             (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
-          tempControl.setMode(ControllerMode::beerConstant);
-          tempControl.setBeerTargetTemperature(newTemp);
+ 
+          setNewControllerMode(ControllerMode::beerConstant, newTemp);
           success = true;
         } else {
           success = false;
@@ -247,8 +247,8 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
       case ControllerMode::fridgeConstant:
         if (myConfig.isBeerSensorEnabled() &&
             (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
-          tempControl.setMode(ControllerMode::fridgeConstant);
-          tempControl.setFridgeTargetTemperature(newTemp);
+
+          setNewControllerMode(ControllerMode::fridgeConstant, newTemp);
           success = true;
         } else {
           success = false;
@@ -257,15 +257,9 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
         break;
 
       case ControllerMode::off:
-        tempControl.setMode(ControllerMode::off);
+        setNewControllerMode(ControllerMode::off, newTemp);
         success = true;
         break;
-    }
-
-    if (success) {
-      myConfig.setControllerMode(newMode);
-      myConfig.setTargetTemperature(newTemp);
-      myConfig.saveFile();
     }
   }
 

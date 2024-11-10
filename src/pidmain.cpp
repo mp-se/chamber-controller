@@ -136,19 +136,6 @@ void loop() {
       fridge = tempControl.getFridgeTemperature();
     }
 
-    if (tempControl.getMode() != myDisplay.getMode() ||
-        myConfig.getTargetTemperature() != myDisplay.getTargetTemperature()) {
-      Log.info(F("Loop: New mode/temperature selected from display %c %F." CR),
-               myDisplay.getMode(), myDisplay.getTargetTemperature());
-      myConfig.setControllerMode(myDisplay.getMode());
-      myConfig.setTargetTemperature(myDisplay.getTargetTemperature());
-      myConfig.saveFile();
-
-      tempControl.setMode(myDisplay.getMode());
-      tempControl.setBeerTargetTemperature(myDisplay.getTargetTemperature());
-      tempControl.setFridgeTargetTemperature(myDisplay.getTargetTemperature());
-    }
-
     char state[40] = "", mode[40] = "Off";
 
     switch (tempControl.getMode()) {
@@ -167,7 +154,7 @@ void loop() {
     switch (tempControl.getState()) {
       case ControllerState::IDLE: {
         uint16_t t =
-            tempControl.timeSinceHeating() < tempControl.timeSinceCooling()
+            tempControl.timeSinceCooling() < tempControl.timeSinceHeating()
                 ? tempControl.timeSinceCooling()
                 : tempControl.timeSinceHeating();
         snprintf(state, sizeof(state), "Idle %02dm %02ds", t / 60, t % 60);
@@ -184,11 +171,16 @@ void loop() {
                  tempControl.timeSinceIdle() / 60,
                  tempControl.timeSinceIdle() % 60);
       } break;
-      case ControllerState::WAITING_TO_HEAT:
-      case ControllerState::WAITING_TO_COOL:
-      case ControllerState::WAITING_FOR_PEAK_DETECT:
       case ControllerState::COOLING_MIN_TIME:
       case ControllerState::HEATING_MIN_TIME: {
+        snprintf(state, sizeof(state), "Waiting %02dm %02ds",
+                 tempControl.timeSinceIdle() / 60,
+                 tempControl.timeSinceIdle() % 60);
+      } break;
+
+      case ControllerState::WAITING_TO_HEAT:
+      case ControllerState::WAITING_TO_COOL:
+      case ControllerState::WAITING_FOR_PEAK_DETECT: {
         snprintf(state, sizeof(state), "Waiting %02dm %02ds",
                  tempControl.getWaitTime() / 60,
                  tempControl.getWaitTime() % 60);
@@ -243,7 +235,20 @@ void loop() {
   mySerialWebSocket.loop();
 }
 
+void setNewControllerMode(char mode, float temp) {
+  Log.info(F("Main: New mode/temperature set %c %F." CR), mode, temp);
+
+  myConfig.setControllerMode(mode);
+  myConfig.setTargetTemperature(temp);
+  myConfig.saveFile();
+
+  tempControl.setMode(mode);
+  tempControl.setBeerTargetTemperature(temp);
+  tempControl.setFridgeTargetTemperature(temp);
+}
+
 void validateTempControl() {
+  /*
   // Check that sensors and control mode is correct
   Log.info(F("Main: Validate temp control settings." CR));
 
@@ -291,7 +296,7 @@ void validateTempControl() {
 
   if (needInitialize) {
     configureTempControl();
-  }
+  }*/
 }
 
 void configureTempControl() {

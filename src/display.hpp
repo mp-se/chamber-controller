@@ -91,9 +91,9 @@ class Display {
   void setRotation(Rotation rotation);
 
   // Misc methods
-  float getTargetTemperature() { return lvglData._targetTemperature; }
+  // float getTargetTemperature() { return lvglData._targetTemperature; }
   void setTargetTemperature(float t) { lvglData._targetTemperature = t; }
-  char getMode() { return lvglData._mode; }
+  // char getMode() { return lvglData._mode; }
   void setMode(char m) { lvglData._mode = m; }
   void updateTemperatures(const char* mode, const char* state, float beerTemp,
                           float chamberTemp, char tempFormat);

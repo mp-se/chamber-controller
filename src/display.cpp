@@ -26,6 +26,7 @@ SOFTWARE.
 #include <LittleFS.h>
 #include <Wire.h>
 
+#include <pidmain.hpp>
 #include <display.hpp>
 #include <fonts.hpp>
 #include <functional>
@@ -306,6 +307,7 @@ void Display::handleButtonEvent(char btn) {
     case 'b':
     case 'f':
       lvglData._mode = btn;
+      setNewControllerMode(lvglData._mode, lvglData._targetTemperature);
       break;
 
     case '+':

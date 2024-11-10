@@ -26,6 +26,7 @@ SOFTWARE.
 
 void configureTempControl();
 void validateTempControl();
+void setNewControllerMode(char mode, float temp);
 
 constexpr auto PARAM_FRIDGE_SENSOR_ID = "fridge_sensor_id";
 constexpr auto PARAM_BEER_SENSOR_ID = "beer_sensor_id";
