@@ -90,6 +90,9 @@ void PidWebServer::setupWebHandlers() {
   _server->on(
       "/api/status", HTTP_GET,
       std::bind(&PidWebServer::webHandleStatus, this, std::placeholders::_1));
+  _server->on(
+      "/api/temps", HTTP_GET,
+      std::bind(&PidWebServer::webHandleTemps, this, std::placeholders::_1));
 
   AsyncCallbackJsonWebHandler *handler;
   _server->on("/api/config", HTTP_GET,
@@ -209,6 +212,22 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
   obj[PARAM_PID_TIME_SINCE_COOLING] = tempControl.timeSinceCooling();
   obj[PARAM_PID_TIME_SINCE_HEATING] = tempControl.timeSinceHeating();
   obj[PARAM_PID_TIME_SINCE_IDLE] = tempControl.timeSinceIdle();
+
+  response->setLength();
+  request->send(response);
+}
+
+void PidWebServer::webHandleTemps(AsyncWebServerRequest *request) {
+  // Log.notice(F("WEB : webServer callback for /api/temps." CR));
+  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  JsonObject obj = response->getRoot().as<JsonObject>();
+
+  obj[PARAM_PID_BEER_TEMP] = tempControl.getBeerTemperature();
+  obj[PARAM_PID_FRIDGE_TEMP] = tempControl.getFridgeTemperature();
+  obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
+  obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
+  obj[PARAM_PID_TEMP_FORMAT] =
+      String(tempControl.getControlConstants().tempFormat);
 
   response->setLength();
   request->send(response);
