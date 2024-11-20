@@ -136,7 +136,7 @@ void loop() {
       fridge = tempControl.getFridgeTemperature();
     }
 
-    char state[40] = "", mode[40] = "Off";
+    char state[40] = "", mode[40] = "Off", statusBar[80] = "";
 
     switch (tempControl.getMode()) {
       case ControllerMode::beerConstant:
@@ -187,7 +187,13 @@ void loop() {
       } break;
     }
 
-    myDisplay.updateTemperatures(mode, state, beer, fridge,
+    if(!myWifi.isConnected() ) {
+      snprintf(statusBar, sizeof(statusBar), "Not connected"); 
+    } else {
+      snprintf(statusBar, sizeof(statusBar), "%s ip: %s %d", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI()); 
+    }
+
+    myDisplay.updateTemperatures(mode, state, statusBar, beer, fridge,
                                  myConfig.getTempFormat());
     tempControl.loop();
   }

@@ -116,7 +116,7 @@ void Display::clear(uint32_t color) {
   delay(1);
 }
 
-void Display::updateTemperatures(const char *mode, const char *state,
+void Display::updateTemperatures(const char *mode, const char *state, const char* statusBar,
                                  float beerTemp, float chamberTemp,
                                  char tempFormat) {
 #if defined(ENABLE_LVGL)
@@ -125,6 +125,7 @@ void Display::updateTemperatures(const char *mode, const char *state,
   lvglData._tempFormat = tempFormat;
   lvglData._dataMode = mode;
   lvglData._dataState = state;
+  lvglData._dataStatusBar = statusBar;
 
   char s[20];
 
@@ -260,10 +261,13 @@ void Display::createUI() {
   // Create components
   lv_style_init(&lvglData._styleLeft);
   lv_style_init(&lvglData._styleCenter);
+  lv_style_init(&lvglData._styleStatusBar);
   lv_style_set_text_font(&lvglData._styleLeft, &lv_font_montserrat_18);
   lv_style_set_text_font(&lvglData._styleCenter, &lv_font_montserrat_18);
+  lv_style_set_text_font(&lvglData._styleStatusBar, &lv_font_montserrat_12);
   lv_style_set_text_align(&lvglData._styleLeft, LV_TEXT_ALIGN_LEFT);
   lv_style_set_text_align(&lvglData._styleCenter, LV_TEXT_ALIGN_CENTER);
+  lv_style_set_text_align(&lvglData._styleStatusBar, LV_TEXT_ALIGN_CENTER);
   // lv_style_set_outline_width(&_styleLeft, 1);
   // lv_style_set_outline_width(&_styleCenter, 1);
 
@@ -279,15 +283,17 @@ void Display::createUI() {
   lvglData._txtChamberTemp =
       createLabel("", 110, 119, 90, 26, &lvglData._styleLeft);
   lvglData._txtTargetTemp =
-      createLabel("", 110, 180, 90, 26, &lvglData._styleCenter);
+      createLabel("", 110, 171, 90, 26, &lvglData._styleCenter);
+  lvglData._txtStatusBar =
+      createLabel("", 5, 214, 305, 16, &lvglData._styleStatusBar);
 
   lvglData._btnBeer =
       createButton("Beer", 205, 10, 100, 44, btnBeerEventHandler);
   lvglData._btnChamber =
       createButton("Chamber", 205, 60, 100, 44, btnChamberEventHandler);
   lvglData._btnOff = createButton("Off", 205, 110, 100, 44, btnOffEventHandler);
-  lvglData._btnUp = createButton("+", 230, 170, 44, 44, btnUpEventHandler);
-  lvglData._btnDown = createButton("-", 30, 170, 44, 44, btnDownEventHandler);
+  lvglData._btnUp = createButton("+", 230, 161, 44, 44, btnUpEventHandler);
+  lvglData._btnDown = createButton("-", 30, 161, 44, 44, btnDownEventHandler);
 
   xTaskCreatePinnedToCore(lvgl_loop_handler,  // Function to implement the task
                           "LVGL_Handler",     // Name of the task
@@ -416,6 +422,7 @@ void lvgl_loop_handler(void *parameter) {
       updateLabel(lvglData._txtMode, lvglData._dataMode.c_str());
       updateLabel(lvglData._txtBeerTemp, lvglData._dataBeerTemp.c_str());
       updateLabel(lvglData._txtChamberTemp, lvglData._dataChamberTemp.c_str());
+      updateLabel(lvglData._txtStatusBar, lvglData._dataStatusBar.c_str());
     }
 
     lv_task_handler();

@@ -38,6 +38,7 @@ struct LVGL_Data {
   lv_obj_t* _txtBeerTemp;
   lv_obj_t* _txtChamberTemp;
   lv_obj_t* _txtTargetTemp;
+  lv_obj_t* _txtStatusBar;
   lv_obj_t* _btnBeer;
   lv_obj_t* _btnChamber;
   lv_obj_t* _btnOff;
@@ -45,6 +46,7 @@ struct LVGL_Data {
   lv_obj_t* _btnDown;
   lv_style_t _styleLeft;
   lv_style_t _styleCenter;
+  lv_style_t _styleStatusBar;
   lv_style_t _styleBtnSelected;
   lv_style_t _styleBtnStandard;
   lv_display_t* _display;
@@ -52,6 +54,7 @@ struct LVGL_Data {
   String _dataState;
   String _dataBeerTemp;
   String _dataChamberTemp;
+  String _dataStatusBar;
   volatile float _targetTemperature;
   volatile char _mode;
   char _tempFormat = 'C';
@@ -95,7 +98,7 @@ class Display {
   void setTargetTemperature(float t) { lvglData._targetTemperature = t; }
   // char getMode() { return lvglData._mode; }
   void setMode(char m) { lvglData._mode = m; }
-  void updateTemperatures(const char* mode, const char* state, float beerTemp,
+  void updateTemperatures(const char* mode, const char* state, const char* statusBar, float beerTemp,
                           float chamberTemp, char tempFormat);
 
   // LVGL methods
