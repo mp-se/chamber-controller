@@ -190,7 +190,7 @@ void loop() {
     if(!myWifi.isConnected() ) {
       snprintf(statusBar, sizeof(statusBar), "Not connected"); 
     } else {
-      snprintf(statusBar, sizeof(statusBar), "%s ip: %s %d", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI()); 
+      snprintf(statusBar, sizeof(statusBar), "ssid: %s ip: %s, rssi: %d", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI()); 
     }
 
     myDisplay.updateTemperatures(mode, state, statusBar, beer, fridge,
