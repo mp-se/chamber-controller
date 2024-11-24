@@ -191,27 +191,29 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
   obj[PARAM_UPTIME_DAYS] = myUptime.getDays();
 
   // Pid controller
-  obj[PARAM_PID_MODE] = String(tempControl.getMode());
-  obj[PARAM_PID_STATE] = tempControl.getState();
-  obj[PARAM_PID_STATE_STRING] = tempControl.getStateAsString();
-  obj[PARAM_PID_BEER_TEMP] = tempControl.getBeerTemperature();
-  obj[PARAM_PID_BEER_TEMP_CONNECTED] =
-      tempControl.getBeerSensor()->isConnected();
-  obj[PARAM_PID_FRIDGE_TEMP] = tempControl.getFridgeTemperature();
-  obj[PARAM_PID_FRIDGE_TEMP_CONNECTED] =
-      tempControl.getFridgeSensor()->isConnected();
-  obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
-  obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
-  obj[PARAM_PID_TEMP_FORMAT] =
-      String(tempControl.getControlConstants().tempFormat);
-  obj[PARAM_PID_COOLING_ACTUATOR_ACTIVE] =
-      tempControl.getCoolingActuator()->isActive();
-  obj[PARAM_PID_HEATING_ACTUATOR_ACTIVE] =
-      tempControl.getHeatingActuator()->isActive();
-  obj[PARAM_PID_WAIT_TIME] = tempControl.getWaitTime();
-  obj[PARAM_PID_TIME_SINCE_COOLING] = tempControl.timeSinceCooling();
-  obj[PARAM_PID_TIME_SINCE_HEATING] = tempControl.timeSinceHeating();
-  obj[PARAM_PID_TIME_SINCE_IDLE] = tempControl.timeSinceIdle();
+  if(runMode == RunMode::pidMode) {
+    obj[PARAM_PID_MODE] = String(tempControl.getMode());
+    obj[PARAM_PID_STATE] = tempControl.getState();
+    obj[PARAM_PID_STATE_STRING] = tempControl.getStateAsString();
+    obj[PARAM_PID_BEER_TEMP] = tempControl.getBeerTemperature();
+    obj[PARAM_PID_BEER_TEMP_CONNECTED] =
+        tempControl.getBeerSensor()->isConnected();
+    obj[PARAM_PID_FRIDGE_TEMP] = tempControl.getFridgeTemperature();
+    obj[PARAM_PID_FRIDGE_TEMP_CONNECTED] =
+        tempControl.getFridgeSensor()->isConnected();
+    obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
+    obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
+    obj[PARAM_PID_TEMP_FORMAT] =
+        String(tempControl.getControlConstants().tempFormat);
+    obj[PARAM_PID_COOLING_ACTUATOR_ACTIVE] =
+        tempControl.getCoolingActuator()->isActive();
+    obj[PARAM_PID_HEATING_ACTUATOR_ACTIVE] =
+        tempControl.getHeatingActuator()->isActive();
+    obj[PARAM_PID_WAIT_TIME] = tempControl.getWaitTime();
+    obj[PARAM_PID_TIME_SINCE_COOLING] = tempControl.timeSinceCooling();
+    obj[PARAM_PID_TIME_SINCE_HEATING] = tempControl.timeSinceHeating();
+    obj[PARAM_PID_TIME_SINCE_IDLE] = tempControl.timeSinceIdle();
+  }
 
   response->setLength();
   request->send(response);
@@ -222,12 +224,14 @@ void PidWebServer::webHandleTemps(AsyncWebServerRequest *request) {
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
 
-  obj[PARAM_PID_BEER_TEMP] = tempControl.getBeerTemperature();
-  obj[PARAM_PID_FRIDGE_TEMP] = tempControl.getFridgeTemperature();
-  obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
-  obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
-  obj[PARAM_PID_TEMP_FORMAT] =
-      String(tempControl.getControlConstants().tempFormat);
+  if(runMode == RunMode::pidMode) {
+    obj[PARAM_PID_BEER_TEMP] = tempControl.getBeerTemperature();
+    obj[PARAM_PID_FRIDGE_TEMP] = tempControl.getFridgeTemperature();
+    obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
+    obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
+    obj[PARAM_PID_TEMP_FORMAT] =
+        String(tempControl.getControlConstants().tempFormat);
+  }
 
   response->setLength();
   request->send(response);
@@ -235,7 +239,7 @@ void PidWebServer::webHandleTemps(AsyncWebServerRequest *request) {
 
 void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
                                  JsonVariant &json) {
-  if (!isAuthenticated(request)) {
+  if (!isAuthenticated(request) || runMode != RunMode::pidMode) {
     return;
   }
 
@@ -264,7 +268,7 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
         break;
 
       case ControllerMode::fridgeConstant:
-        if (myConfig.isBeerSensorEnabled() &&
+        if (myConfig.isFridgeSensorEnabled() &&
             (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
 
           setNewControllerMode(ControllerMode::fridgeConstant, newTemp);
@@ -301,7 +305,8 @@ void PidWebServer::webHandleControlConstants(AsyncWebServerRequest *request) {
   Log.notice(F("WEB : webServer callback for /api/pid/cc." CR));
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
-  tempControl.getControlConstants().toJsonReadable(obj);
+  if(runMode == RunMode::pidMode)
+    tempControl.getControlConstants().toJsonReadable(obj);
   response->setLength();
   request->send(response);
 }
@@ -314,7 +319,8 @@ void PidWebServer::webHandleControlSettings(AsyncWebServerRequest *request) {
   Log.notice(F("WEB : webServer callback for /api/pid/cs." CR));
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
-  tempControl.getControlSettings().toJsonReadable(obj);
+  if(runMode == RunMode::pidMode)
+    tempControl.getControlSettings().toJsonReadable(obj);
   response->setLength();
   request->send(response);
 }
@@ -327,7 +333,8 @@ void PidWebServer::webHandleControlVariables(AsyncWebServerRequest *request) {
   Log.notice(F("WEB : webServer callback for /api/pid/cv." CR));
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
-  tempControl.getControlVariables().toJsonReadable(obj);
+  if(runMode == RunMode::pidMode)
+    tempControl.getControlVariables().toJsonReadable(obj);
   response->setLength();
   request->send(response);
 }
@@ -340,7 +347,8 @@ void PidWebServer::webHandleMinTimes(AsyncWebServerRequest *request) {
   Log.notice(F("WEB : webServer callback for /api/pid/mt." CR));
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
-  tempControl.getMinTimes().toJsonReadable(obj);
+  if(runMode == RunMode::pidMode)
+    tempControl.getMinTimes().toJsonReadable(obj);
   response->setLength();
   request->send(response);
 }
