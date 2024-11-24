@@ -116,6 +116,18 @@ void Display::clear(uint32_t color) {
   delay(1);
 }
 
+void Display::updateButtons(bool beerEnabled, bool chamberEnabled) {
+  if(!beerEnabled)
+    lv_obj_add_flag( lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
+  else
+    lv_obj_remove_flag( lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
+
+  if(!chamberEnabled)
+    lv_obj_add_flag( lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
+  else
+    lv_obj_remove_flag( lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
+}
+
 void Display::updateTemperatures(const char *mode, const char *state, const char* statusBar,
                                  float beerTemp, float chamberTemp,
                                  char tempFormat) {

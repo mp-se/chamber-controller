@@ -135,6 +135,8 @@ void runLoop() {
 
     // Log.notice(F("Loop: Running temp control." CR));
 
+    myDisplay.updateButtons(strlen(myConfig.getBeerSensorId()), strlen(myConfig.getFridgeSensorId()));
+
     float beer = NAN, fridge = NAN;
 
     if (!tempControl.isDefaultBeerSensor() &&

@@ -94,12 +94,12 @@ class Display {
   void setRotation(Rotation rotation);
 
   // Misc methods
-  // float getTargetTemperature() { return lvglData._targetTemperature; }
   void setTargetTemperature(float t) { lvglData._targetTemperature = t; }
-  // char getMode() { return lvglData._mode; }
   void setMode(char m) { lvglData._mode = m; }
   void updateTemperatures(const char* mode, const char* state, const char* statusBar, float beerTemp,
                           float chamberTemp, char tempFormat);
+
+  void updateButtons(bool beerEnabled, bool chamberEnabled);
 
   // LVGL methods
   bool getTouch(uint16_t* x, uint16_t* y);  // Check for touch callback
