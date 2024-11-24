@@ -58,6 +58,8 @@ TempSensor *fridgeSensor = NULL;
 TempSensor *beerSensor = NULL;
 Display myDisplay;
 
+RunMode runMode = RunMode::pidMode;
+
 void setup() {
   delay(2000);
 
@@ -79,9 +81,11 @@ void setup() {
 
   myWifi.init();
   if (!myWifi.hasConfig() || myWifi.isDoubleResetDetected()) {
+    runMode = RunMode::wifiSetupMode;
     Log.notice(
         F("Main: Missing wifi config or double reset detected, entering wifi "
           "setup." CR));
+    myDisplay.printLineCentered(2, "Entering WIFI setup");
     myWebServer.setWifiSetup(true);
     myWifi.startAP();
   } else {
@@ -90,21 +94,28 @@ void setup() {
     myWifi.timeSync();
   }
 
-  myDisplay.printLineCentered(2, "Configuring Temp Control");
-
   myWebServer.setupWebServer();
   mySerialWebSocket.begin(myWebServer.getWebServer(), &EspSerial);
   mySerial.begin(&mySerialWebSocket);
-
   oneWire.begin(Config::Pins::oneWirePin);
 
-  // Configure temp controller
-  configureTempControl();
+  switch(runMode) {
+    case RunMode::pidMode:
+      myDisplay.printLineCentered(2, "Configuring Temp Control");
 
-  // Create graphical UI
-  myDisplay.createUI();
-  myDisplay.setTargetTemperature(myConfig.getTargetTemperature());
-  myDisplay.setMode(myConfig.getControllerMode());
+      // Configure temp controller
+      configureTempControl();
+
+      // Create graphical UI
+      myDisplay.createUI();
+      myDisplay.setTargetTemperature(myConfig.getTargetTemperature());
+      myDisplay.setMode(myConfig.getControllerMode());
+    break;
+
+    case RunMode::wifiSetupMode:
+    break;
+  }
+
   Log.notice(F("Main: Setup is completed." CR));
 }
 
@@ -112,7 +123,7 @@ LoopTimer tempControlLoop(1000);
 LoopTimer validateLoop(10000);
 LoopTimer pushLoop(30000);
 
-void loop() {
+void runLoop() {
   if (!myWifi.isConnected()) {
     Log.notice(F("Loop: No wifi connection, attempting to reconnect." CR));
     myWifi.connect(WIFI_AP_STA);
@@ -234,11 +245,6 @@ void loop() {
       myPush.sendInfluxDb2(s);
     }
   }
-
-  myUptime.calculate();
-  myWifi.loop();
-  myWebServer.loop();
-  mySerialWebSocket.loop();
 }
 
 void setNewControllerMode(char mode, float temp) {
@@ -251,6 +257,22 @@ void setNewControllerMode(char mode, float temp) {
   tempControl.setMode(mode);
   tempControl.setBeerTargetTemperature(temp);
   tempControl.setFridgeTargetTemperature(temp);
+}
+
+void loop() {
+  switch(runMode) {
+    case RunMode::pidMode:
+      runLoop();
+    break;
+
+    case RunMode::wifiSetupMode:
+    break;
+  }
+
+  myUptime.calculate();
+  myWifi.loop();
+  myWebServer.loop();
+  mySerialWebSocket.loop();
 }
 
 void validateTempControl() {
@@ -347,11 +369,11 @@ void configureTempControl() {
 
   // Create the actuators
   if (!actuatorCooling) {
-    actuatorCooling = new DigitalPinActuator(Config::Pins::coolingPin, false);
+    actuatorCooling = new DigitalPinActuator(Config::Pins::coolingPin, myConfig.isPinsInverted());
   }
 
   if (!actuatorHeating) {
-    actuatorHeating = new DigitalPinActuator(Config::Pins::heatingPin, false);
+    actuatorHeating = new DigitalPinActuator(Config::Pins::heatingPin, myConfig.isPinsInverted());
   }
 
   if (myConfig.isCoolingEnabled()) {

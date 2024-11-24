@@ -24,6 +24,12 @@ SOFTWARE.
 #ifndef SRC_PIDMAIN_HPP_
 #define SRC_PIDMAIN_HPP_
 
+enum RunMode {
+  pidMode = 0,
+  wifiSetupMode = 1,
+};
+extern RunMode runMode;
+
 void configureTempControl();
 void validateTempControl();
 void setNewControllerMode(char mode, float temp);
@@ -34,5 +40,6 @@ constexpr auto PARAM_CONTROLLER_MODE = "controller_mode";
 constexpr auto PARAM_TARGET_TEMPERATURE = "target_temperature";
 constexpr auto PARAM_ENABLE_COOLING = "enable_cooling";
 constexpr auto PARAM_ENABLE_HEATING = "enable_heating";
+constexpr auto PARAM_INVERT_PINS = "invert_pins";
 
 #endif  // SRC_PIDMAIN_HPP_
