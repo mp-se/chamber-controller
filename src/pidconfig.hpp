@@ -35,6 +35,7 @@ class PidConfig : public BaseConfig {
   float _targetTemperature = 5;
   bool _enableCooling = false;
   bool _enableHeating = false;
+  bool _invertPins = true;
 
   // TODO: Add option to define which MIN_TIMES profile to use.
   // TODO: Add offset for beer and fridge sensors
@@ -71,6 +72,12 @@ class PidConfig : public BaseConfig {
   bool isHeatingEnabled() { return _enableHeating; }
   void setHeatingEnabled(bool b) {
     _enableHeating = b;
+    _saveNeeded = true;
+  }
+
+  bool isPinsInverted() { return _invertPins; }
+  void setPinsInverted(bool b) {
+    _invertPins = b;
     _saveNeeded = true;
   }
 

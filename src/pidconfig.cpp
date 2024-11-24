@@ -45,6 +45,7 @@ void PidConfig::createJson(JsonObject& doc) {
   doc[PARAM_TARGET_TEMPERATURE] = getTargetTemperature();
   doc[PARAM_ENABLE_COOLING] = isCoolingEnabled();
   doc[PARAM_ENABLE_HEATING] = isHeatingEnabled();
+  doc[PARAM_INVERT_PINS] = isPinsInverted();
 }
 
 void PidConfig::parseJson(JsonObject& doc) {
@@ -69,6 +70,8 @@ void PidConfig::parseJson(JsonObject& doc) {
     setCoolingEnabled(doc[PARAM_ENABLE_COOLING].as<bool>());
   if (!doc[PARAM_ENABLE_HEATING].isNull())
     setHeatingEnabled(doc[PARAM_ENABLE_HEATING].as<bool>());
+  if (!doc[PARAM_INVERT_PINS].isNull())
+    setPinsInverted(doc[PARAM_INVERT_PINS].as<bool>());
 }
 
 // EOF
