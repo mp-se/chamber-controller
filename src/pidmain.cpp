@@ -76,6 +76,7 @@ void setup() {
   myDisplay.printLineCentered(1, "Chamber Controller");
   myDisplay.printLineCentered(2, "Starting");
 
+#if !defined(WOKWI)
   myDisplay.calibrateTouch();
   myDisplay.printLineCentered(2, "Connecting to WIFI");
 
@@ -93,6 +94,15 @@ void setup() {
     myWifi.connect(WIFI_AP_STA);
     myWifi.timeSync();
   }
+#else
+  myConfig.setWifiSSID("Wokwi-GUEST", 0);
+  myConfig.setWifiPass("", 0);
+  myConfig.setFridgeSensorId("123456");
+  myConfig.setCoolingEnabled(true);
+
+  myWifi.connect(WIFI_AP_STA);
+  myWifi.timeSync();
+#endif
 
   myWebServer.setupWebServer();
   mySerialWebSocket.begin(myWebServer.getWebServer(), &EspSerial);
@@ -257,8 +267,10 @@ void setNewControllerMode(char mode, float temp) {
   myConfig.saveFile();
 
   tempControl.setMode(mode);
-  tempControl.setBeerTargetTemperature(temp);
-  tempControl.setFridgeTargetTemperature(temp);
+  if(mode == ControllerMode::beerConstant)
+    tempControl.setBeerTargetTemperature(temp);
+  else if(mode == ControllerMode::fridgeConstant)
+    tempControl.setFridgeTargetTemperature(temp);
 }
 
 void loop() {
