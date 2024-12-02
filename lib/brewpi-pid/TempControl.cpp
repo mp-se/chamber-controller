@@ -102,6 +102,7 @@ void TempControl::updateSensor(TempSensor* sensor) {
 
   sensor->update();
   if (!sensor->isConnected()) {
+    Log.warning(F("BREW: TempControl sensor is not connected, trying to initialize." CR));
     sensor->init();
   }
 }
@@ -118,6 +119,8 @@ void TempControl::updatePID() {
 
   static unsigned char integralUpdateCounter = 0;
   if (modeIsBeer()) {
+    Log.verbose(F("BREW: Updating PID, mode is beer." CR));
+
     if (_cs.beerSetting == INVALID_TEMP) {
       // beer setting is not updated yet
       // set fridge to unknown too
@@ -130,6 +133,7 @@ void TempControl::updatePID() {
     if (!_beerSensor->isConnected() || !_fridgeSensor->isConnected()) {
       // The question here is if we should reset the PID (or decrement some kind
       // of counter to reset the PID)
+      Log.warning(F("BREW: No sensor is connected, unable to get temperatures." CR));
       return;
     }
 
@@ -401,7 +405,8 @@ void TempControl::updateEstimatedPeak(uint16_t timeLimit, temperature estimator,
 void TempControl::updateOutputs() {
   if (_cs.mode == ControllerMode::test) return;
 
-  // cameraLight.update();
+  Log.verbose(F("BREW: TempControl is updating outputs." CR));
+
   bool heating = stateIsHeating();
   bool cooling = stateIsCooling();
   _cooler->setActive(cooling);
