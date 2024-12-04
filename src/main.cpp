@@ -33,7 +33,7 @@ SOFTWARE.
 #include <log.hpp>
 #include <looptimer.hpp>
 #include <pidconfig.hpp>
-#include <pidmain.hpp>
+#include <main.hpp>
 #include <pidpush.hpp>
 #include <pidwebserver.hpp>
 #include <serialws.hpp>

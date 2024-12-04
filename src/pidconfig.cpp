@@ -25,7 +25,7 @@ SOFTWARE.
 
 #include <espframework.hpp>
 #include <pidconfig.hpp>
-#include <pidmain.hpp>
+#include <main.hpp>
 
 PidConfig::PidConfig(String baseMDNS, String fileName)
     : BaseConfig(baseMDNS, fileName) {}

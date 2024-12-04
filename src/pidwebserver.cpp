@@ -30,7 +30,7 @@ SOFTWARE.
 #include <espframework.hpp>
 #include <log.hpp>
 #include <pidconfig.hpp>
-#include <pidmain.hpp>
+#include <main.hpp>
 #include <pidpush.hpp>
 #include <pidwebserver.hpp>
 #include <uptime.hpp>
