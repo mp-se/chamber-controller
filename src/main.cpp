@@ -181,33 +181,57 @@ void runLoop() {
             tempControl.timeSinceCooling() < tempControl.timeSinceHeating()
                 ? tempControl.timeSinceCooling()
                 : tempControl.timeSinceHeating();
-        snprintf(state, sizeof(state), "Idle %02dm %02ds", t / 60, t % 60);
+
+        if(t>3600)
+          snprintf(state, sizeof(state), "Idle %02dh %02dm", t / 3600, (t % 3600) / 60);
+        else
+          snprintf(state, sizeof(state), "Idle %02dm %02ds", t / 60, t % 60);
       } break;
       case ControllerState::STATE_OFF:
         break;
       case ControllerState::HEATING: {
-        snprintf(state, sizeof(state), "Heating %02dm %02ds",
-                 tempControl.timeSinceIdle() / 60,
-                 tempControl.timeSinceIdle() % 60);
+        if(tempControl.timeSinceIdle()>3600)
+          snprintf(state, sizeof(state), "Heating %02dh %02dm",
+                  tempControl.timeSinceIdle() / 3600,
+                  (tempControl.timeSinceIdle() % 3600) / 60);
+        else
+          snprintf(state, sizeof(state), "Heating %02dm %02ds",
+                  tempControl.timeSinceIdle() / 60,
+                  tempControl.timeSinceIdle() % 60);
       } break;
       case ControllerState::COOLING: {
-        snprintf(state, sizeof(state), "Cooling %02dm %02ds",
-                 tempControl.timeSinceIdle() / 60,
-                 tempControl.timeSinceIdle() % 60);
+        if(tempControl.timeSinceIdle()>3600)
+          snprintf(state, sizeof(state), "Cooling %02dh %02dm",
+                  tempControl.timeSinceIdle() / 3600,
+                  (tempControl.timeSinceIdle() % 3600) / 60);
+        else
+          snprintf(state, sizeof(state), "Cooling %02dm %02ds",
+                  tempControl.timeSinceIdle() / 60,
+                  tempControl.timeSinceIdle() % 60);
       } break;
       case ControllerState::COOLING_MIN_TIME:
       case ControllerState::HEATING_MIN_TIME: {
-        snprintf(state, sizeof(state), "Waiting %02dm %02ds",
-                 tempControl.timeSinceIdle() / 60,
-                 tempControl.timeSinceIdle() % 60);
+        if(tempControl.timeSinceIdle()>3600)
+          snprintf(state, sizeof(state), "Waiting %02dh %02dm",
+                  tempControl.timeSinceIdle() / 3600,
+                  (tempControl.timeSinceIdle() % 3600) / 60);
+        else
+          snprintf(state, sizeof(state), "Waiting %02dm %02ds",
+                  tempControl.timeSinceIdle() / 60,
+                  tempControl.timeSinceIdle() % 60);
       } break;
 
       case ControllerState::WAITING_TO_HEAT:
       case ControllerState::WAITING_TO_COOL:
       case ControllerState::WAITING_FOR_PEAK_DETECT: {
-        snprintf(state, sizeof(state), "Waiting %02dm %02ds",
-                 tempControl.getWaitTime() / 60,
-                 tempControl.getWaitTime() % 60);
+        if(tempControl.timeSinceIdle()>3600)
+          snprintf(state, sizeof(state), "Waiting %02dh %02dm",
+                  tempControl.getWaitTime() / 3600,
+                  (tempControl.getWaitTime() % 3600) / 60);
+        else
+          snprintf(state, sizeof(state), "Waiting %02dm %02ds",
+                  tempControl.getWaitTime() / 60,
+                  tempControl.getWaitTime() % 60);
       } break;
     }
 
