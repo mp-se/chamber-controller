@@ -21,13 +21,13 @@
 #include <log.hpp>
 
 temperature FixedFilter::add(temperature val) {
-  // Log.info(F("BREW: Adding %d to FixedFilter." CR), val);
+  Log.verbose(F("BREW: Adding %d to FixedFilter." CR), val);
   temperature_precise returnVal = addDoublePrecision(tempRegularToPrecise(val));
   return tempPreciseToRegular(returnVal);
 }
 
 temperature_precise FixedFilter::addDoublePrecision(temperature_precise val) {
-  // Log.info(F("BREW: Adding %d (double) to FixedFilter." CR), val);
+  Log.verbose(F("BREW: Adding %d (double) to FixedFilter." CR), val);
 
   _xv[2] = _xv[1];
   _xv[1] = _xv[0];
@@ -48,7 +48,7 @@ temperature_precise FixedFilter::addDoublePrecision(temperature_precise val) {
 }
 
 void FixedFilter::init(temperature val) {
-  // Log.info(F("BREW: Initialize FixedFilter using %d." CR), val);
+  Log.verbose(F("BREW: Initialize FixedFilter using %d." CR), val);
 
   _xv[0] = val;
   _xv[0] = tempRegularToPrecise(

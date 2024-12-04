@@ -56,7 +56,7 @@ constexpr auto KEY_TEMP_FORMAT = "temp_format";
 ControlConstants::ControlConstants() { setDefaults(); }
 
 void ControlConstants::setDefaults() {
-  // Log.info(F("BREW: Using default ControlConstants." CR));
+  Log.verbose(F("BREW: Using default ControlConstants." CR));
 
   tempSettingMin = intToTemp(1);   // +1 deg Celsius
   tempSettingMax = intToTemp(30);  // +30 deg Celsius

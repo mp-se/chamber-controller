@@ -37,7 +37,7 @@ constexpr auto KEY_MODE = "mode";
 ControlSettings::ControlSettings() { setDefaults(); }
 
 void ControlSettings::setDefaults() {
-  // Log.info(F("BREW: Using default ControlSettings." CR));
+  Log.verbose(F("BREW: Using default ControlSettings." CR));
 
   beerSetting = intToTemp(20);
   fridgeSetting = intToTemp(20);

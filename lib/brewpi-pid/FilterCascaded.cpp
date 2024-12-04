@@ -26,14 +26,14 @@
 #include <log.hpp>
 
 CascadedFilter::CascadedFilter() {
-  // Log.verbose(F("BREW: Creating CascadedFilter." CR));
+  Log.verbose(F("BREW: Creating CascadedFilter." CR));
 
   setCoefficients(2);
 }
 
 void CascadedFilter::setCoefficients(uint8_t bValue) {
-  // Log.info(F("BREW: Setting coefficients on CascadedFilter to %d." CR),
-  // bValue);
+  Log.verbose(F("BREW: Setting coefficients on CascadedFilter to %d." CR),
+  bValue);
 
   for (uint8_t i = 0; i < numFilterSections; i++) {
     sections[i].setCoefficients(bValue);
@@ -41,7 +41,7 @@ void CascadedFilter::setCoefficients(uint8_t bValue) {
 }
 
 temperature CascadedFilter::add(temperature val) {
-  // Log.info(F("BREW: Adding temp %d to CascadedFilter." CR), val);
+  Log.verbose(F("BREW: Adding temp %d to CascadedFilter." CR), val);
 
   temperature_precise valDoublePrecision = tempRegularToPrecise(val);
   valDoublePrecision = addDoublePrecision(valDoublePrecision);
@@ -50,7 +50,7 @@ temperature CascadedFilter::add(temperature val) {
 
 temperature_precise CascadedFilter::addDoublePrecision(
     temperature_precise val) {
-  // Log.info(F("BREW: Adding temp %d (double) to CascadedFilter." CR), val);
+  Log.verbose(F("BREW: Adding temp %d (double) to CascadedFilter." CR), val);
 
   temperature_precise input = val;
 
@@ -72,7 +72,7 @@ temperature_precise CascadedFilter::readPrevOutputDoublePrecision() {
 }
 
 void CascadedFilter::init(temperature val) {
-  // Log.info(F("BREW: Initialize CascadedFilter with %d." CR), val);
+  Log.verbose(F("BREW: Initialize CascadedFilter with %d." CR), val);
 
   for (uint8_t i = 0; i < numFilterSections; i++) {
     sections[i].init(val);

@@ -108,14 +108,14 @@ void TempControl::updateSensor(TempSensor* sensor) {
 }
 
 void TempControl::updateTemperatures() {
-  // Log.verbose(F("BREW: Updating temp sensors" CR));
+  Log.verbose(F("BREW: Updating temp sensors" CR));
 
   updateSensor(_beerSensor);
   updateSensor(_fridgeSensor);
 }
 
 void TempControl::updatePID() {
-  // Log.verbose(F("BREW: Updating PID for TempControl" CR));
+  Log.verbose(F("BREW: Updating PID for TempControl" CR));
 
   static unsigned char integralUpdateCounter = 0;
   if (modeIsBeer()) {
@@ -234,7 +234,7 @@ void TempControl::updatePID() {
 }
 
 void TempControl::updateState() {
-  // Log.verbose(F("BREW: Updating TempControl state" CR));
+  Log.verbose(F("BREW: Updating TempControl state" CR));
 
   // update state
   bool stayIdle = false;

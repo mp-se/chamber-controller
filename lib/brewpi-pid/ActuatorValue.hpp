@@ -26,18 +26,18 @@
 class ValueActuator : public Actuator {
  public:
   ValueActuator() {
-    // Log.verbose(F("BREW: Creating ValueActuator state=false." CR));
+    Log.verbose(F("BREW: Creating ValueActuator state=false." CR));
     _state = false;
   }
   explicit ValueActuator(bool initial) {
-    // Log.verbose(F("BREW: Creating ValueActuator state=&s." CR),
-                // initial ? "true" : "false");
+    Log.verbose(F("BREW: Creating ValueActuator state=&s." CR),
+                initial ? "true" : "false");
     _state = initial;
   }
 
   virtual void setActive(bool active) {
-    // Log.info(F("BREW: ValueActuator set active=%s." CR),
-            //  active ? "true" : "false");
+    Log.verbose(F("BREW: ValueActuator set active=%s." CR),
+             active ? "true" : "false");
     _state = active;
   }
   virtual bool isActive() const { return _state; }

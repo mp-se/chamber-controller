@@ -25,14 +25,14 @@
 #include <log.hpp>
 
 void TempSensor::init() {
-  // Log.verbose(F("BREW: Initializing TempSensor." CR));
+  Log.verbose(F("BREW: Initializing TempSensor." CR));
 
   if (_sensor && _sensor->init() &&
       (failedReadCount < 0 || failedReadCount > 60)) {
     temperature temp = _sensor->read();
 
     if (temp != TEMP_SENSOR_DISCONNECTED) {
-      // Log.info(F("BREW: Initializing TempSensor filters with %d." CR), temp);
+      Log.verbose(F("BREW: Initializing TempSensor filters with %d." CR), temp);
 
       fastFilter.init(temp);
       slowFilter.init(temp);
@@ -47,7 +47,7 @@ void TempSensor::init() {
 }
 
 void TempSensor::update() {
-  // Log.verbose(F("BREW: Updating TempSensor." CR));
+  Log.verbose(F("BREW: Updating TempSensor." CR));
 
   temperature temp;
   if (!_sensor || (temp = _sensor->read()) == TEMP_SENSOR_DISCONNECTED) {
@@ -56,8 +56,8 @@ void TempSensor::update() {
     return;
   }
 
-  // Log.info(F("BREW: Updating TempSensor filters with temp %F." CR),
-  //          tempToDouble(temp, Config::TempFormat::tempDecimals));
+  Log.verbose(F("BREW: Updating TempSensor filters with temp %F." CR),
+           tempToDouble(temp, Config::TempFormat::tempDecimals));
 
   fastFilter.add(temp);
   slowFilter.add(temp);

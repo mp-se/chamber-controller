@@ -44,7 +44,7 @@ MinTimes::MinTimes() {
 }
 
 void MinTimes::setDefaults(MinTimesSettingsChoice choise) {
-  // Log.info(F("BREW: Using default MinTimes, %d." CR), settingsChoice);
+  Log.verbose(F("BREW: Using default MinTimes, %d." CR), settingsChoice);
   settingsChoice = choise;
 
   if (settingsChoice == MIN_TIMES_DEFAULT ||

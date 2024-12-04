@@ -27,16 +27,16 @@
 class AutoOffActuator : public Actuator {
  public:
   AutoOffActuator(uint16_t timeout, Actuator* target) {
-    // Log.verbose(F("BREW: Creating AutoOffActuator timeout=%ds target=%p." CR),
-    //             timeout, target);
+    Log.verbose(F("BREW: Creating AutoOffActuator timeout=%ds target=%p." CR),
+                timeout, target);
     _timeout = timeout;
     _target = target;
     _active = false;
   }
 
   void setActive(bool active) {
-    // Log.info(F("BREW: AutoOffActuator target=%p set active=%s." CR), _target,
-    //          active ? "true" : "false");
+    Log.verbose(F("BREW: AutoOffActuator target=%p set active=%s." CR), _target,
+             active ? "true" : "false");
     _active = active;
     _target->setActive(_active);
     if (_active) _lastActiveTime = ticks.seconds();
@@ -45,7 +45,7 @@ class AutoOffActuator : public Actuator {
   bool isActive() const { return _active; }
 
   void update() {
-    // Log.info(F("BREW: Updating AutoOffActuator target=%p." CR), _target);
+    Log.verbose(F("BREW: Updating AutoOffActuator target=%p." CR), _target);
     if (ticks.timeSince(_lastActiveTime) >= _timeout) setActive(false);
   }
 

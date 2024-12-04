@@ -87,7 +87,7 @@ class FixedFilter {
 
  public:
   FixedFilter() {
-    // Log.verbose(F("BREW: Creating FixedFilter." CR));
+    Log.verbose(F("BREW: Creating FixedFilter." CR));
 
     setCoefficients(20); /* default to a b value of 2 */
   }
@@ -95,8 +95,8 @@ class FixedFilter {
   void init(temperature val);
 
   void setCoefficients(uint8_t bValue) {
-    // Log.verbose(F("BREW: Setting coefficients on FixedFilter to %d." CR),
-    // bValue);
+    Log.verbose(F("BREW: Setting coefficients on FixedFilter to %d." CR),
+    bValue);
 
     _a = bValue * 2 + 4;
     _b = bValue;
