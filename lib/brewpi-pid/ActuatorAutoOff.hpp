@@ -36,7 +36,7 @@ class AutoOffActuator : public Actuator {
 
   void setActive(bool active) {
     Log.verbose(F("BREW: AutoOffActuator target=%p set active=%s." CR), _target,
-             active ? "true" : "false");
+                active ? "true" : "false");
     _active = active;
     _target->setActive(_active);
     if (_active) _lastActiveTime = ticks.seconds();

@@ -49,9 +49,10 @@ class MinTimes {
   uint16_t HEAT_PEAK_DETECT_TIME;
 
   void setDefaults(MinTimesSettingsChoice choise = MIN_TIMES_DEFAULT);
-  // bool save();
-  // bool load();
+  bool save();
+  bool load();
   void toJsonReadable(JsonObject& doc) const;
+  void fromJsonReadable(JsonObject& doc);
 };
 
 #endif  // SRC_MINTIMES_HPP_

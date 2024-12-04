@@ -171,7 +171,8 @@ class TempControl {
     setBeerTemp(doubleToTemp(newTemp));
   }
   void setFridgeTargetTemperature(double newTemp) {
-    Log.info(F("BREW: Setting new fridge target temperature to %F" CR), newTemp);
+    Log.info(F("BREW: Setting new fridge target temperature to %F" CR),
+             newTemp);
 
     setFridgeTemp(doubleToTemp(newTemp));
   }
@@ -183,14 +184,14 @@ class TempControl {
   const MinTimes& getMinTimes() { return _minTimes; }
 
   // Load from disk
-  // void loadSettings();
-  // void loadConstants();
+  void loadSettings();
+  void loadConstants();
 
  private:
-  // void storeSettings();
+  void storeSettings();
   void loadDefaultSettings();
 
-  // void storeConstants();
+  void storeConstants();
   void loadDefaultConstants();
 
   temperature getBeerTemp();

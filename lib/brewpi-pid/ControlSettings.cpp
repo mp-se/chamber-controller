@@ -47,45 +47,60 @@ void ControlSettings::setDefaults() {
                                // handled in TempControl::loadDefaultSettings()
 }
 
-// bool ControlSettings::save() {
-//   JsonDocument doc;
+bool ControlSettings::save() {
+#if defined(BREWPI_ENABLE_SAVE)
+  JsonDocument doc;
 
-//   doc[KEY_BEER_SETTING] = beerSetting;
-//   doc[KEY_FRIDGE_SETTING] = fridgeSetting;
-//   doc[KEY_HEAT_EST] = heatEstimator;
-//   doc[KEY_COOL_EST] = coolEstimator;
-//   doc[KEY_MODE] = String(mode);
+  doc[KEY_BEER_SETTING] = beerSetting;
+  doc[KEY_FRIDGE_SETTING] = fridgeSetting;
+  doc[KEY_HEAT_EST] = heatEstimator;
+  doc[KEY_COOL_EST] = coolEstimator;
+  doc[KEY_MODE] = String(mode);
 
-//   JsonFileSystemHelper file(FILENAME_CONTROL_SETTINGS);
-//   return file.saveJson(doc);
-// }
+  JsonFileSystemHelper file(FILENAME_CONTROL_SETTINGS);
+  return file.saveJson(doc);
+#else
+  return true;
+#endif
+}
 
-// bool ControlSettings::load() {
-//   setDefaults();
+bool ControlSettings::load() {
+#if defined(BREWPI_ENABLE_SAVE)
+  setDefaults();
 
-//   JsonDocument doc;
-//   JsonFileSystemHelper file(FILENAME_CONTROL_SETTINGS);
-//   bool b = file.loadJson(doc);
+  JsonDocument doc;
+  JsonFileSystemHelper file(FILENAME_CONTROL_SETTINGS);
+  bool b = file.loadJson(doc);
 
-//   if (b) {
-//     if (doc[KEY_BEER_SETTING].is<int>()) beerSetting = doc[KEY_BEER_SETTING];
-//     if (doc[KEY_FRIDGE_SETTING].is<int>()) fridgeSetting = doc[KEY_FRIDGE_SETTING];
-//     if (doc[KEY_HEAT_EST].is<int>()) heatEstimator = doc[KEY_HEAT_EST];
-//     if (doc[KEY_COOL_EST].is<int>()) coolEstimator = doc[KEY_COOL_EST];
-//     if (doc[KEY_MODE].is<String>()) mode = doc[KEY_MODE].as<String>().charAt(0);
-//   }
-//   return b;
-// }
+  if (b) {
+    JsonObject obj = doc.as<JsonObject>();
+    fromJsonReadable(obj);
+  }
+  return b;
+#else
+  return true;
+#endif
+}
 
 void ControlSettings::toJsonReadable(JsonObject& doc) const {
   doc[KEY_MODE] = String(mode);
-  doc[KEY_BEER_SETTING] = tempToDouble(beerSetting, Config::TempFormat::tempDecimals);
+  doc[KEY_BEER_SETTING] =
+      tempToDouble(beerSetting, Config::TempFormat::tempDecimals);
   doc[KEY_FRIDGE_SETTING] =
       tempToDouble(fridgeSetting, Config::TempFormat::tempDecimals);
   doc[KEY_HEAT_EST] =
       fixedPointToDouble(heatEstimator, Config::TempFormat::fixedPointDecimals);
   doc[KEY_COOL_EST] =
       fixedPointToDouble(coolEstimator, Config::TempFormat::fixedPointDecimals);
+}
+
+void ControlSettings::fromJsonReadable(JsonObject& doc) {
+  if (doc[KEY_BEER_SETTING].is<int>()) beerSetting = doc[KEY_BEER_SETTING];
+  if (doc[KEY_FRIDGE_SETTING].is<int>())
+    fridgeSetting = doc[KEY_FRIDGE_SETTING];
+  if (doc[KEY_HEAT_EST].is<int>()) heatEstimator = doc[KEY_HEAT_EST];
+  if (doc[KEY_COOL_EST].is<int>()) coolEstimator = doc[KEY_COOL_EST];
+  if (doc[KEY_MODE].is<String>()) mode = doc[KEY_MODE].as<String>().charAt(0);
 }
 
 // EOF

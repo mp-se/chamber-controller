@@ -37,7 +37,7 @@ class ValueActuator : public Actuator {
 
   virtual void setActive(bool active) {
     Log.verbose(F("BREW: ValueActuator set active=%s." CR),
-             active ? "true" : "false");
+                active ? "true" : "false");
     _state = active;
   }
   virtual bool isActive() const { return _state; }

@@ -84,57 +84,45 @@ void MinTimes::setDefaults(MinTimesSettingsChoice choise) {
 #endif
 
   // If custom then we load from disk to change any of the default above.
-  // if (settingsChoice == MIN_TIMES_CUSTOM) {
-  //   load();
-  // }
+  if (settingsChoice == MIN_TIMES_CUSTOM) {
+    load();
+  }
 }
 
-// bool MinTimes::save() {
-//   JsonDocument doc;
+bool MinTimes::save() {
+#if defined(BREWPI_ENABLE_SAVE)
+  JsonDocument doc;
 
-//   JsonObject obj = doc.as<JsonObject>();
-//   toJsonReadable(obj);
-  
-//   JsonFileSystemHelper file(FILENAME_CUSTOM_MIN_TIMES);
-//   return file.saveJson(doc);
-// }
+  JsonObject obj = doc.as<JsonObject>();
+  toJsonReadable(obj);
 
-// bool MinTimes::load() {
-//   setDefaults();
+  JsonFileSystemHelper file(FILENAME_CUSTOM_MIN_TIMES);
+  return file.saveJson(doc);
+#else
+  return true;
+#endif
+}
 
-//   JsonDocument doc;
-//   JsonFileSystemHelper file(FILENAME_CUSTOM_MIN_TIMES);
-//   bool b = file.loadJson(doc);
+bool MinTimes::load() {
+#if defined(BREWPI_ENABLE_SAVE)
+  setDefaults();
 
-//   if (b) {
-//     if (doc[KEY_SETTINGS_CHOICE].is<int>())
-//       settingsChoice = doc[KEY_SETTINGS_CHOICE];
+  JsonDocument doc;
+  JsonFileSystemHelper file(FILENAME_CUSTOM_MIN_TIMES);
+  bool b = file.loadJson(doc);
 
-//     // doc the constants from the JSON Doc
-//     if (doc[KEY_MIN_COOL_OFF_TIME].is<int>())
-//       MIN_COOL_OFF_TIME = doc[KEY_MIN_COOL_OFF_TIME];
-//     if (doc[KEY_MIN_HEAT_OFF_TIME].is<int>())
-//       MIN_HEAT_OFF_TIME = doc[KEY_MIN_HEAT_OFF_TIME];
-//     if (doc[KEY_MIN_COOL_ON_TIME].is<int>())
-//       MIN_COOL_ON_TIME = doc[KEY_MIN_COOL_ON_TIME];
-//     if (doc[KEY_MIN_HEAT_ON_TIME].is<int>())
-//       MIN_HEAT_ON_TIME = doc[KEY_MIN_HEAT_ON_TIME];
-
-//     if (doc[KEY_MIN_COOL_OFF_TIME_FRIDGE_CONSTANT].is<int>())
-//       MIN_COOL_OFF_TIME_FRIDGE_CONSTANT =
-//           doc[KEY_MIN_COOL_OFF_TIME_FRIDGE_CONSTANT];
-//     if (doc[KEY_MIN_SWITCH_TIME].is<int>())
-//       MIN_SWITCH_TIME = doc[KEY_MIN_SWITCH_TIME];
-//     if (doc[KEY_COOL_PEAK_DETECT_TIME].is<int>())
-//       COOL_PEAK_DETECT_TIME = doc[KEY_COOL_PEAK_DETECT_TIME];
-//     if (doc[KEY_HEAT_PEAK_DETECT_TIME].is<int>())
-//       HEAT_PEAK_DETECT_TIME = doc[KEY_HEAT_PEAK_DETECT_TIME];
-//   }
-//   return b;
-// }
+  if (b) {
+    JsonObject obj = doc.as<JsonObject>();
+    fromJsonReadable(obj);
+  }
+  return b;
+#else
+  return true;
+#endif
+}
 
 void MinTimes::toJsonReadable(JsonObject& doc) const {
- doc[KEY_SETTINGS_CHOICE] = settingsChoice;
+  doc[KEY_SETTINGS_CHOICE] = settingsChoice;
   doc[KEY_MIN_COOL_OFF_TIME] = MIN_COOL_OFF_TIME;
   doc[KEY_MIN_HEAT_OFF_TIME] = MIN_HEAT_OFF_TIME;
   doc[KEY_MIN_COOL_ON_TIME] = MIN_COOL_ON_TIME;
@@ -144,6 +132,30 @@ void MinTimes::toJsonReadable(JsonObject& doc) const {
   doc[KEY_MIN_SWITCH_TIME] = MIN_SWITCH_TIME;
   doc[KEY_COOL_PEAK_DETECT_TIME] = COOL_PEAK_DETECT_TIME;
   doc[KEY_HEAT_PEAK_DETECT_TIME] = HEAT_PEAK_DETECT_TIME;
+}
+
+void MinTimes::fromJsonReadable(JsonObject& doc) {
+  if (doc[KEY_SETTINGS_CHOICE].is<int>())
+    settingsChoice = doc[KEY_SETTINGS_CHOICE];
+
+  if (doc[KEY_MIN_COOL_OFF_TIME].is<int>())
+    MIN_COOL_OFF_TIME = doc[KEY_MIN_COOL_OFF_TIME];
+  if (doc[KEY_MIN_HEAT_OFF_TIME].is<int>())
+    MIN_HEAT_OFF_TIME = doc[KEY_MIN_HEAT_OFF_TIME];
+  if (doc[KEY_MIN_COOL_ON_TIME].is<int>())
+    MIN_COOL_ON_TIME = doc[KEY_MIN_COOL_ON_TIME];
+  if (doc[KEY_MIN_HEAT_ON_TIME].is<int>())
+    MIN_HEAT_ON_TIME = doc[KEY_MIN_HEAT_ON_TIME];
+
+  if (doc[KEY_MIN_COOL_OFF_TIME_FRIDGE_CONSTANT].is<int>())
+    MIN_COOL_OFF_TIME_FRIDGE_CONSTANT =
+        doc[KEY_MIN_COOL_OFF_TIME_FRIDGE_CONSTANT];
+  if (doc[KEY_MIN_SWITCH_TIME].is<int>())
+    MIN_SWITCH_TIME = doc[KEY_MIN_SWITCH_TIME];
+  if (doc[KEY_COOL_PEAK_DETECT_TIME].is<int>())
+    COOL_PEAK_DETECT_TIME = doc[KEY_COOL_PEAK_DETECT_TIME];
+  if (doc[KEY_HEAT_PEAK_DETECT_TIME].is<int>())
+    HEAT_PEAK_DETECT_TIME = doc[KEY_HEAT_PEAK_DETECT_TIME];
 }
 
 // EOF

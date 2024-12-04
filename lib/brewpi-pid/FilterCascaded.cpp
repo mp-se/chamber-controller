@@ -33,7 +33,7 @@ CascadedFilter::CascadedFilter() {
 
 void CascadedFilter::setCoefficients(uint8_t bValue) {
   Log.verbose(F("BREW: Setting coefficients on CascadedFilter to %d." CR),
-  bValue);
+              bValue);
 
   for (uint8_t i = 0; i < numFilterSections; i++) {
     sections[i].setCoefficients(bValue);

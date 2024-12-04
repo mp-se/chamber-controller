@@ -41,7 +41,7 @@ class DigitalPinActuator : public Actuator {
 
   inline virtual void setActive(bool active_setting) {
     Log.verbose(F("BREW: Set DigitalPinActuator pin=%d to valule=%s." CR), _pin,
-             active_setting ? "true" : "false");
+                active_setting ? "true" : "false");
     _active = active_setting;
     digitalWrite(_pin, active_setting ^ _invert ? HIGH : LOW);
   }

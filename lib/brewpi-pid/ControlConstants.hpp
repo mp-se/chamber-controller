@@ -54,9 +54,10 @@ class ControlConstants {
   char tempFormat;
 
   void setDefaults();
-  // bool save();
-  // bool load();
+  bool save();
+  bool load();
   void toJsonReadable(JsonObject& doc) const;
+  void fromJsonReadable(JsonObject& doc);
 };
 
 #endif  // SRC_CONTROLCONSTANTS_HPP_

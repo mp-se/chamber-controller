@@ -96,7 +96,7 @@ class FixedFilter {
 
   void setCoefficients(uint8_t bValue) {
     Log.verbose(F("BREW: Setting coefficients on FixedFilter to %d." CR),
-    bValue);
+                bValue);
 
     _a = bValue * 2 + 4;
     _b = bValue;

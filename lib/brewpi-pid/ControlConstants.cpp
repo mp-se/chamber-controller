@@ -95,85 +95,57 @@ void ControlConstants::setDefaults() {
   tempFormat = 'C';
 }
 
-// bool ControlConstants::save() {
-//   JsonDocument doc;
+bool ControlConstants::save() {
+#if defined(BREWPI_ENABLE_SAVE)
+  JsonDocument doc;
 
-//   doc[KEY_TEMP_SETTING_MIN] = tempSettingMin;
-//   doc[KEY_TEMP_SETTING_MAX] = tempSettingMax;
-//   doc[KEY_KP] = Kp;
-//   doc[KEY_KI] = Ki;
-//   doc[KEY_KD] = Kd;
-//   doc[KEY_MAX_ERROR] = iMaxError;
-//   doc[KEY_IDLE_RANGE_HIGH] = idleRangeHigh;
-//   doc[KEY_IDLE_RANGE_LOW] = idleRangeLow;
-//   doc[KEY_HEATING_TARGET_UPPER] = heatingTargetUpper;
-//   doc[KEY_HEATING_TARGET_LOWER] = heatingTargetLower;
-//   doc[KEY_COOLING_TARGET_UPPER] = coolingTargetUpper;
-//   doc[KEY_COOLING_TARGET_LOWER] = coolingTargetLower;
-//   doc[KEY_MAX_HEAT_EST] = maxHeatTimeForEstimate;
-//   doc[KEY_MAX_COOL_EST] = maxCoolTimeForEstimate;
-//   doc[KEY_FRIDGE_FILTER_FAST] = fridgeFastFilter;
-//   doc[KEY_FRIDGE_FILTER_SLOW] = fridgeSlowFilter;
-//   doc[KEY_FRIDGE_FILTER_SLOPE] = fridgeSlopeFilter;
-//   doc[KEY_BEER_FILTER_FAST] = beerFastFilter;
-//   doc[KEY_BEER_FILTER_SLOW] = beerSlowFilter;
-//   doc[KEY_BEER_FILTER_SLOPE] = beerSlopeFilter;
-//   doc[KEY_PID_MAX] = pidMax;
-//   doc[KEY_TEMP_FORMAT] = String(tempFormat);
+  doc[KEY_TEMP_SETTING_MIN] = tempSettingMin;
+  doc[KEY_TEMP_SETTING_MAX] = tempSettingMax;
+  doc[KEY_KP] = Kp;
+  doc[KEY_KI] = Ki;
+  doc[KEY_KD] = Kd;
+  doc[KEY_MAX_ERROR] = iMaxError;
+  doc[KEY_IDLE_RANGE_HIGH] = idleRangeHigh;
+  doc[KEY_IDLE_RANGE_LOW] = idleRangeLow;
+  doc[KEY_HEATING_TARGET_UPPER] = heatingTargetUpper;
+  doc[KEY_HEATING_TARGET_LOWER] = heatingTargetLower;
+  doc[KEY_COOLING_TARGET_UPPER] = coolingTargetUpper;
+  doc[KEY_COOLING_TARGET_LOWER] = coolingTargetLower;
+  doc[KEY_MAX_HEAT_EST] = maxHeatTimeForEstimate;
+  doc[KEY_MAX_COOL_EST] = maxCoolTimeForEstimate;
+  doc[KEY_FRIDGE_FILTER_FAST] = fridgeFastFilter;
+  doc[KEY_FRIDGE_FILTER_SLOW] = fridgeSlowFilter;
+  doc[KEY_FRIDGE_FILTER_SLOPE] = fridgeSlopeFilter;
+  doc[KEY_BEER_FILTER_FAST] = beerFastFilter;
+  doc[KEY_BEER_FILTER_SLOW] = beerSlowFilter;
+  doc[KEY_BEER_FILTER_SLOPE] = beerSlopeFilter;
+  doc[KEY_PID_MAX] = pidMax;
+  doc[KEY_TEMP_FORMAT] = String(tempFormat);
 
-//   JsonFileSystemHelper file(FILENAME_CONTROL_CONSTANTS);
-//   return file.saveJson(doc);
-// }
+  JsonFileSystemHelper file(FILENAME_CONTROL_CONSTANTS);
+  return file.saveJson(doc);
+#else
+  return true;
+#endif
+}
 
-// bool ControlConstants::load() {
-//   setDefaults();
+bool ControlConstants::load() {
+#if defined(BREWPI_ENABLE_SAVE)
+  setDefaults();
 
-//   JsonDocument doc;
-//   JsonFileSystemHelper file(FILENAME_CONTROL_CONSTANTS);
-//   bool b = file.loadJson(doc);
+  JsonDocument doc;
+  JsonFileSystemHelper file(FILENAME_CONTROL_CONSTANTS);
+  bool b = file.loadJson(doc);
 
-//   if (b) {
-//     if (doc[KEY_TEMP_SETTING_MIN].is<int>()) tempSettingMin = doc[KEY_TEMP_SETTING_MIN];
-//     if (doc[KEY_TEMP_SETTING_MAX].is<int>()) tempSettingMax = doc[KEY_TEMP_SETTING_MAX];
-//     if (doc[KEY_KP].is<int>()) Kp = doc[KEY_KP];
-//     if (doc[KEY_KI].is<int>()) Ki = doc[KEY_KI];
-//     if (doc[KEY_KD].is<int>()) Kd = doc[KEY_KD];
-//     if (doc[KEY_MAX_ERROR].is<int>()) iMaxError = doc[KEY_MAX_ERROR];
-//     if (doc[KEY_IDLE_RANGE_HIGH].is<int>()) idleRangeHigh = doc[KEY_IDLE_RANGE_HIGH];
-//     if (doc[KEY_IDLE_RANGE_LOW].is<int>()) idleRangeLow = doc[KEY_IDLE_RANGE_LOW];
-//     if (doc[KEY_HEATING_TARGET_UPPER].is<int>())
-//       heatingTargetUpper = doc[KEY_HEATING_TARGET_UPPER];
-//     if (doc[KEY_HEATING_TARGET_LOWER].is<int>())
-//       heatingTargetLower = doc[KEY_HEATING_TARGET_LOWER];
-//     if (doc[KEY_COOLING_TARGET_UPPER].is<int>())
-//       coolingTargetUpper = doc[KEY_COOLING_TARGET_UPPER];
-//     if (doc[KEY_COOLING_TARGET_LOWER].is<int>())
-//       coolingTargetLower = doc[KEY_COOLING_TARGET_LOWER];
-//     if (doc[KEY_MAX_HEAT_EST].is<int>())
-//       maxHeatTimeForEstimate = doc[KEY_MAX_HEAT_EST];
-//     if (doc[KEY_MAX_COOL_EST].is<int>())
-//       maxCoolTimeForEstimate = doc[KEY_MAX_COOL_EST];
-//     if (doc[KEY_FRIDGE_FILTER_FAST].is<int>())
-//       fridgeFastFilter = doc[KEY_FRIDGE_FILTER_FAST];
-//     if (doc[KEY_FRIDGE_FILTER_SLOW].is<int>())
-//       fridgeSlowFilter = doc[KEY_FRIDGE_FILTER_SLOW];
-//     if (doc[KEY_FRIDGE_FILTER_SLOPE].is<int>())
-//       fridgeSlopeFilter = doc[KEY_FRIDGE_FILTER_SLOPE];
-//     if (doc[KEY_BEER_FILTER_FAST].is<int>())
-//       beerFastFilter = doc[KEY_BEER_FILTER_FAST];
-//     if (doc[KEY_BEER_FILTER_SLOW].is<int>())
-//       beerSlowFilter = doc[KEY_BEER_FILTER_SLOW];
-//     if (doc[KEY_BEER_FILTER_SLOPE].is<int>())
-//       beerSlopeFilter = doc[KEY_BEER_FILTER_SLOPE];
-//     // if (doc[KEY_LIGHT_HEATER].is<int>()) lightAsHeater =
-//     // doc[KEY_LIGHT_HEATER]; if (doc[KEY_ROTARY_HALF_STEPS].is<int>())
-//     //   rotaryHalfSteps = doc[KEY_ROTARY_HALF_STEPS];
-//     if (doc[KEY_PID_MAX].is<int>()) pidMax = doc[KEY_PID_MAX];
-//     if (doc[KEY_TEMP_FORMAT].is<int>())
-//       tempFormat = doc[KEY_TEMP_FORMAT].as<String>().charAt(0);
-//   }
-//   return b;
-// }
+  if (b) {
+    JsonObject obj = doc.as<JsonObject>();
+    fromJsonReadable(obj);
+  }
+  return b;
+#else
+  return true;
+#endif
+}
 
 void ControlConstants::toJsonReadable(JsonObject& doc) const {
   doc[KEY_TEMP_FORMAT] = String(tempFormat);
@@ -188,21 +160,20 @@ void ControlConstants::toJsonReadable(JsonObject& doc) const {
   doc[KEY_KI] = fixedPointToDouble(Ki, Config::TempFormat::fixedPointDecimals);
   doc[KEY_KD] = fixedPointToDouble(Kd, Config::TempFormat::fixedPointDecimals);
 
-
   doc[KEY_MAX_ERROR] =
       tempDiffToDouble(iMaxError, Config::TempFormat::tempDiffDecimals);
   doc[KEY_IDLE_RANGE_HIGH] =
       tempDiffToDouble(idleRangeHigh, Config::TempFormat::tempDiffDecimals);
   doc[KEY_IDLE_RANGE_LOW] =
       tempDiffToDouble(idleRangeLow, Config::TempFormat::tempDiffDecimals);
-  doc[KEY_HEATING_TARGET_UPPER] = tempDiffToDouble(heatingTargetUpper,
-                                        Config::TempFormat::tempDiffDecimals);
-  doc[KEY_HEATING_TARGET_LOWER] = tempDiffToDouble(heatingTargetLower,
-                                        Config::TempFormat::tempDiffDecimals);
-  doc[KEY_COOLING_TARGET_UPPER] = tempDiffToDouble(coolingTargetUpper,
-                                        Config::TempFormat::tempDiffDecimals);
-  doc[KEY_COOLING_TARGET_LOWER] = tempDiffToDouble(coolingTargetLower,
-                                        Config::TempFormat::tempDiffDecimals);
+  doc[KEY_HEATING_TARGET_UPPER] = tempDiffToDouble(
+      heatingTargetUpper, Config::TempFormat::tempDiffDecimals);
+  doc[KEY_HEATING_TARGET_LOWER] = tempDiffToDouble(
+      heatingTargetLower, Config::TempFormat::tempDiffDecimals);
+  doc[KEY_COOLING_TARGET_UPPER] = tempDiffToDouble(
+      coolingTargetUpper, Config::TempFormat::tempDiffDecimals);
+  doc[KEY_COOLING_TARGET_LOWER] = tempDiffToDouble(
+      coolingTargetLower, Config::TempFormat::tempDiffDecimals);
   doc[KEY_MAX_HEAT_EST] = maxHeatTimeForEstimate;
   doc[KEY_MAX_COOL_EST] = maxCoolTimeForEstimate;
   doc[KEY_FRIDGE_FILTER_FAST] = fridgeFastFilter;
@@ -211,6 +182,47 @@ void ControlConstants::toJsonReadable(JsonObject& doc) const {
   doc[KEY_BEER_FILTER_FAST] = beerFastFilter;
   doc[KEY_BEER_FILTER_SLOW] = beerSlowFilter;
   doc[KEY_BEER_FILTER_SLOPE] = beerSlopeFilter;
+}
+
+void ControlConstants::fromJsonReadable(JsonObject& doc) {
+  if (doc[KEY_TEMP_SETTING_MIN].is<int>())
+    tempSettingMin = doc[KEY_TEMP_SETTING_MIN];
+  if (doc[KEY_TEMP_SETTING_MAX].is<int>())
+    tempSettingMax = doc[KEY_TEMP_SETTING_MAX];
+  if (doc[KEY_KP].is<int>()) Kp = doc[KEY_KP];
+  if (doc[KEY_KI].is<int>()) Ki = doc[KEY_KI];
+  if (doc[KEY_KD].is<int>()) Kd = doc[KEY_KD];
+  if (doc[KEY_MAX_ERROR].is<int>()) iMaxError = doc[KEY_MAX_ERROR];
+  if (doc[KEY_IDLE_RANGE_HIGH].is<int>())
+    idleRangeHigh = doc[KEY_IDLE_RANGE_HIGH];
+  if (doc[KEY_IDLE_RANGE_LOW].is<int>()) idleRangeLow = doc[KEY_IDLE_RANGE_LOW];
+  if (doc[KEY_HEATING_TARGET_UPPER].is<int>())
+    heatingTargetUpper = doc[KEY_HEATING_TARGET_UPPER];
+  if (doc[KEY_HEATING_TARGET_LOWER].is<int>())
+    heatingTargetLower = doc[KEY_HEATING_TARGET_LOWER];
+  if (doc[KEY_COOLING_TARGET_UPPER].is<int>())
+    coolingTargetUpper = doc[KEY_COOLING_TARGET_UPPER];
+  if (doc[KEY_COOLING_TARGET_LOWER].is<int>())
+    coolingTargetLower = doc[KEY_COOLING_TARGET_LOWER];
+  if (doc[KEY_MAX_HEAT_EST].is<int>())
+    maxHeatTimeForEstimate = doc[KEY_MAX_HEAT_EST];
+  if (doc[KEY_MAX_COOL_EST].is<int>())
+    maxCoolTimeForEstimate = doc[KEY_MAX_COOL_EST];
+  if (doc[KEY_FRIDGE_FILTER_FAST].is<int>())
+    fridgeFastFilter = doc[KEY_FRIDGE_FILTER_FAST];
+  if (doc[KEY_FRIDGE_FILTER_SLOW].is<int>())
+    fridgeSlowFilter = doc[KEY_FRIDGE_FILTER_SLOW];
+  if (doc[KEY_FRIDGE_FILTER_SLOPE].is<int>())
+    fridgeSlopeFilter = doc[KEY_FRIDGE_FILTER_SLOPE];
+  if (doc[KEY_BEER_FILTER_FAST].is<int>())
+    beerFastFilter = doc[KEY_BEER_FILTER_FAST];
+  if (doc[KEY_BEER_FILTER_SLOW].is<int>())
+    beerSlowFilter = doc[KEY_BEER_FILTER_SLOW];
+  if (doc[KEY_BEER_FILTER_SLOPE].is<int>())
+    beerSlopeFilter = doc[KEY_BEER_FILTER_SLOPE];
+  if (doc[KEY_PID_MAX].is<int>()) pidMax = doc[KEY_PID_MAX];
+  if (doc[KEY_TEMP_FORMAT].is<int>())
+    tempFormat = doc[KEY_TEMP_FORMAT].as<String>().charAt(0);
 }
 
 // EOF

@@ -38,9 +38,10 @@ struct ControlSettings {
   char mode;
 
   void setDefaults();
-//   bool save();
-//   bool load();
+  bool save();
+  bool load();
   void toJsonReadable(JsonObject& doc) const;
+  void fromJsonReadable(JsonObject& doc);
 };
 
 #endif  // SRC_CONTROLSETTINGS_HPP_
