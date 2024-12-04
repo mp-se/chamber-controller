@@ -143,7 +143,7 @@ void runLoop() {
   if (tempControlLoop.hasExipred()) {
     tempControlLoop.reset();
 
-    // Log.notice(F("Loop: Running temp control." CR));
+    Log.verbose(F("Loop: Running temp control." CR));
 
     myDisplay.updateButtons(strlen(myConfig.getBeerSensorId()), strlen(myConfig.getFridgeSensorId()));
 

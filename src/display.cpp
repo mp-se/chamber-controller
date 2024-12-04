@@ -117,16 +117,9 @@ void Display::clear(uint32_t color) {
 }
 
 void Display::updateButtons(bool beerEnabled, bool chamberEnabled) {
-  if(!beerEnabled)
-    lv_obj_add_flag( lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
-  else
-    lv_obj_remove_flag( lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
-
-  if(!chamberEnabled)
-    lv_obj_add_flag( lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
-  else
-    lv_obj_remove_flag( lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
-}
+  lvglData._showBeerBtn = beerEnabled;
+  lvglData._showChamberBtn = chamberEnabled;
+  }
 
 void Display::updateTemperatures(const char *mode, const char *state, const char* statusBar,
                                  float beerTemp, float chamberTemp,
@@ -425,6 +418,19 @@ void lvgl_loop_handler(void *parameter) {
     if (taskLoop.hasExipred()) {
       taskLoop.reset();
 
+      // Show/Hide buttons
+      if(!lvglData._showBeerBtn)
+        lv_obj_add_flag( lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
+      else
+        lv_obj_remove_flag( lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
+
+      if(!lvglData._showChamberBtn)
+        lv_obj_add_flag( lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
+      else
+        lv_obj_remove_flag( lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
+
+
+      // Update text
       char s[20];
       snprintf(s, sizeof(s), "%0.1F°%c", lvglData._targetTemperature,
                lvglData._tempFormat);

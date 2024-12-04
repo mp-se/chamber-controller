@@ -55,6 +55,8 @@ struct LVGL_Data {
   String _dataBeerTemp;
   String _dataChamberTemp;
   String _dataStatusBar;
+  bool _showBeerBtn;
+  bool _showChamberBtn;
   volatile float _targetTemperature;
   volatile char _mode;
   char _tempFormat = 'C';
