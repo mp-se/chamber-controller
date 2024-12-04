@@ -136,7 +136,7 @@ void Display::updateTemperatures(const char *mode, const char *state,
 
   // Beer Temp
   if (isnan(beerTemp))
-    snprintf(s, sizeof(s), "-- %c", tempFormat);
+    snprintf(s, sizeof(s), "-- °%c", tempFormat);
   else
     snprintf(s, sizeof(s), "%0.1F°%c", beerTemp, tempFormat);
 
@@ -144,7 +144,7 @@ void Display::updateTemperatures(const char *mode, const char *state,
 
   // Beer Temp
   if (isnan(chamberTemp))
-    snprintf(s, sizeof(s), "-- %c", tempFormat);
+    snprintf(s, sizeof(s), "-- °%c", tempFormat);
   else
     snprintf(s, sizeof(s), "%0.1F°%c", chamberTemp, tempFormat);
 
