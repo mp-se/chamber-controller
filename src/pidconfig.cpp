@@ -24,8 +24,8 @@ SOFTWARE.
 #include <ArduinoJson.h>
 
 #include <espframework.hpp>
-#include <pidconfig.hpp>
 #include <main.hpp>
+#include <pidconfig.hpp>
 
 PidConfig::PidConfig(String baseMDNS, String fileName)
     : BaseConfig(baseMDNS, fileName) {}

@@ -29,8 +29,8 @@ SOFTWARE.
 #include <TempControl.hpp>
 #include <espframework.hpp>
 #include <log.hpp>
-#include <pidconfig.hpp>
 #include <main.hpp>
+#include <pidconfig.hpp>
 #include <pidpush.hpp>
 #include <pidwebserver.hpp>
 #include <uptime.hpp>
@@ -191,7 +191,7 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
   obj[PARAM_UPTIME_DAYS] = myUptime.getDays();
 
   // Pid controller
-  if(runMode == RunMode::pidMode) {
+  if (runMode == RunMode::pidMode) {
     obj[PARAM_PID_MODE] = String(tempControl.getMode());
     obj[PARAM_PID_STATE] = tempControl.getState();
     obj[PARAM_PID_STATE_STRING] = tempControl.getStateAsString();
@@ -202,7 +202,8 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
     obj[PARAM_PID_FRIDGE_TEMP_CONNECTED] =
         tempControl.getFridgeSensor()->isConnected();
     obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
-    obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
+    obj[PARAM_PID_FRIDGE_TARGET_TEMP] =
+        tempControl.getFridgeTemperatureSetting();
     obj[PARAM_PID_TEMP_FORMAT] =
         String(tempControl.getControlConstants().tempFormat);
     obj[PARAM_PID_COOLING_ACTUATOR_ACTIVE] =
@@ -224,11 +225,12 @@ void PidWebServer::webHandleTemps(AsyncWebServerRequest *request) {
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
 
-  if(runMode == RunMode::pidMode) {
+  if (runMode == RunMode::pidMode) {
     obj[PARAM_PID_BEER_TEMP] = tempControl.getBeerTemperature();
     obj[PARAM_PID_FRIDGE_TEMP] = tempControl.getFridgeTemperature();
     obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
-    obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
+    obj[PARAM_PID_FRIDGE_TARGET_TEMP] =
+        tempControl.getFridgeTemperatureSetting();
     obj[PARAM_PID_TEMP_FORMAT] =
         String(tempControl.getControlConstants().tempFormat);
   }
@@ -258,7 +260,6 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
       case ControllerMode::beerConstant:
         if (myConfig.isBeerSensorEnabled() &&
             (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
- 
           setNewControllerMode(ControllerMode::beerConstant, newTemp);
           success = true;
         } else {
@@ -270,7 +271,6 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
       case ControllerMode::fridgeConstant:
         if (myConfig.isFridgeSensorEnabled() &&
             (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
-
           setNewControllerMode(ControllerMode::fridgeConstant, newTemp);
           success = true;
         } else {
@@ -305,7 +305,7 @@ void PidWebServer::webHandleControlConstants(AsyncWebServerRequest *request) {
   Log.notice(F("WEB : webServer callback for /api/pid/cc." CR));
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
-  if(runMode == RunMode::pidMode)
+  if (runMode == RunMode::pidMode)
     tempControl.getControlConstants().toJsonReadable(obj);
   response->setLength();
   request->send(response);
@@ -319,7 +319,7 @@ void PidWebServer::webHandleControlSettings(AsyncWebServerRequest *request) {
   Log.notice(F("WEB : webServer callback for /api/pid/cs." CR));
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
-  if(runMode == RunMode::pidMode)
+  if (runMode == RunMode::pidMode)
     tempControl.getControlSettings().toJsonReadable(obj);
   response->setLength();
   request->send(response);
@@ -333,7 +333,7 @@ void PidWebServer::webHandleControlVariables(AsyncWebServerRequest *request) {
   Log.notice(F("WEB : webServer callback for /api/pid/cv." CR));
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
-  if(runMode == RunMode::pidMode)
+  if (runMode == RunMode::pidMode)
     tempControl.getControlVariables().toJsonReadable(obj);
   response->setLength();
   request->send(response);
@@ -347,7 +347,7 @@ void PidWebServer::webHandleMinTimes(AsyncWebServerRequest *request) {
   Log.notice(F("WEB : webServer callback for /api/pid/mt." CR));
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
-  if(runMode == RunMode::pidMode)
+  if (runMode == RunMode::pidMode)
     tempControl.getMinTimes().toJsonReadable(obj);
   response->setLength();
   request->send(response);

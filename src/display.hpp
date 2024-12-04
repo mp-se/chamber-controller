@@ -98,7 +98,8 @@ class Display {
   // Misc methods
   void setTargetTemperature(float t) { lvglData._targetTemperature = t; }
   void setMode(char m) { lvglData._mode = m; }
-  void updateTemperatures(const char* mode, const char* state, const char* statusBar, float beerTemp,
+  void updateTemperatures(const char* mode, const char* state,
+                          const char* statusBar, float beerTemp,
                           float chamberTemp, char tempFormat);
 
   void updateButtons(bool beerEnabled, bool chamberEnabled);

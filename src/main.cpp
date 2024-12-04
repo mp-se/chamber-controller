@@ -32,8 +32,8 @@ SOFTWARE.
 #include <espframework.hpp>
 #include <log.hpp>
 #include <looptimer.hpp>
-#include <pidconfig.hpp>
 #include <main.hpp>
+#include <pidconfig.hpp>
 #include <pidpush.hpp>
 #include <pidwebserver.hpp>
 #include <serialws.hpp>
@@ -109,7 +109,7 @@ void setup() {
   mySerial.begin(&mySerialWebSocket);
   oneWire.begin(Config::Pins::oneWirePin);
 
-  switch(runMode) {
+  switch (runMode) {
     case RunMode::pidMode:
       myDisplay.printLineCentered(2, "Configuring Temp Control");
 
@@ -120,10 +120,10 @@ void setup() {
       myDisplay.createUI();
       myDisplay.setTargetTemperature(myConfig.getTargetTemperature());
       myDisplay.setMode(myConfig.getControllerMode());
-    break;
+      break;
 
     case RunMode::wifiSetupMode:
-    break;
+      break;
   }
 
   Log.notice(F("Main: Setup is completed." CR));
@@ -145,7 +145,8 @@ void runLoop() {
 
     Log.verbose(F("Loop: Running temp control." CR));
 
-    myDisplay.updateButtons(strlen(myConfig.getBeerSensorId()), strlen(myConfig.getFridgeSensorId()));
+    myDisplay.updateButtons(strlen(myConfig.getBeerSensorId()),
+                            strlen(myConfig.getFridgeSensorId()));
 
     float beer = NAN, fridge = NAN;
 
@@ -210,10 +211,12 @@ void runLoop() {
       } break;
     }
 
-    if(!myWifi.isConnected() ) {
-      snprintf(statusBar, sizeof(statusBar), "Not connected"); 
+    if (!myWifi.isConnected()) {
+      snprintf(statusBar, sizeof(statusBar), "Not connected");
     } else {
-      snprintf(statusBar, sizeof(statusBar), "ssid: %s ip: %s, rssi: %d", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI()); 
+      snprintf(statusBar, sizeof(statusBar), "ssid: %s ip: %s, rssi: %d",
+               WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(),
+               WiFi.RSSI());
     }
 
     myDisplay.updateTemperatures(mode, state, statusBar, beer, fridge,
@@ -267,20 +270,20 @@ void setNewControllerMode(char mode, float temp) {
   myConfig.saveFile();
 
   tempControl.setMode(mode);
-  if(mode == ControllerMode::beerConstant)
+  if (mode == ControllerMode::beerConstant)
     tempControl.setBeerTargetTemperature(temp);
-  else if(mode == ControllerMode::fridgeConstant)
+  else if (mode == ControllerMode::fridgeConstant)
     tempControl.setFridgeTargetTemperature(temp);
 }
 
 void loop() {
-  switch(runMode) {
+  switch (runMode) {
     case RunMode::pidMode:
       runLoop();
-    break;
+      break;
 
     case RunMode::wifiSetupMode:
-    break;
+      break;
   }
 
   myUptime.calculate();
@@ -383,11 +386,13 @@ void configureTempControl() {
 
   // Create the actuators
   if (!actuatorCooling) {
-    actuatorCooling = new DigitalPinActuator(Config::Pins::coolingPin, myConfig.isPinsInverted());
+    actuatorCooling = new DigitalPinActuator(Config::Pins::coolingPin,
+                                             myConfig.isPinsInverted());
   }
 
   if (!actuatorHeating) {
-    actuatorHeating = new DigitalPinActuator(Config::Pins::heatingPin, myConfig.isPinsInverted());
+    actuatorHeating = new DigitalPinActuator(Config::Pins::heatingPin,
+                                             myConfig.isPinsInverted());
   }
 
   if (myConfig.isCoolingEnabled()) {
@@ -410,8 +415,18 @@ void configureTempControl() {
     tempControl.setBeerTargetTemperature(myConfig.getTargetTemperature());
   }
 
-  Log.info(F("Main: Setting mode %c." CR), myConfig.getControllerMode());
-  tempControl.setMode(myConfig.getControllerMode());
+#if defined(BREWPI_ENABLE_SAVE)
+  tempControl.loadConstants();
+  tempControl.loadSettings();
+#endif
+
+  if(myConfig.getControllerMode() != tempControl.getMode()) { // If we have a missmatch after loading settings, set the controller mode 
+#if defined(BREWPI_ENABLE_SAVE)
+    Log.warning(F("Main: Stored controller mode does not match configured, updating." CR));
+#endif
+    Log.info(F("Main: Setting mode %c." CR), myConfig.getControllerMode());
+    tempControl.setMode(myConfig.getControllerMode());
+  }
 }
 
 // EOF

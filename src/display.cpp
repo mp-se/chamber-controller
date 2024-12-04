@@ -26,12 +26,12 @@ SOFTWARE.
 #include <LittleFS.h>
 #include <Wire.h>
 
-#include <main.hpp>
 #include <display.hpp>
 #include <fonts.hpp>
 #include <functional>
 #include <log.hpp>
 #include <looptimer.hpp>
+#include <main.hpp>
 
 constexpr auto TTF_CALIBRATION_FILENAME = "/tft.dat";
 
@@ -119,11 +119,11 @@ void Display::clear(uint32_t color) {
 void Display::updateButtons(bool beerEnabled, bool chamberEnabled) {
   lvglData._showBeerBtn = beerEnabled;
   lvglData._showChamberBtn = chamberEnabled;
-  }
+}
 
-void Display::updateTemperatures(const char *mode, const char *state, const char* statusBar,
-                                 float beerTemp, float chamberTemp,
-                                 char tempFormat) {
+void Display::updateTemperatures(const char *mode, const char *state,
+                                 const char *statusBar, float beerTemp,
+                                 float chamberTemp, char tempFormat) {
 #if defined(ENABLE_LVGL)
   if (!_tft) return;
 
@@ -419,16 +419,15 @@ void lvgl_loop_handler(void *parameter) {
       taskLoop.reset();
 
       // Show/Hide buttons
-      if(!lvglData._showBeerBtn)
-        lv_obj_add_flag( lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
+      if (!lvglData._showBeerBtn)
+        lv_obj_add_flag(lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
       else
-        lv_obj_remove_flag( lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_remove_flag(lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
 
-      if(!lvglData._showChamberBtn)
-        lv_obj_add_flag( lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
+      if (!lvglData._showChamberBtn)
+        lv_obj_add_flag(lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
       else
-        lv_obj_remove_flag( lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
-
+        lv_obj_remove_flag(lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
 
       // Update text
       char s[20];

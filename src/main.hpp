@@ -21,8 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-#ifndef SRC_PIDMAIN_HPP_
-#define SRC_PIDMAIN_HPP_
+#ifndef SRC_MAIN_HPP_
+#define SRC_MAIN_HPP_
 
 enum RunMode {
   pidMode = 0,
@@ -42,4 +42,4 @@ constexpr auto PARAM_ENABLE_COOLING = "enable_cooling";
 constexpr auto PARAM_ENABLE_HEATING = "enable_heating";
 constexpr auto PARAM_INVERT_PINS = "invert_pins";
 
-#endif  // SRC_PIDMAIN_HPP_
+#endif  // SRC_MAIN_HPP_
