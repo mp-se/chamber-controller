@@ -100,6 +100,11 @@ void TempControl::updateSensor(TempSensor* sensor) {
     return;
   }
 
+  if (sensor == &defaultBeerSensor || sensor == &defaultFridgeSensor) {
+    Log.verbose(F("BREW: Default sensor, no action required." CR));
+    return;
+  }
+
   sensor->update();
   if (!sensor->isConnected()) {
     Log.warning(F(
