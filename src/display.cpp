@@ -42,14 +42,13 @@ struct LVGL_Data lvglData;
 #endif
 
 void Display::setup() {
+#if defined(ENABLE_TFT)
   Log.notice(
       F("DISP: TFT Config: MISO=%d, MOSI=%d, SCLK=%d, CS=%d, DC=%d, RST=%d, "
         "TOUCH_CS=%d" CR),
       TFT_MISO, TFT_MOSI, TFT_SCLK, TFT_CS, TFT_DC, TFT_RST, TOUCH_CS);
 
-#if defined(ENABLE_TFT)
   _tft = new TFT_eSPI();
-#endif
 
   if (!_tft) {
     Log.warning(F("DISP: No TFT_eSPI driver is created!" CR));
@@ -60,18 +59,22 @@ void Display::setup() {
   _tft->setRotation(_rotation);
   clear();
   setFont(FontSize::FONT_9);
+#endif
 }
 
 void Display::setRotation(Rotation r) {
+#if defined(ENABLE_TFT)
   if (!_tft) {
     return;
   }
 
   _rotation = r;
   _tft->setRotation(_rotation);
+#endif
 }
 
 void Display::setFont(FontSize f) {
+#if defined(ENABLE_TFT)
   if (!_tft) return;
 
   switch (f) {
@@ -89,36 +92,45 @@ void Display::setFont(FontSize f) {
       _tft->setFreeFont(FF20);
       break;
   }
+#endif
 }
 
 void Display::printLine(int l, const String &text) {
+#if defined(ENABLE_TFT)
   if (!_tft) return;
 
   uint16_t h = _tft->fontHeight();
   _tft->fillRect(0, l * h, _tft->width(), h, _backgroundColor);
   _tft->drawString(text.c_str(), 0, l * h, GFXFF);
+#endif
 }
 
 void Display::printLineCentered(int l, const String &text) {
+#if defined(ENABLE_TFT)
   if (!_tft) return;
 
   uint16_t h = _tft->fontHeight();
   uint16_t w = _tft->textWidth(text);
   _tft->fillRect(0, l * h, _tft->width(), h, _backgroundColor);
   _tft->drawString(text.c_str(), (_tft->width() - w) / 2, l * h, GFXFF);
+#endif
 }
 
 void Display::clear(uint32_t color) {
+#if defined(ENABLE_TFT)
   if (!_tft) return;
 
   _backgroundColor = color;
   _tft->fillScreen(_backgroundColor);
   delay(1);
+#endif
 }
 
 void Display::updateButtons(bool beerEnabled, bool chamberEnabled) {
+#if defined(ENABLE_LVGL)
   lvglData._showBeerBtn = beerEnabled;
   lvglData._showChamberBtn = chamberEnabled;
+#endif
 }
 
 void Display::updateTemperatures(const char *mode, const char *state,
@@ -153,9 +165,9 @@ void Display::updateTemperatures(const char *mode, const char *state,
 }
 
 void Display::calibrateTouch() {
+#if defined(ENABLE_LVGL)
   if (!_tft) return;
 
-#if defined(ENABLE_LVGL)
   uint16_t x, y, pressed, i = 0;
 
   myDisplay.printLineCentered(4, "Press screen to calibrate");
@@ -210,6 +222,7 @@ void Display::calibrateTouch() {
 }
 
 bool Display::getTouch(uint16_t *x, uint16_t *y) {
+#if defined(ENABLE_TFT)
   uint16_t xt, yt;
   uint8_t b = _tft->getTouch(&xt, &yt);
 
@@ -227,12 +240,15 @@ bool Display::getTouch(uint16_t *x, uint16_t *y) {
   }
 
   return b;
+#else
+  return false;
+#endif
 }
 
 void Display::createUI() {
+#if defined(ENABLE_LVGL)
   if (!_tft) return;
 
-#if defined(ENABLE_LVGL)
   Log.notice(F("DISP: Using LVL v%d.%d.%d." CR), lv_version_major(),
              lv_version_minor(), lv_version_patch());
 
@@ -311,6 +327,7 @@ void Display::createUI() {
 }
 
 void Display::handleButtonEvent(char btn) {
+#if defined(ENABLE_LVGL)
   Log.info(F("DISP: Button pressed, char=%c" CR), btn);
 
   switch (btn) {
@@ -329,6 +346,7 @@ void Display::handleButtonEvent(char btn) {
       lvglData._targetTemperature -= 0.5;
       break;
   }
+#endif
 }
 
 // LVGL Wrappers and Handlers

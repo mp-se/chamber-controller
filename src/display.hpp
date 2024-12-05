@@ -24,7 +24,12 @@ SOFTWARE.
 #ifndef SRC_DISPLAY_HPP_
 #define SRC_DISPLAY_HPP_
 
+#if defined(ENABLE_TFT)
 #include <TFT_eSPI.h>
+#else
+#define TFT_eSPI void
+#define TFT_BLACK 0
+#endif
 #if defined(ENABLE_LVGL)
 #include <lvgl.h>
 #endif
@@ -96,8 +101,16 @@ class Display {
   void setRotation(Rotation rotation);
 
   // Misc methods
-  void setTargetTemperature(float t) { lvglData._targetTemperature = t; }
-  void setMode(char m) { lvglData._mode = m; }
+  void setTargetTemperature(float t) { 
+#if defined(ENABLE_LVGL)
+    lvglData._targetTemperature = t; 
+#endif
+  }
+  void setMode(char m) { 
+#if defined(ENABLE_LVGL)
+    lvglData._mode = m; 
+#endif
+  }
   void updateTemperatures(const char* mode, const char* state,
                           const char* statusBar, float beerTemp,
                           float chamberTemp, char tempFormat);

@@ -23,6 +23,7 @@ This is still work in progress but so far I have been running this PID controlle
 Currently I'm using the following development board for running my instance but the frameworks would support many more boards with some new targets. 
 
 * Lolin ESP32 PRO with Lolin TFT
+* Lolin ESP32s2 without TFT
 
 # Flashing
 
