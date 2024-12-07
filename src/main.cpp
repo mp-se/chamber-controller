@@ -91,7 +91,7 @@ void setup() {
     myWifi.startAP();
   } else {
     myConfig.setWifiScanAP(true);
-    myWifi.connect(WIFI_AP_STA);
+    myWifi.connect();
     myWifi.timeSync();
   }
 #else
