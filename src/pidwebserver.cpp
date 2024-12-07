@@ -176,10 +176,10 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
   // Generic params
   obj[PARAM_ID] = _webConfig->getID();
   obj[PARAM_MDNS] = _webConfig->getMDNS();
-#if defined(ESP32)
-  obj[PARAM_PLATFORM] = "esp32";
-#elif defined(ESP32S2)
+#if defined(ESP32S2)
   obj[PARAM_PLATFORM] = "esp32s2";
+#elif defined(ESP32)
+  obj[PARAM_PLATFORM] = "esp32";
 #else
 #error "Platform is not defined"
 #endif
