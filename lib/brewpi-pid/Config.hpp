@@ -24,9 +24,17 @@
 
 namespace Config {
 namespace Pins {
+#if defined(ESP32S2)
+constexpr auto heatingPin = 5;
+constexpr auto coolingPin = 7;
+constexpr auto oneWirePin = 9;
+#elif defined(ESP32)
 constexpr auto heatingPin = 25;
 constexpr auto coolingPin = 26;
 constexpr auto oneWirePin = 13;
+#else
+#error "Unknown target"
+#endif
 };  // namespace Pins
 
 namespace TempFormat {
