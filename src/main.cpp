@@ -373,6 +373,16 @@ void configureTempControl() {
   Log.info(F("Main: Initializing temp control." CR));
   tempControl.init(MIN_TIMES_DEFAULT);
 
+  if(!myConfig.isFridgeSensorEnabled() && !myConfig.isBeerSensorEnabled()) {
+    Log.error(F("Main: No sensor configured, unable to configure Temp Controller." CR));
+    return;
+  }
+
+  if(!myConfig.isCoolingEnabled() && !myConfig.isHeatingEnabled()) {
+    Log.error(F("Main: Heating or Cooling is not configured, unable to configure Temp Controller." CR));
+    return;
+  }
+
   // Create the temperature sensors
   if (myConfig.isFridgeSensorEnabled()) {
     Log.info(F("Main: Configuring fridge sensor %s." CR),
