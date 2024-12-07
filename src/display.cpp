@@ -59,6 +59,8 @@ void Display::setup() {
   _tft->setRotation(_rotation);
   clear();
   setFont(FontSize::FONT_9);
+#else 
+  Log.warning(F("DISP: TFT driver support is not included in this build!" CR));
 #endif
 }
 
