@@ -27,7 +27,7 @@ jobs:
       - name: PlatformIO Run
         uses: karniv00l/platformio-run-action@v1
         with:
-          environments: "chamber-controller-32"
+          environments: "chamber-controller-32,chamber-controller-s2"
           #project-dir: "./some_dir"
           #project-conf: "./some_dir/custom.ini"
           jobs: 6
