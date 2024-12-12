@@ -66,8 +66,8 @@ temperature FixedFilter::detectPosPeak() {
   if (_yv[0] < _yv[1] && _yv[1] >= _yv[2]) {
     return tempPreciseToRegular(_yv[1]);
   } else {
-    Log.warning(
-        F("BREW: FixedFilter invalid temperature in detecting +Peak." CR));
+    // Log.warning(
+    //     F("BREW: FixedFilter invalid temperature in detecting +Peak." CR));
     return INVALID_TEMP;
   }
 }
@@ -76,8 +76,8 @@ temperature FixedFilter::detectNegPeak() {
   if (_yv[0] > _yv[1] && _yv[1] <= _yv[2]) {
     return tempPreciseToRegular(_yv[1]);
   } else {
-    Log.warning(
-        F("BREW: FixedFilter invalid temperature in detecting -Peak." CR));
+    // Log.warning(
+    //     F("BREW: FixedFilter invalid temperature in detecting -Peak." CR));
     return INVALID_TEMP;
   }
 }
