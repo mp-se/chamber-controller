@@ -11,9 +11,9 @@ This is still work in progress but so far I have been running this PID controlle
 
 # Features
 
-* Control heat and cooling outputs. 
+* Control heating and cooling output
 * Supports 2 temperature senors for beer and chamber.
-* Control either sensor target.
+* Control on either sensor target.
 * Sending data to influxdb v2 for analysis of PID algorithm and fine tuning.
 * Web interface for easy configuration.
 * Firmware update and Serial Logging via web interface. 
