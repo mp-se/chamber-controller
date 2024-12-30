@@ -42,7 +42,7 @@ SOFTWARE.
 
 SerialDebug mySerial(115200L);
 PidConfig myConfig("chamber", "/chamber.cfg");
-WifiConnection myWifi(&myConfig, "chamber", "password", "Chamber Controller",
+WifiConnection myWifi(&myConfig, "chamber", "password", "chamber",
                       "", "");
 PidPush myPush(&myConfig);
 
@@ -136,7 +136,7 @@ LoopTimer pushLoop(30000);
 void runLoop() {
   if (!myWifi.isConnected()) {
     Log.notice(F("Loop: No wifi connection, attempting to reconnect." CR));
-    myWifi.connect(WIFI_AP_STA);
+    myWifi.connect();
     myWifi.timeSync();
   }
 
