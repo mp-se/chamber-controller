@@ -36,6 +36,7 @@ class PidConfig : public BaseConfig {
   bool _enableCooling = false;
   bool _enableHeating = false;
   bool _invertPins = true;
+  int _restartInterval = 60 * 4; // minutes 
 
   // TODO: Add option to define which MIN_TIMES profile to use.
   // TODO: Add offset for beer and fridge sensors
@@ -78,6 +79,12 @@ class PidConfig : public BaseConfig {
   bool isPinsInverted() { return _invertPins; }
   void setPinsInverted(bool b) {
     _invertPins = b;
+    _saveNeeded = true;
+  }
+
+  int getRestartInterval() { return _restartInterval; }
+  void setRestartInterval(int v) {
+    _restartInterval = v;
     _saveNeeded = true;
   }
 

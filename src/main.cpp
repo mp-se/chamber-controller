@@ -59,6 +59,10 @@ TempSensor *beerSensor = NULL;
 Display myDisplay;
 
 RunMode runMode = RunMode::pidMode;
+LoopTimer restartInterval(0);
+LoopTimer tempControlLoop(1000);
+LoopTimer validateLoop(10000);
+LoopTimer pushLoop(30000);
 
 void setup() {
   delay(2000);
@@ -68,8 +72,9 @@ void setup() {
   myConfig.checkFileSystem();
   myConfig.loadFile();
 
-  // PINS: MISO=-1, MOSI=23, SCLK=18, CS=14, DC=27, RST=33, TOUCH_DS=12
+  restartInterval.setInterval(myConfig.getRestartInterval() * 3600);
 
+  // PINS: MISO=-1, MOSI=23, SCLK=18, CS=14, DC=27, RST=33, TOUCH_DS=12
   Log.notice(F("Main: Initialize display." CR));
   myDisplay.setup();
   myDisplay.setFont(FontSize::FONT_12);
@@ -129,11 +134,13 @@ void setup() {
   Log.notice(F("Main: Setup is completed." CR));
 }
 
-LoopTimer tempControlLoop(1000);
-LoopTimer validateLoop(10000);
-LoopTimer pushLoop(30000);
-
 void runLoop() {
+  if(restartInterval.hasExipred()) {
+    Log.notice(F("Loop: Restart timer expired, doing reset." CR));
+    delay(500);
+    ESP.restart();
+  }
+
   if (!myWifi.isConnected()) {
     Log.notice(F("Loop: No wifi connection, attempting to reconnect." CR));
     myWifi.connect();
