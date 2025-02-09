@@ -59,7 +59,7 @@ TempSensor *beerSensor = NULL;
 Display myDisplay;
 
 RunMode runMode = RunMode::pidMode;
-LoopTimer restartInterval(0);
+LoopTimer restartInterval(60000);
 LoopTimer tempControlLoop(1000);
 LoopTimer validateLoop(10000);
 LoopTimer pushLoop(30000);
@@ -71,8 +71,6 @@ void setup() {
 
   myConfig.checkFileSystem();
   myConfig.loadFile();
-
-  restartInterval.setInterval(myConfig.getRestartInterval() * 3600);
 
   // PINS: MISO=-1, MOSI=23, SCLK=18, CS=14, DC=27, RST=33, TOUCH_DS=12
   Log.notice(F("Main: Initialize display." CR));
@@ -149,6 +147,8 @@ void runLoop() {
 
   if (tempControlLoop.hasExipred()) {
     tempControlLoop.reset();
+
+    restartInterval.setInterval(myConfig.getRestartInterval() * 3600 * 1000);
 
     Log.verbose(F("Loop: Running temp control." CR));
 
