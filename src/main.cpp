@@ -59,7 +59,6 @@ TempSensor *beerSensor = NULL;
 Display myDisplay;
 
 RunMode runMode = RunMode::pidMode;
-LoopTimer restartInterval(60000);
 LoopTimer tempControlLoop(1000);
 LoopTimer validateLoop(10000);
 LoopTimer pushLoop(30000);
@@ -133,12 +132,6 @@ void setup() {
 }
 
 void runLoop() {
-  if(restartInterval.hasExipred()) {
-    Log.notice(F("Loop: Restart timer expired, doing reset." CR));
-    delay(500);
-    ESP.restart();
-  }
-
   if (!myWifi.isConnected()) {
     Log.notice(F("Loop: No wifi connection, attempting to reconnect." CR));
     myWifi.connect();
@@ -148,7 +141,15 @@ void runLoop() {
   if (tempControlLoop.hasExipred()) {
     tempControlLoop.reset();
 
-    restartInterval.setInterval(myConfig.getRestartInterval() * 3600 * 1000);
+    uint32_t up = myUptime.getHours() * 60 + myUptime.getMinutes();
+
+    // Log.notice(F("Loop: Checking restart timer, elapsed: %d, limit: %d." CR), up, myConfig.getRestartInterval());
+
+    if(up > myConfig.getRestartInterval()) {
+      Log.notice(F("Loop: Restart timer expired, doing reset." CR));
+      delay(500);
+      ESP.restart();
+    }
 
     Log.verbose(F("Loop: Running temp control." CR));
 
