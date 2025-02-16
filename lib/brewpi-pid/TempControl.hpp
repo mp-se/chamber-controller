@@ -117,7 +117,7 @@ class TempControl {
   const TempSensor* getFridgeSensor() { return _fridgeSensor; }
 
   // Status methods
-  unsigned char getState() { return _state; }
+  uint8_t getState() { return _state; }
   const char* getStateAsString() {
     switch (_state) {
       case ControllerState::IDLE:
