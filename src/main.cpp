@@ -143,9 +143,7 @@ void runLoop() {
 
     uint32_t up = myUptime.getHours() * 60 + myUptime.getMinutes();
 
-    // Log.notice(F("Loop: Checking restart timer, elapsed: %d, limit: %d." CR), up, myConfig.getRestartInterval());
-
-    if(up > myConfig.getRestartInterval()) {
+    if(myConfig.getRestartInterval() > 0 && up > myConfig.getRestartInterval()) {
       Log.notice(F("Loop: Restart timer expired, doing reset." CR));
       delay(500);
       ESP.restart();
