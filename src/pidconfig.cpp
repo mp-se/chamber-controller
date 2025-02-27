@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2024 Magnus
+Copyright (c) 2024-2025 Magnus
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,7 @@ void PidConfig::createJson(JsonObject& doc) {
   doc[PARAM_ENABLE_HEATING] = isHeatingEnabled();
   doc[PARAM_INVERT_PINS] = isPinsInverted();
   doc[PARAM_RESTART_INTERVAL] = getRestartInterval();
+  doc[PARAM_BLE_ENABLED] = isBleEnabled();
 }
 
 void PidConfig::parseJson(JsonObject& doc) {
@@ -75,6 +76,8 @@ void PidConfig::parseJson(JsonObject& doc) {
     setPinsInverted(doc[PARAM_INVERT_PINS].as<bool>());
   if (!doc[PARAM_RESTART_INTERVAL].isNull())
     setRestartInterval(doc[PARAM_RESTART_INTERVAL].as<int>());
+  if (!doc[PARAM_BLE_ENABLED].isNull())
+    setBleEnabled(doc[PARAM_BLE_ENABLED].as<bool>());
 }
 
 // EOF

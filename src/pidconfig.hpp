@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2024 Magnus
+Copyright (c) 2024-2025 Magnus
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,7 @@ class PidConfig : public BaseConfig {
   bool _enableHeating = false;
   bool _invertPins = true;
   int _restartInterval = 60 * 4; // minutes 
+  bool _enableBle = false;
 
   // TODO: Add option to define which MIN_TIMES profile to use.
   // TODO: Add offset for beer and fridge sensors
@@ -79,6 +80,12 @@ class PidConfig : public BaseConfig {
   bool isPinsInverted() { return _invertPins; }
   void setPinsInverted(bool b) {
     _invertPins = b;
+    _saveNeeded = true;
+  }
+
+  bool isBleEnabled() { return _enableBle; }
+  void setBleEnabled(bool b) {
+    _enableBle = b;
     _saveNeeded = true;
   }
 

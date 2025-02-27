@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2024 Magnus
+Copyright (c) 202-2025 Magnus
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@ SOFTWARE.
 #include <serialws.hpp>
 #include <uptime.hpp>
 #include <wificonnection.hpp>
+#include <ble_chamber.hpp>
 
 SerialDebug mySerial(115200L);
 PidConfig myConfig("chamber", "/chamber.cfg");
@@ -57,7 +58,9 @@ OneWireTempSensor *oneWireBeer = NULL;
 TempSensor *fridgeSensor = NULL;
 TempSensor *beerSensor = NULL;
 Display myDisplay;
-
+#if defined(ENABLE_BLE)
+BleSender bleSender;
+#endif
 RunMode runMode = RunMode::pidMode;
 LoopTimer tempControlLoop(1000);
 LoopTimer validateLoop(10000);
@@ -128,6 +131,9 @@ void setup() {
       break;
   }
 
+#if defined(ENABLE_BLE)
+  bleSender.init();
+#endif
   Log.notice(F("Main: Setup is completed." CR));
 }
 
@@ -252,6 +258,11 @@ void runLoop() {
     myDisplay.updateTemperatures(mode, state, statusBar, beer, fridge,
                                  myConfig.getTempFormat());
     tempControl.loop();
+
+#if defined(ENABLE_BLE)
+    if(myConfig.isBleEnabled())
+      bleSender.sendCustomBeaconData(isnan(fridge) ? 0 : fridge, isnan(beer) ? 0 : beer);
+#endif
   }
 
   // if (validateLoop.hasExipred()) {

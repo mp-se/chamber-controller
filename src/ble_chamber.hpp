@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2024-2025 Magnus
+Copyright (c) 2025 Magnus
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,10 +21,35 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-#include <espframework.hpp>
-#include <pidconfig.hpp>
-#include <pidpush.hpp>
+#ifndef SRC_BLE_CHAMBER_HPP_
+#define SRC_BLE_CHAMBER_HPP_
 
-PidPush::PidPush(PidConfig* config) : BasePush(config) { _pidConfig = config; }
+#if defined(ENABLE_BLE) && defined(CHAMBER)
 
-// EOF
+#include <NimBLEBeacon.h>
+#include <NimBLEDevice.h>
+
+class BleSender {
+ private:
+  BLEServer* _server = nullptr;
+  BLEAdvertising* _advertising = nullptr;
+  BLEService* _service = nullptr;
+  BLECharacteristic* _characteristic = nullptr;
+  BLEUUID _uuid;
+  bool _initFlag = false;
+  int _beaconTime = 1000;
+
+  void dumpPayload(const char* payload, int len);
+
+ public:
+  BleSender() {}
+
+  void init();
+
+  // Beacons
+  void sendCustomBeaconData(float chamberTempC, float beerTempC);
+};
+
+#endif  // ENABLE_BLE && CHAMBER
+
+#endif  // SRC_BLE_CHAMBER_HPP_

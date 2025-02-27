@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2024 Magnus
+Copyright (c) 2024-2025 Magnus
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -42,5 +42,6 @@ constexpr auto PARAM_ENABLE_COOLING = "enable_cooling";
 constexpr auto PARAM_ENABLE_HEATING = "enable_heating";
 constexpr auto PARAM_INVERT_PINS = "invert_pins";
 constexpr auto PARAM_RESTART_INTERVAL = "restart_interval";
+constexpr auto PARAM_BLE_ENABLED = "ble_enabled";
 
 #endif  // SRC_MAIN_HPP_
