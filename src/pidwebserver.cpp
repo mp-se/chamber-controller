@@ -205,12 +205,11 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
     obj[PARAM_PID_BEER_TEMP] = tempControl.getBeerTemperature();
     obj[PARAM_PID_BEER_TEMP_CONNECTED] =
         tempControl.getBeerSensor()->isConnected();
-    obj[PARAM_PID_FRIDGE_TEMP] = tempControl.getFridgeTemperature();
+    obj[PARAM_PID_FRIDGE_TEMP] = serialized(String(tempControl.getFridgeTemperature(), DECIMALS_TEMP)); 
     obj[PARAM_PID_FRIDGE_TEMP_CONNECTED] =
         tempControl.getFridgeSensor()->isConnected();
-    obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
-    obj[PARAM_PID_FRIDGE_TARGET_TEMP] =
-        tempControl.getFridgeTemperatureSetting();
+    obj[PARAM_PID_BEER_TARGET_TEMP] = serialized(String(tempControl.getBeerTemperatureSetting(), DECIMALS_TEMP)); 
+    obj[PARAM_PID_FRIDGE_TARGET_TEMP] = serialized(String(tempControl.getFridgeTemperatureSetting(), DECIMALS_TEMP));
     obj[PARAM_PID_TEMP_FORMAT] =
         String(tempControl.getControlConstants().tempFormat);
     obj[PARAM_PID_COOLING_ACTUATOR_ACTIVE] =

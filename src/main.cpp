@@ -260,8 +260,10 @@ void runLoop() {
     tempControl.loop();
 
 #if defined(ENABLE_BLE)
-    if(myConfig.isBleEnabled())
+    if(myConfig.isBleEnabled()) {
+      Log.notice(F("Main: Sending temperature over BLE." CR));
       bleSender.sendCustomBeaconData(isnan(fridge) ? 0 : fridge, isnan(beer) ? 0 : beer);
+    }
 #endif
   }
 
@@ -412,7 +414,7 @@ void configureTempControl() {
     if (fridgeSensor) delete fridgeSensor;
 
     oneWireFridge =
-        new OneWireTempSensor(&oneWire, daFridge, 0);  // TODO: Configure offset
+        new OneWireTempSensor(&oneWire, daFridge, myConfig.getFridgeSensorOffset()); 
     fridgeSensor = new TempSensor(TEMP_SENSOR_TYPE_FRIDGE, oneWireFridge);
     fridgeSensor->init();
     tempControl.setFridgeSensor(fridgeSensor);
@@ -429,7 +431,7 @@ void configureTempControl() {
     if (beerSensor) delete beerSensor;
 
     oneWireBeer =
-        new OneWireTempSensor(&oneWire, daBeer, 0);  // TODO: Configure offset
+        new OneWireTempSensor(&oneWire, daBeer, myConfig.getBeerSensorOffset()); 
     beerSensor = new TempSensor(TEMP_SENSOR_TYPE_BEER, oneWireBeer);
     beerSensor->init();
     tempControl.setBeerSensor(beerSensor);

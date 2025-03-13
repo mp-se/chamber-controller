@@ -31,15 +31,17 @@ typedef uint8_t DeviceAddress[8];
 class OneWireTempSensor : public BasicTempSensor {
  public:
   OneWireTempSensor(OneWire* bus, DeviceAddress address,
-                    fixed4_4 calibrationOffset) {
+                    float calibrationOffsetC) {
     // Log.verbose(F("TEMP: Creating OneWireTempSensor with offset %d." CR),
-    //             calibrationOffset);
+    //             calibrationOffsetC);
+    char buff[10];
+    dtostrf(calibrationOffsetC, 4, 6, buff);
 
     _oneWire = bus;
     _sensor = NULL;
     _connected = true;
     memcpy(_sensorAddress, address, sizeof(DeviceAddress));
-    _calibrationOffset = calibrationOffset;
+    _calibrationOffset = fixed4_4(stringToTempDiff(buff) >> (TEMP_FIXED_POINT_BITS - TEMP_CALIBRATION_OFFSET_PRECISION));
   }
 
   ~OneWireTempSensor();

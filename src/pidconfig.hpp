@@ -33,14 +33,15 @@ class PidConfig : public BaseConfig {
   String _beerSensorId = "";
   char _controllerMode = ControllerMode::off;
   float _targetTemperature = 5;
+  float _fridgeSensorOffset = 0.0;
+  float _beerSensorOffset = 0.0;
+  int _restartInterval = 60 * 4; // minutes 
   bool _enableCooling = false;
   bool _enableHeating = false;
   bool _invertPins = true;
-  int _restartInterval = 60 * 4; // minutes 
   bool _enableBle = false;
 
   // TODO: Add option to define which MIN_TIMES profile to use.
-  // TODO: Add offset for beer and fridge sensors
 
  public:
   PidConfig(String baseMDNS, String fileName);
@@ -59,6 +60,18 @@ class PidConfig : public BaseConfig {
   }
   bool isBeerSensorEnabled() { return _beerSensorId.length() != 0; }
 
+  float getFridgeSensorOffset() { return _fridgeSensorOffset; }
+  void setFridgeSensorOffset(float t) {
+    _fridgeSensorOffset = t;
+    _saveNeeded = true;
+  }
+
+  float getBeerSensorOffset() { return _beerSensorOffset; }
+  void setBeerSensorOffset(float t) {
+    _beerSensorOffset = t;
+    _saveNeeded = true;
+  }
+    
   float getTargetTemperature() { return _targetTemperature; }
   void setTargetTemperature(float v) {
     _targetTemperature = v;

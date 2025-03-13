@@ -12,13 +12,13 @@ def after_build(source, target, env):
     dir    = env.GetLaunchDir()
     name   = env.get( "PIOENV" )
     
-    if name == "chamber-controller-32" :
-        target = dir + "/bin/firmware32.bin"
+    if name == "chamber-controller-32pro" :
+        target = dir + "/bin/firmware32pro.bin"
         source = dir + "/.pio/build/" + name + "/firmware.bin"
         print( "Copy file : " + source + " -> " + target )
         shutil.copyfile( source, target )
 
-        target = dir + "/bin/partitions32.bin"
+        target = dir + "/bin/partitions32pro.bin"
         source = dir + "/.pio/build/" + name + "/partitions.bin"
         print( "Copy file : " + source + " -> " + target )
         shutil.copyfile( source, target )

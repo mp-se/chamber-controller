@@ -40,9 +40,10 @@ void PidConfig::createJson(JsonObject& doc) {
   // Handle project specific config
   doc[PARAM_FRIDGE_SENSOR_ID] = getFridgeSensorId();
   doc[PARAM_BEER_SENSOR_ID] = getBeerSensorId();
-
+  doc[PARAM_FRIDGE_SENSOR_OFFSET] = serialized(String(getFridgeSensorOffset(), DECIMALS_TEMP));
+  doc[PARAM_BEER_SENSOR_OFFSET] = serialized(String(getBeerSensorOffset(), DECIMALS_TEMP));
   doc[PARAM_CONTROLLER_MODE] = String(getControllerMode());
-  doc[PARAM_TARGET_TEMPERATURE] = getTargetTemperature();
+  doc[PARAM_TARGET_TEMPERATURE] = serialized(String(getTargetTemperature(), DECIMALS_TEMP));
   doc[PARAM_ENABLE_COOLING] = isCoolingEnabled();
   doc[PARAM_ENABLE_HEATING] = isHeatingEnabled();
   doc[PARAM_INVERT_PINS] = isPinsInverted();
@@ -66,6 +67,10 @@ void PidConfig::parseJson(JsonObject& doc) {
     setFridgeSensorId(doc[PARAM_FRIDGE_SENSOR_ID]);
   if (!doc[PARAM_BEER_SENSOR_ID].isNull())
     setBeerSensorId(doc[PARAM_BEER_SENSOR_ID]);
+  if (!doc[PARAM_FRIDGE_SENSOR_OFFSET].isNull())
+    setFridgeSensorOffset(doc[PARAM_FRIDGE_SENSOR_OFFSET].as<float>());
+  if (!doc[PARAM_BEER_SENSOR_OFFSET].isNull())
+    setBeerSensorOffset(doc[PARAM_BEER_SENSOR_OFFSET].as<float>());
   if (!doc[PARAM_TARGET_TEMPERATURE].isNull())
     setTargetTemperature(doc[PARAM_TARGET_TEMPERATURE].as<float>());
   if (!doc[PARAM_ENABLE_COOLING].isNull())
