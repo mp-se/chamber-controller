@@ -16,7 +16,8 @@ This is still work in progress but so far I have been running this PID controlle
 * Control on either sensor target.
 * Sending data to influxdb v2 for analysis of PID algorithm and fine tuning.
 * Web interface for easy configuration.
-* Firmware update and Serial Logging via web interface. 
+* Firmware update and Serial Logging via web interface.
+* Sending temperature data over bluetooth
 
 # Hardware
 
@@ -27,16 +28,8 @@ Currently I'm using the following development board for running my instance but 
 
 # Flashing
 
-Currently I use VSCode and PlatformIO to build and flash the device. Pre-built binaries are available and can be flashed using esptool.  
+Flashing is done using my web flasher available at https://gravitymon.com/flasher/index.html.
 
-Another option is to use python and esptool for flashing. Run the commands from the root directory for this project.
-
-- Install python3 from python.org
-- run> pip install esptool
-- run> python3 flash.py target port
-
-Example: python3 flash.py esp32 COM10
-
-# Software Setup
+# Software & Wifi Setup
 
 All the configuration is done using a web interface running on the device but after flashing there is a need to setup the wifi support. After installation the device will create an SSID called Chamber with the password 'password'. Join this network and then navigate to http://192.168.4.1 to open up the user interface. Under WIFI you can scan for existing networks, select the one you want and enter the SSID. Once the wifi is settings is saved you can reset the device and it should connect to the network. If you have an display the IP adress is shown on the bottom of the screen.
