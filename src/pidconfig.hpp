@@ -38,7 +38,7 @@ class PidConfig : public BaseConfig {
   int _restartInterval = 60 * 4; // minutes 
   bool _enableCooling = false;
   bool _enableHeating = false;
-  bool _invertPins = true;
+  bool _invertPins = false;
   bool _enableBle = false;
 
   // TODO: Add option to define which MIN_TIMES profile to use.
