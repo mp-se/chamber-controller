@@ -93,6 +93,7 @@ void setup() {
           "setup." CR));
     myDisplay.printLineCentered(2, "Entering WIFI setup");
     myWebServer.setWifiSetup(true);
+    myWifi.enableImprov(true);  
     myWifi.startAP();
   } else {
     myConfig.setWifiScanAP(true);
