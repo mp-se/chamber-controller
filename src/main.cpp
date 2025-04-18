@@ -82,7 +82,6 @@ void setup() {
   myDisplay.printLineCentered(2, "Starting");
 
 #if !defined(WOKWI)
-  myDisplay.calibrateTouch();
   myDisplay.printLineCentered(2, "Connecting to WIFI");
 
   myWifi.init();
@@ -99,6 +98,8 @@ void setup() {
     myConfig.setWifiScanAP(true);
     myWifi.connect();
     myWifi.timeSync();
+
+    myDisplay.calibrateTouch();
   }
 #else
   myConfig.setWifiSSID("Wokwi-GUEST", 0);
