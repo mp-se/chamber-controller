@@ -30,6 +30,8 @@ Currently I'm using the following development board for running my instance but 
 
 Flashing is done using my web flasher available at https://gravitymon.com/flasher/index.html.
 
+Its not possible to upgrade from versions older than 0.3 to 0.4+ for the esp32pro board, I had to change the flash layout in order to accomodate larger binaries which is required to fit the bluetooth stack.
+
 # Software & Wifi Setup
 
 All the configuration is done using a web interface running on the device but after flashing there is a need to setup the wifi support. After installation the device will create an SSID called Chamber with the password 'password'. Join this network and then navigate to http://192.168.4.1 to open up the user interface. Under WIFI you can scan for existing networks, select the one you want and enter the SSID. Once the wifi is settings is saved you can reset the device and it should connect to the network. If you have an display the IP adress is shown on the bottom of the screen.
