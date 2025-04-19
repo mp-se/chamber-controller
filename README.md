@@ -15,16 +15,17 @@ This is still work in progress but so far I have been running this PID controlle
 * Supports 2 temperature senors for beer and chamber.
 * Control on either sensor target.
 * Sending data to influxdb v2 for analysis of PID algorithm and fine tuning.
+* Sending temperature data over bluetooth for use in my other projects
 * Web interface for easy configuration.
 * Firmware update and Serial Logging via web interface.
-* Sending temperature data over bluetooth
 
 # Hardware
 
 Currently I'm using the following development board for running my instance but the frameworks would support many more boards with some new targets. 
 
 * Lolin ESP32 PRO with Lolin TFT
-* Lolin ESP32s2 without TFT
+* Lolin ESP32s2 mini without TFT
+* Lolin ESP32s3 mini without TFT
 
 # Flashing
 
