@@ -65,6 +65,7 @@ struct LVGL_Data {
   volatile float _targetTemperature;
   volatile char _mode;
   char _tempFormat = 'C';
+  bool _darkmode = false;
 };
 
 extern struct LVGL_Data lvglData;
@@ -113,7 +114,7 @@ class Display {
   }
   void updateTemperatures(const char* mode, const char* state,
                           const char* statusBar, float beerTemp,
-                          float chamberTemp, char tempFormat);
+                          float chamberTemp, char tempFormat, bool darkmode);
 
   void updateButtons(bool beerEnabled, bool chamberEnabled);
 

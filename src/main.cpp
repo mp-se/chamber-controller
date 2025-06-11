@@ -258,7 +258,7 @@ void runLoop() {
     }
 
     myDisplay.updateTemperatures(mode, state, statusBar, beer, fridge,
-                                 myConfig.getTempFormat());
+                                 myConfig.getTempFormat(), myConfig.getDarkMode());
     tempControl.loop();
 
 #if defined(ENABLE_BLE)
