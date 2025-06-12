@@ -441,28 +441,24 @@ void lvgl_loop_handler(void *parameter) {
 
       // Set dark mode if this is enabled in the settings
       lv_obj_t *scr = lv_scr_act();
+      lv_color_t color;
 
       if(lvglData._darkmode) { 
         lv_obj_set_style_bg_color(scr, lv_color_hex(0x1F1F1F), LV_PART_MAIN);
         lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, LV_PART_MAIN);
-
-        lv_obj_set_style_text_color(lvglData._txtState, lv_color_white(), 0);
-        lv_obj_set_style_text_color(lvglData._txtMode, lv_color_white(), 0);
-        lv_obj_set_style_text_color(lvglData._txtBeerTemp, lv_color_white(), 0);
-        lv_obj_set_style_text_color(lvglData._txtChamberTemp, lv_color_white(), 0);
-        lv_obj_set_style_text_color(lvglData._txtTargetTemp, lv_color_white(), 0);
-        lv_obj_set_style_text_color(lvglData._txtStatusBar, lv_color_white(), 0);
+        color = lv_color_white();
       } else {
         lv_obj_set_style_bg_color(scr, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
         lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, LV_PART_MAIN);
-
-        lv_obj_set_style_text_color(lvglData._txtState, lv_color_black(), 0);
-        lv_obj_set_style_text_color(lvglData._txtMode, lv_color_black(), 0);
-        lv_obj_set_style_text_color(lvglData._txtBeerTemp, lv_color_black(), 0);
-        lv_obj_set_style_text_color(lvglData._txtChamberTemp, lv_color_black(), 0);
-        lv_obj_set_style_text_color(lvglData._txtTargetTemp, lv_color_black(), 0);
-        lv_obj_set_style_text_color(lvglData._txtStatusBar, lv_color_black(), 0);
+        color = lv_color_black();
       }
+
+      lv_obj_set_style_text_color(lvglData._txtState, color, 0);
+      lv_obj_set_style_text_color(lvglData._txtMode, color, 0);
+      lv_obj_set_style_text_color(lvglData._txtBeerTemp, color, 0);
+      lv_obj_set_style_text_color(lvglData._txtChamberTemp, color, 0);
+      lv_obj_set_style_text_color(lvglData._txtTargetTemp, color, 0);
+      lv_obj_set_style_text_color(lvglData._txtStatusBar, color, 0);
 
       // Show/Hide buttons
       if (!lvglData._showBeerBtn)
