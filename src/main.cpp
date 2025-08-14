@@ -146,7 +146,7 @@ void runLoop() {
     myWifi.timeSync();
   }
 
-  if (tempControlLoop.hasExipred()) {
+  if (tempControlLoop.hasExpired()) {
     tempControlLoop.reset();
 
     uint32_t up = myUptime.getHours() * 60 + myUptime.getMinutes();
@@ -274,7 +274,7 @@ void runLoop() {
   //   validateTempControl();
   // }
 
-  if (pushLoop.hasExipred()) {
+  if (pushLoop.hasExpired()) {
     pushLoop.reset();
 
     if (myConfig.hasTargetInfluxDb2()) {

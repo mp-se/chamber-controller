@@ -54,7 +54,7 @@ class PidWebServer : public BaseWebServer {
   void webHandleMinTimes(AsyncWebServerRequest *request);
 
  public:
-  explicit PidWebServer(WebConfig *config, PidPush *push);
+  explicit PidWebServer(WebConfigInterface *config, PidPush *push);
 
   void loop();
 };

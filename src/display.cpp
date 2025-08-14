@@ -436,7 +436,7 @@ void lvgl_loop_handler(void *parameter) {
   LoopTimer taskLoop(500);
 
   for (;;) {
-    if (taskLoop.hasExipred()) {
+    if (taskLoop.hasExpired()) {
       taskLoop.reset();
 
       // Set dark mode if this is enabled in the settings

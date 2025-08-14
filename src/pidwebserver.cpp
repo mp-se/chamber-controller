@@ -76,7 +76,7 @@ constexpr auto PARAM_SENSORS = "sensors";
 
 extern OneWire oneWire;
 
-PidWebServer::PidWebServer(WebConfig *config, PidPush *push)
+PidWebServer::PidWebServer(WebConfigInterface *config, PidPush *push)
     : BaseWebServer(config) {
   _push = push;
 }
