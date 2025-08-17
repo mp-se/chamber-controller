@@ -12,7 +12,7 @@ This is still work in progress but so far I have been running this PID controlle
 # Features
 
 * Control heating and cooling output
-* Supports 2 temperature senors for beer and chamber.
+* Supports 2 temperature sensors for beer and chamber.
 * Control on either sensor target.
 * Sending data to influxdb v2 for analysis of PID algorithm and fine tuning.
 * Sending temperature data over bluetooth for use in my other projects
@@ -31,7 +31,7 @@ Currently I'm using the following development board for running my instance but 
 
 Flashing is done using my web flasher available at https://gravitymon.com/flasher/index.html.
 
-Its not possible to upgrade from versions older than 0.3 to 0.4+ for the esp32pro board, I had to change the flash layout in order to accomodate larger binaries which is required to fit the bluetooth stack.
+Its not possible to upgrade from versions older than 0.3 to 0.4+ for the esp32pro board, I had to change the flash layout in order to accomodate larger binaries which is required to fit the bluetooth stack and TFT libraries.
 
 # Software & Wifi Setup
 
