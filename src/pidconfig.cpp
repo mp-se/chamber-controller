@@ -30,7 +30,7 @@ SOFTWARE.
 PidConfig::PidConfig(String baseMDNS, String fileName)
     : BaseConfig(baseMDNS, fileName) {}
 
-void PidConfig::createJson(JsonObject& doc) {
+void PidConfig::createJson(JsonObject& doc) const {
   // Call base class functions
   createJsonBase(doc);
   createJsonWifi(doc);

@@ -46,69 +46,69 @@ class PidConfig : public BaseConfig {
  public:
   PidConfig(String baseMDNS, String fileName);
 
-  const char* getFridgeSensorId() { return _fridgeSensorId.c_str(); }
+  const char* getFridgeSensorId() const { return _fridgeSensorId.c_str(); }
   void setFridgeSensorId(String s) {
     _fridgeSensorId = s;
     _saveNeeded = true;
   }
-  bool isFridgeSensorEnabled() { return _fridgeSensorId.length() != 0; }
+  bool isFridgeSensorEnabled() const { return _fridgeSensorId.length() != 0; }
 
-  const char* getBeerSensorId() { return _beerSensorId.c_str(); }
+  const char* getBeerSensorId() const { return _beerSensorId.c_str(); }
   void setBeerSensorId(String s) {
     _beerSensorId = s;
     _saveNeeded = true;
   }
-  bool isBeerSensorEnabled() { return _beerSensorId.length() != 0; }
+  bool isBeerSensorEnabled() const { return _beerSensorId.length() != 0; }
 
-  float getFridgeSensorOffset() { return _fridgeSensorOffset; }
+  float getFridgeSensorOffset() const { return _fridgeSensorOffset; }
   void setFridgeSensorOffset(float t) {
     _fridgeSensorOffset = t;
     _saveNeeded = true;
   }
 
-  float getBeerSensorOffset() { return _beerSensorOffset; }
+  float getBeerSensorOffset() const { return _beerSensorOffset; }
   void setBeerSensorOffset(float t) {
     _beerSensorOffset = t;
     _saveNeeded = true;
   }
     
-  float getTargetTemperature() { return _targetTemperature; }
+  float getTargetTemperature() const { return _targetTemperature; }
   void setTargetTemperature(float v) {
     _targetTemperature = v;
     _saveNeeded = true;
   }
 
-  bool isCoolingEnabled() { return _enableCooling; }
+  bool isCoolingEnabled() const { return _enableCooling; }
   void setCoolingEnabled(bool b) {
     _enableCooling = b;
     _saveNeeded = true;
   }
 
-  bool isHeatingEnabled() { return _enableHeating; }
+  bool isHeatingEnabled() const { return _enableHeating; }
   void setHeatingEnabled(bool b) {
     _enableHeating = b;
     _saveNeeded = true;
   }
 
-  bool isPinsInverted() { return _invertPins; }
+  bool isPinsInverted() const { return _invertPins; }
   void setPinsInverted(bool b) {
     _invertPins = b;
     _saveNeeded = true;
   }
 
-  bool isBleEnabled() { return _enableBle; }
+  bool isBleEnabled() const { return _enableBle; }
   void setBleEnabled(bool b) {
     _enableBle = b;
     _saveNeeded = true;
   }
 
-  int getRestartInterval() { return _restartInterval; }
+  int getRestartInterval() const { return _restartInterval; }
   void setRestartInterval(int v) {
     _restartInterval = v;
     _saveNeeded = true;
   }
 
-  char getControllerMode() { return _controllerMode; }
+  char getControllerMode() const { return _controllerMode; }
   void setControllerMode(char c) {
     if (c == ControllerMode::off || c == ControllerMode::beerConstant ||
         c == ControllerMode::fridgeConstant) {
@@ -116,16 +116,16 @@ class PidConfig : public BaseConfig {
       _saveNeeded = true;
     }
   }
-  bool isControllerFridgeConstant() {
+  bool isControllerFridgeConstant() const {
     return _controllerMode == ControllerMode::fridgeConstant;
   }
-  bool isControllerBeerConstant() {
+  bool isControllerBeerConstant() const {
     return _controllerMode == ControllerMode::beerConstant;
   }
-  bool isControllerOff() { return _controllerMode == ControllerMode::off; }
+  bool isControllerOff() const { return _controllerMode == ControllerMode::off; }
 
-  void createJson(JsonObject& doc);
-  void parseJson(JsonObject& doc);
+  void createJson(JsonObject& doc) const override;
+  void parseJson(JsonObject& doc) override;
 };
 
 extern PidConfig myConfig;
