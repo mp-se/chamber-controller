@@ -51,12 +51,12 @@ PidWebServer myWebServer(&myConfig, &myPush);
 SerialWebSocket mySerialWebSocket;
 
 OneWire oneWire;
-DigitalPinActuator *actuatorCooling = NULL;
-DigitalPinActuator *actuatorHeating = NULL;
-OneWireTempSensor *oneWireFridge = NULL;
-OneWireTempSensor *oneWireBeer = NULL;
-TempSensor *fridgeSensor = NULL;
-TempSensor *beerSensor = NULL;
+DigitalPinActuator *actuatorCooling = nullptr;
+DigitalPinActuator *actuatorHeating = nullptr;
+OneWireTempSensor *oneWireFridge = nullptr;
+OneWireTempSensor *oneWireBeer = nullptr;
+TempSensor *fridgeSensor = nullptr;
+TempSensor *beerSensor = nullptr;
 Display myDisplay;
 #if defined(ENABLE_BLE)
 BleSender bleSender;
@@ -349,13 +349,13 @@ void validateTempControl() {
 
   // Check cooling actuator if settings are correct
   if (myConfig.isCoolingEnabled() && tempControl.isDefaultCoolingActator()) {
-    Log.warning(F("Main: Cooling actutor is enabled but not configured!" CR));
+    Log.warning(F("Main: Cooling actuator is enabled but not configured!" CR));
     needInitialize = true;
   }
 
   // Check heating actuator if settings are correct
   if (myConfig.isHeatingEnabled() && tempControl.isDefaultHeatingActator()) {
-    Log.warning(F("Main: Heating actutor is enabled but not configured!" CR));
+    Log.warning(F("Main: Heating actuator is enabled but not configured!" CR));
     needInitialize = true;
   }
 
@@ -415,8 +415,14 @@ void configureTempControl() {
     DeviceAddress daFridge;
     parseBytes(daFridge, myConfig.getFridgeSensorId(), sizeof(daFridge));
 
-    if (oneWireFridge) delete oneWireFridge;
-    if (fridgeSensor) delete fridgeSensor;
+    if (oneWireFridge) {
+      delete oneWireFridge;
+      oneWireFridge = nullptr;
+    }
+    if (fridgeSensor) {
+      delete fridgeSensor;
+      fridgeSensor = nullptr;
+    }
 
     oneWireFridge =
         new OneWireTempSensor(&oneWire, daFridge, myConfig.getFridgeSensorOffset()); 
@@ -432,8 +438,14 @@ void configureTempControl() {
     DeviceAddress daBeer;
     parseBytes(daBeer, myConfig.getBeerSensorId(), sizeof(daBeer));
 
-    if (oneWireBeer) delete oneWireBeer;
-    if (beerSensor) delete beerSensor;
+    if (oneWireBeer) {
+      delete oneWireBeer;
+      oneWireBeer = nullptr;
+    }
+    if (beerSensor) {
+      delete beerSensor;
+      beerSensor = nullptr;
+    }
 
     oneWireBeer =
         new OneWireTempSensor(&oneWire, daBeer, myConfig.getBeerSensorOffset()); 
