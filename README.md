@@ -9,6 +9,10 @@ This is a project that I created to test out a PID controller for another projec
 
 This is still work in progress but so far I have been running this PID controller for a couple of weeks without issues.
 
+# Versions
+
+0.5.0 Update web UI based on my new common component library. Updated dependecies. Now using the full 16Mb on the ESP32 PRO. Upgrading from 0.3 is not possible on the PRO due to new flash layout. 
+
 # Features
 
 * Control heating and cooling output
