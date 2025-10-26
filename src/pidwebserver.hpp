@@ -40,6 +40,7 @@ class PidWebServer : public BaseWebServer {
 
   void setupWebHandlers();
   void webHandleStatus(AsyncWebServerRequest *request);
+  void webHandleFeature(AsyncWebServerRequest *request);
   void webHandleTemps(AsyncWebServerRequest *request);
   void webHandleConfigRead(AsyncWebServerRequest *request);
   void webHandleConfigWrite(AsyncWebServerRequest *request, JsonVariant &json);

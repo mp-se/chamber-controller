@@ -34,10 +34,12 @@ SOFTWARE.
 #include <pidpush.hpp>
 #include <pidwebserver.hpp>
 #include <uptime.hpp>
+#include <utils.hpp>
 
 // These are parameters that the example ui app uses. Part of the status
 // response.
 constexpr auto PARAM_PLATFORM = "platform";
+constexpr auto PARAM_BOARD = "board";
 constexpr auto PARAM_TOTAL_HEAP = "total_heap";
 constexpr auto PARAM_FREE_HEAP = "free_heap";
 constexpr auto PARAM_IP = "ip";
@@ -48,6 +50,8 @@ constexpr auto PARAM_UPTIME_SECONDS = "uptime_seconds";
 constexpr auto PARAM_UPTIME_MINUTES = "uptime_minutes";
 constexpr auto PARAM_UPTIME_HOURS = "uptime_hours";
 constexpr auto PARAM_UPTIME_DAYS = "uptime_days";
+constexpr auto PARAM_FIRMWARE_FILE = "firmware_file";
+constexpr auto PARAM_FEATURE_BLE_SUPPORTED = "ble";
 
 // Pid related params
 constexpr auto PARAM_PID_MODE = "pid_mode";
@@ -93,6 +97,9 @@ void PidWebServer::setupWebHandlers() {
   _server->on(
       "/api/temps", HTTP_GET,
       std::bind(&PidWebServer::webHandleTemps, this, std::placeholders::_1));
+  _server->on("/api/feature", HTTP_GET,
+              std::bind(&PidWebServer::webHandleFeature, this,
+                        std::placeholders::_1));
 
   AsyncCallbackJsonWebHandler *handler;
   _server->on("/api/config", HTTP_GET,
@@ -124,6 +131,31 @@ void PidWebServer::setupWebHandlers() {
   _server->on(
       "/api/pid/mt", HTTP_GET,
       std::bind(&PidWebServer::webHandleMinTimes, this, std::placeholders::_1));
+}
+
+void PidWebServer::webHandleFeature(AsyncWebServerRequest *request) {
+  Log.notice(F("WEB : webServer callback for /api/feature(get)." CR));
+
+  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  JsonObject obj = response->getRoot().as<JsonObject>();
+
+  obj[PARAM_PLATFORM] = platform;
+#if defined(BOARD)
+  obj[PARAM_BOARD] = BOARD;
+#else
+  obj[PARAM_BOARD] = "UNDEFINED";
+#endif
+  obj[PARAM_APP_VER] = CFG_APPVER;
+  obj[PARAM_APP_BUILD] = CFG_GITREV;
+  obj[PARAM_FIRMWARE_FILE] = CFG_FILENAMEBIN;
+#if defined(ENABLE_BLE)
+  obj[PARAM_FEATURE_BLE_SUPPORTED] = true;
+#else
+  obj[PARAM_FEATURE_BLE_SUPPORTED] = false;
+#endif
+
+  response->setLength();
+  request->send(response);
 }
 
 void PidWebServer::webHandleConfigRead(AsyncWebServerRequest *request) {
@@ -176,18 +208,8 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
   // Generic params
   obj[PARAM_ID] = _webConfig->getID();
   obj[PARAM_MDNS] = _webConfig->getMDNS();
-#if defined(ESP32S2)
-  obj[PARAM_PLATFORM] = "esp32s2";
-#elif defined(ESP32)
-  obj[PARAM_PLATFORM] = "esp32";
-#else
-#error "Platform is not defined"
-#endif
-
   obj[PARAM_RSSI] = WiFi.RSSI();
   obj[PARAM_SSID] = WiFi.SSID();
-  obj[PARAM_APP_VER] = CFG_APPVER;
-  obj[PARAM_APP_BUILD] = CFG_GITREV;
   obj[PARAM_TOTAL_HEAP] = ESP.getHeapSize();
   obj[PARAM_FREE_HEAP] = ESP.getFreeHeap();
   obj[PARAM_IP] = WiFi.localIP().toString();
