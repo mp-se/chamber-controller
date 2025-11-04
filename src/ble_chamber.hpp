@@ -31,10 +31,7 @@ SOFTWARE.
 
 class BleSender {
  private:
-  BLEServer* _server = nullptr;
   BLEAdvertising* _advertising = nullptr;
-  BLEService* _service = nullptr;
-  BLECharacteristic* _characteristic = nullptr;
   BLEUUID _uuid;
   bool _initFlag = false;
   int _beaconTime = 1000;
