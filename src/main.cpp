@@ -28,33 +28,39 @@ SOFTWARE.
 #include <NumberFormats.hpp>
 #include <TempControl.hpp>
 #include <TempSensorOneWire.hpp>
+#include <TempSensorBle.hpp>
+#include <ble_chamber.hpp>
+#include <ble_scanner.hpp>
 #include <display.hpp>
 #include <espframework.hpp>
 #include <log.hpp>
 #include <looptimer.hpp>
 #include <main.hpp>
+#include <measurement.hpp>
 #include <pidconfig.hpp>
 #include <pidpush.hpp>
 #include <pidwebserver.hpp>
 #include <serialws.hpp>
 #include <uptime.hpp>
 #include <wificonnection.hpp>
-#include <ble_chamber.hpp>
 
 SerialDebug mySerial(115200L);
 PidConfig myConfig("chamber", "/chamber.cfg");
-WifiConnection myWifi(&myConfig, "chamber", "password", "chamber",
-                      "", "");
+WifiConnection myWifi(&myConfig, "chamber", "password", "chamber", "", "");
 PidPush myPush(&myConfig);
 
 PidWebServer myWebServer(&myConfig, &myPush);
 SerialWebSocket mySerialWebSocket;
+#if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
+MeasurementList myMeasurementList;
+#endif
 
 OneWire oneWire;
 DigitalPinActuator *actuatorCooling = nullptr;
 DigitalPinActuator *actuatorHeating = nullptr;
 OneWireTempSensor *oneWireFridge = nullptr;
 OneWireTempSensor *oneWireBeer = nullptr;
+BleTempSensor *bleBeer = nullptr;
 TempSensor *fridgeSensor = nullptr;
 TempSensor *beerSensor = nullptr;
 Display myDisplay;
@@ -81,7 +87,6 @@ void setup() {
   myDisplay.printLineCentered(1, "Chamber Controller");
   myDisplay.printLineCentered(2, "Starting");
 
-#if !defined(WOKWI)
   myDisplay.printLineCentered(2, "Connecting to WIFI");
 
   myWifi.init();
@@ -92,7 +97,7 @@ void setup() {
           "setup." CR));
     myDisplay.printLineCentered(2, "Entering WIFI setup");
     myWebServer.setWifiSetup(true);
-    myWifi.enableImprov(true);  
+    myWifi.enableImprov(true);
     myWifi.startAP();
   } else {
     myConfig.setWifiScanAP(true);
@@ -101,15 +106,6 @@ void setup() {
 
     myDisplay.calibrateTouch();
   }
-#else
-  myConfig.setWifiSSID("Wokwi-GUEST", 0);
-  myConfig.setWifiPass("", 0);
-  myConfig.setFridgeSensorId("123456");
-  myConfig.setCoolingEnabled(true);
-
-  myWifi.connect(WIFI_AP_STA);
-  myWifi.timeSync();
-#endif
 
   myWebServer.setupWebServer();
   mySerialWebSocket.begin(myWebServer.getWebServer(), &EspSerial);
@@ -122,6 +118,14 @@ void setup() {
 
       // Configure temp controller
       configureTempControl();
+
+      // Setup ble scanner
+#if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
+      Log.notice(F("Main: Initialize ble scanner." CR));
+      bleScanner.setScanTime(myConfig.getBleScanTime());
+      bleScanner.setAllowActiveScan(myConfig.getBleActiveScan());
+      bleScanner.init();
+#endif
 
       // Create graphical UI
       myDisplay.createUI();
@@ -146,14 +150,26 @@ void runLoop() {
     myWifi.timeSync();
   }
 
+#if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
+  if (myConfig.isBleScanEnabled()) {
+    bleScanner.setScanTime(myConfig.getBleScanTime());
+    bleScanner.setAllowActiveScan(myConfig.getBleActiveScan());
+    bleScanner.scan();
+    yield();  // Reset watchdog after BLE scan
+    bleScanner.loop();
+  }
+#endif
+
   if (tempControlLoop.hasExpired()) {
     tempControlLoop.reset();
 
     uint32_t up = myUptime.getHours() * 60 + myUptime.getMinutes();
 
-    Log.notice(F("Loop: Checking restart timer %d, %d." CR), up, myConfig.getRestartInterval());
+    Log.notice(F("Loop: Checking restart timer %d, %d." CR), up,
+               myConfig.getRestartInterval());
 
-    if(myConfig.getRestartInterval() > 0 && up > myConfig.getRestartInterval()) {
+    if (myConfig.getRestartInterval() > 0 &&
+        up > myConfig.getRestartInterval()) {
       Log.notice(F("Loop: Restart timer expired, doing reset." CR));
       LittleFS.end();
       delay(500);
@@ -199,56 +215,57 @@ void runLoop() {
                 ? tempControl.timeSinceCooling()
                 : tempControl.timeSinceHeating();
 
-        if(t>3600)
-          snprintf(state, sizeof(state), "Idle %02dh %02dm", t / 3600, (t % 3600) / 60);
+        if (t > 3600)
+          snprintf(state, sizeof(state), "Idle %02dh %02dm", t / 3600,
+                   (t % 3600) / 60);
         else
           snprintf(state, sizeof(state), "Idle %02dm %02ds", t / 60, t % 60);
       } break;
       case ControllerState::STATE_OFF:
         break;
       case ControllerState::HEATING: {
-        if(tempControl.timeSinceIdle()>3600)
+        if (tempControl.timeSinceIdle() > 3600)
           snprintf(state, sizeof(state), "Heating %02dh %02dm",
-                  tempControl.timeSinceIdle() / 3600,
-                  (tempControl.timeSinceIdle() % 3600) / 60);
+                   tempControl.timeSinceIdle() / 3600,
+                   (tempControl.timeSinceIdle() % 3600) / 60);
         else
           snprintf(state, sizeof(state), "Heating %02dm %02ds",
-                  tempControl.timeSinceIdle() / 60,
-                  tempControl.timeSinceIdle() % 60);
+                   tempControl.timeSinceIdle() / 60,
+                   tempControl.timeSinceIdle() % 60);
       } break;
       case ControllerState::COOLING: {
-        if(tempControl.timeSinceIdle()>3600)
+        if (tempControl.timeSinceIdle() > 3600)
           snprintf(state, sizeof(state), "Cooling %02dh %02dm",
-                  tempControl.timeSinceIdle() / 3600,
-                  (tempControl.timeSinceIdle() % 3600) / 60);
+                   tempControl.timeSinceIdle() / 3600,
+                   (tempControl.timeSinceIdle() % 3600) / 60);
         else
           snprintf(state, sizeof(state), "Cooling %02dm %02ds",
-                  tempControl.timeSinceIdle() / 60,
-                  tempControl.timeSinceIdle() % 60);
+                   tempControl.timeSinceIdle() / 60,
+                   tempControl.timeSinceIdle() % 60);
       } break;
       case ControllerState::COOLING_MIN_TIME:
       case ControllerState::HEATING_MIN_TIME: {
-        if(tempControl.timeSinceIdle()>3600)
+        if (tempControl.timeSinceIdle() > 3600)
           snprintf(state, sizeof(state), "Waiting %02dh %02dm",
-                  tempControl.timeSinceIdle() / 3600,
-                  (tempControl.timeSinceIdle() % 3600) / 60);
+                   tempControl.timeSinceIdle() / 3600,
+                   (tempControl.timeSinceIdle() % 3600) / 60);
         else
           snprintf(state, sizeof(state), "Waiting %02dm %02ds",
-                  tempControl.timeSinceIdle() / 60,
-                  tempControl.timeSinceIdle() % 60);
+                   tempControl.timeSinceIdle() / 60,
+                   tempControl.timeSinceIdle() % 60);
       } break;
 
       case ControllerState::WAITING_TO_HEAT:
       case ControllerState::WAITING_TO_COOL:
       case ControllerState::WAITING_FOR_PEAK_DETECT: {
-        if(tempControl.timeSinceIdle()>3600)
+        if (tempControl.timeSinceIdle() > 3600)
           snprintf(state, sizeof(state), "Waiting %02dh %02dm",
-                  tempControl.getWaitTime() / 3600,
-                  (tempControl.getWaitTime() % 3600) / 60);
+                   tempControl.getWaitTime() / 3600,
+                   (tempControl.getWaitTime() % 3600) / 60);
         else
           snprintf(state, sizeof(state), "Waiting %02dm %02ds",
-                  tempControl.getWaitTime() / 60,
-                  tempControl.getWaitTime() % 60);
+                   tempControl.getWaitTime() / 60,
+                   tempControl.getWaitTime() % 60);
       } break;
     }
 
@@ -261,13 +278,15 @@ void runLoop() {
     }
 
     myDisplay.updateTemperatures(mode, state, statusBar, beer, fridge,
-                                 myConfig.getTempFormat(), myConfig.getDarkMode());
+                                 myConfig.getTempFormat(),
+                                 myConfig.getDarkMode());
     tempControl.loop();
 
 #if defined(ENABLE_BLE)
-    if(myConfig.isBleEnabled()) {
+    if (myConfig.isBlePushEnabled()) {
       Log.notice(F("Main: Sending temperature over BLE." CR));
-      bleSender.sendCustomBeaconData(isnan(fridge) ? 0 : fridge, isnan(beer) ? 0 : beer);
+      bleSender.sendCustomBeaconData(isnan(fridge) ? 0 : fridge,
+                                     isnan(beer) ? 0 : beer);
     }
 #endif
   }
@@ -397,13 +416,16 @@ void configureTempControl() {
   Log.info(F("Main: Initializing temp control." CR));
   tempControl.init(MIN_TIMES_DEFAULT);
 
-  if(!myConfig.isFridgeSensorEnabled() && !myConfig.isBeerSensorEnabled()) {
-    Log.error(F("Main: No sensor configured, unable to configure Temp Controller." CR));
+  if (!myConfig.isFridgeSensorEnabled() && !myConfig.isBeerSensorEnabled()) {
+    Log.error(F(
+        "Main: No sensor configured, unable to configure Temp Controller." CR));
     return;
   }
 
-  if(!myConfig.isCoolingEnabled() && !myConfig.isHeatingEnabled()) {
-    Log.error(F("Main: Heating or Cooling is not configured, unable to configure Temp Controller." CR));
+  if (!myConfig.isCoolingEnabled() && !myConfig.isHeatingEnabled()) {
+    Log.error(
+        F("Main: Heating or Cooling is not configured, unable to configure "
+          "Temp Controller." CR));
     return;
   }
 
@@ -424,34 +446,54 @@ void configureTempControl() {
       fridgeSensor = nullptr;
     }
 
-    oneWireFridge =
-        new OneWireTempSensor(&oneWire, daFridge, myConfig.getFridgeSensorOffset()); 
+    oneWireFridge = new OneWireTempSensor(&oneWire, daFridge,
+                                          myConfig.getFridgeSensorOffset());
     fridgeSensor = new TempSensor(TEMP_SENSOR_TYPE_FRIDGE, oneWireFridge);
     fridgeSensor->init();
     tempControl.setFridgeSensor(fridgeSensor);
   }
 
   if (myConfig.isBeerSensorEnabled()) {
-    Log.info(F("Main: Configuring beer sensor %s." CR),
-             myConfig.getBeerSensorId());
 
-    DeviceAddress daBeer;
-    parseBytes(daBeer, myConfig.getBeerSensorId(), sizeof(daBeer));
+    if(strlen(myConfig.getBeerBleSensorId()) > 0) {
+      Log.info(F("Main: Configuring beer sensor %s (BLE)." CR),
+              myConfig.getBeerBleSensorId());
 
-    if (oneWireBeer) {
-      delete oneWireBeer;
-      oneWireBeer = nullptr;
+      if (bleBeer) {
+        delete bleBeer;
+        bleBeer = nullptr;
+      }
+      if (beerSensor) {
+        delete beerSensor;
+        beerSensor = nullptr;
+      }
+
+      bleBeer = new BleTempSensor(myConfig.getBeerBleSensorId());
+      beerSensor = new TempSensor(TEMP_SENSOR_TYPE_BEER, bleBeer);
+      beerSensor->init();
+      tempControl.setBeerSensor(beerSensor);
+    } else {
+      Log.info(F("Main: Configuring beer sensor %s (OneWire)." CR),
+              myConfig.getBeerSensorId());
+
+      DeviceAddress daBeer;
+      parseBytes(daBeer, myConfig.getBeerSensorId(), sizeof(daBeer));
+
+      if (oneWireBeer) {
+        delete oneWireBeer;
+        oneWireBeer = nullptr;
+      }
+      if (beerSensor) {
+        delete beerSensor;
+        beerSensor = nullptr;
+      }
+
+      oneWireBeer =
+          new OneWireTempSensor(&oneWire, daBeer, myConfig.getBeerSensorOffset());
+      beerSensor = new TempSensor(TEMP_SENSOR_TYPE_BEER, oneWireBeer);
+      beerSensor->init();
+      tempControl.setBeerSensor(beerSensor);
     }
-    if (beerSensor) {
-      delete beerSensor;
-      beerSensor = nullptr;
-    }
-
-    oneWireBeer =
-        new OneWireTempSensor(&oneWire, daBeer, myConfig.getBeerSensorOffset()); 
-    beerSensor = new TempSensor(TEMP_SENSOR_TYPE_BEER, oneWireBeer);
-    beerSensor->init();
-    tempControl.setBeerSensor(beerSensor);
   }
 
   // Create the actuators
@@ -490,9 +532,13 @@ void configureTempControl() {
   tempControl.loadSettings();
 #endif
 
-  if(myConfig.getControllerMode() != tempControl.getMode()) { // If we have a missmatch after loading settings, set the controller mode 
+  if (myConfig.getControllerMode() !=
+      tempControl.getMode()) {  // If we have a missmatch after loading
+                                // settings, set the controller mode
 #if defined(BREWPI_ENABLE_SAVE)
-    Log.warning(F("Main: Stored controller mode does not match configured, updating." CR));
+    Log.warning(
+        F("Main: Stored controller mode does not match configured, "
+          "updating." CR));
 #endif
     Log.info(F("Main: Setting mode %c." CR), myConfig.getControllerMode());
     tempControl.setMode(myConfig.getControllerMode());
