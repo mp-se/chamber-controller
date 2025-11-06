@@ -36,13 +36,19 @@ void setNewControllerMode(char mode, float temp);
 
 constexpr auto PARAM_FRIDGE_SENSOR_ID = "fridge_sensor_id";
 constexpr auto PARAM_BEER_SENSOR_ID = "beer_sensor_id";
+constexpr auto PARAM_BEER_BLE_SENSOR_ID = "beer_ble_sensor_id";
 constexpr auto PARAM_CONTROLLER_MODE = "controller_mode";
 constexpr auto PARAM_TARGET_TEMPERATURE = "target_temperature";
 constexpr auto PARAM_ENABLE_COOLING = "enable_cooling";
 constexpr auto PARAM_ENABLE_HEATING = "enable_heating";
 constexpr auto PARAM_INVERT_PINS = "invert_pins";
 constexpr auto PARAM_RESTART_INTERVAL = "restart_interval";
-constexpr auto PARAM_BLE_ENABLED = "ble_enabled";
+constexpr auto PARAM_BLE_ENABLED =
+    "ble_enabled";  // This variable is the same as ble_push and will be removed
+                    // in future
+constexpr auto PARAM_BLE_SCAN_ENABLED = "ble_scan_enabled";
+constexpr auto PARAM_BLE_PUSH_ENABLED = "ble_push_enabled";
+constexpr auto PARAM_BLE_SENSOR_VALID_TIME = "ble_sensor_valid_time";
 constexpr auto PARAM_FRIDGE_SENSOR_OFFSET = "fridge_sensor_offset";
 constexpr auto PARAM_BEER_SENSOR_OFFSET = "beer_sensor_offset";
 

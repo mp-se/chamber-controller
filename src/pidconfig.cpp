@@ -40,15 +40,23 @@ void PidConfig::createJson(JsonObject& doc) const {
   // Handle project specific config
   doc[PARAM_FRIDGE_SENSOR_ID] = getFridgeSensorId();
   doc[PARAM_BEER_SENSOR_ID] = getBeerSensorId();
-  doc[PARAM_FRIDGE_SENSOR_OFFSET] = serialized(String(getFridgeSensorOffset(), DECIMALS_TEMP));
-  doc[PARAM_BEER_SENSOR_OFFSET] = serialized(String(getBeerSensorOffset(), DECIMALS_TEMP));
+  doc[PARAM_BEER_BLE_SENSOR_ID] = getBeerBleSensorId();
+  doc[PARAM_FRIDGE_SENSOR_OFFSET] =
+      serialized(String(getFridgeSensorOffset(), DECIMALS_TEMP));
+  doc[PARAM_BEER_SENSOR_OFFSET] =
+      serialized(String(getBeerSensorOffset(), DECIMALS_TEMP));
   doc[PARAM_CONTROLLER_MODE] = String(getControllerMode());
-  doc[PARAM_TARGET_TEMPERATURE] = serialized(String(getTargetTemperature(), DECIMALS_TEMP));
+  doc[PARAM_TARGET_TEMPERATURE] =
+      serialized(String(getTargetTemperature(), DECIMALS_TEMP));
   doc[PARAM_ENABLE_COOLING] = isCoolingEnabled();
   doc[PARAM_ENABLE_HEATING] = isHeatingEnabled();
   doc[PARAM_INVERT_PINS] = isPinsInverted();
   doc[PARAM_RESTART_INTERVAL] = getRestartInterval();
-  doc[PARAM_BLE_ENABLED] = isBleEnabled();
+  // doc[PARAM_BLE_ENABLED] = isBlePushEnabled(); // This variable is the same
+  // as ble_push and will be removed in future
+  doc[PARAM_BLE_PUSH_ENABLED] = isBlePushEnabled();
+  doc[PARAM_BLE_SCAN_ENABLED] = isBleScanEnabled();
+  doc[PARAM_BLE_SENSOR_VALID_TIME] = getBleSensorValidTime();
 }
 
 void PidConfig::parseJson(JsonObject& doc) {
@@ -67,6 +75,8 @@ void PidConfig::parseJson(JsonObject& doc) {
     setFridgeSensorId(doc[PARAM_FRIDGE_SENSOR_ID]);
   if (!doc[PARAM_BEER_SENSOR_ID].isNull())
     setBeerSensorId(doc[PARAM_BEER_SENSOR_ID]);
+  if (!doc[PARAM_BEER_BLE_SENSOR_ID].isNull())
+    setBeerBleSensorId(doc[PARAM_BEER_BLE_SENSOR_ID]);
   if (!doc[PARAM_FRIDGE_SENSOR_OFFSET].isNull())
     setFridgeSensorOffset(doc[PARAM_FRIDGE_SENSOR_OFFSET].as<float>());
   if (!doc[PARAM_BEER_SENSOR_OFFSET].isNull())
@@ -81,8 +91,19 @@ void PidConfig::parseJson(JsonObject& doc) {
     setPinsInverted(doc[PARAM_INVERT_PINS].as<bool>());
   if (!doc[PARAM_RESTART_INTERVAL].isNull())
     setRestartInterval(doc[PARAM_RESTART_INTERVAL].as<int>());
-  if (!doc[PARAM_BLE_ENABLED].isNull())
-    setBleEnabled(doc[PARAM_BLE_ENABLED].as<bool>());
+  if (!doc[PARAM_BLE_ENABLED]
+           .isNull())  // This variable is the same as ble_push and will be
+                       // removed in future
+    setBlePushEnabled(
+        doc[PARAM_BLE_ENABLED]
+            .as<bool>());  // This variable is the same as ble_push and will be
+                           // removed in future
+  if (!doc[PARAM_BLE_PUSH_ENABLED].isNull())
+    setBlePushEnabled(doc[PARAM_BLE_PUSH_ENABLED].as<bool>());
+  if (!doc[PARAM_BLE_SCAN_ENABLED].isNull())
+    setBleScanEnabled(doc[PARAM_BLE_SCAN_ENABLED].as<bool>());
+  if (!doc[PARAM_BLE_SENSOR_VALID_TIME].isNull())
+    setBleSensorValidTime(doc[PARAM_BLE_SENSOR_VALID_TIME].as<int>());
 }
 
 // EOF

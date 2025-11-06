@@ -26,6 +26,7 @@ SOFTWARE.
 #include <LittleFS.h>
 #include <Wire.h>
 
+#include <cstdio>
 #include <display.hpp>
 #include <fonts.hpp>
 #include <functional>
@@ -59,7 +60,7 @@ void Display::setup() {
   _tft->setRotation(_rotation);
   clear();
   setFont(FontSize::FONT_9);
-#else 
+#else
   Log.warning(F("DISP: TFT driver support is not included in this build!" CR));
 #endif
 }
@@ -137,7 +138,8 @@ void Display::updateButtons(bool beerEnabled, bool chamberEnabled) {
 
 void Display::updateTemperatures(const char *mode, const char *state,
                                  const char *statusBar, float beerTemp,
-                                 float chamberTemp, char tempFormat, bool darkmode) {
+                                 float chamberTemp, char tempFormat,
+                                 bool darkmode) {
 #if defined(ENABLE_LVGL)
   if (!_tft) return;
 
@@ -443,7 +445,7 @@ void lvgl_loop_handler(void *parameter) {
       lv_obj_t *scr = lv_scr_act();
       lv_color_t color;
 
-      if(lvglData._darkmode) { 
+      if (lvglData._darkmode) {
         lv_obj_set_style_bg_color(scr, lv_color_hex(0x1F1F1F), LV_PART_MAIN);
         lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, LV_PART_MAIN);
         color = lv_color_white();

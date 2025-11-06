@@ -30,14 +30,17 @@ SOFTWARE.
 #include <espframework.hpp>
 #include <log.hpp>
 #include <main.hpp>
+#include <measurement.hpp>
 #include <pidconfig.hpp>
 #include <pidpush.hpp>
 #include <pidwebserver.hpp>
 #include <uptime.hpp>
+#include <utils.hpp>
 
 // These are parameters that the example ui app uses. Part of the status
 // response.
 constexpr auto PARAM_PLATFORM = "platform";
+constexpr auto PARAM_BOARD = "board";
 constexpr auto PARAM_TOTAL_HEAP = "total_heap";
 constexpr auto PARAM_FREE_HEAP = "free_heap";
 constexpr auto PARAM_IP = "ip";
@@ -48,6 +51,9 @@ constexpr auto PARAM_UPTIME_SECONDS = "uptime_seconds";
 constexpr auto PARAM_UPTIME_MINUTES = "uptime_minutes";
 constexpr auto PARAM_UPTIME_HOURS = "uptime_hours";
 constexpr auto PARAM_UPTIME_DAYS = "uptime_days";
+constexpr auto PARAM_FIRMWARE_FILE = "firmware_file";
+constexpr auto PARAM_FEATURE_BLE_SUPPORTED = "ble";
+constexpr auto PARAM_FEATURE_BLE_SENSOR = "ble_sensor";
 
 // Pid related params
 constexpr auto PARAM_PID_MODE = "pid_mode";
@@ -74,6 +80,15 @@ constexpr auto PARAM_NEW_TEMPERATURE = "new_temperature";
 
 constexpr auto PARAM_SENSORS = "sensors";
 
+// Ble sensors
+constexpr auto PARAM_TEMPERATURE_DEVICE = "temperature_device";
+constexpr auto PARAM_DEVICE = "device";
+constexpr auto PARAM_NAME = "name";
+constexpr auto PARAM_TYPE = "type";
+constexpr auto PARAM_SOURCE = "source";
+constexpr auto PARAM_TEMP = "temp";
+constexpr auto PARAM_UPDATE_TIME = "update_time";
+
 extern OneWire oneWire;
 
 PidWebServer::PidWebServer(WebConfigInterface *config, PidPush *push)
@@ -93,6 +108,9 @@ void PidWebServer::setupWebHandlers() {
   _server->on(
       "/api/temps", HTTP_GET,
       std::bind(&PidWebServer::webHandleTemps, this, std::placeholders::_1));
+  _server->on(
+      "/api/feature", HTTP_GET,
+      std::bind(&PidWebServer::webHandleFeature, this, std::placeholders::_1));
 
   AsyncCallbackJsonWebHandler *handler;
   _server->on("/api/config", HTTP_GET,
@@ -124,6 +142,37 @@ void PidWebServer::setupWebHandlers() {
   _server->on(
       "/api/pid/mt", HTTP_GET,
       std::bind(&PidWebServer::webHandleMinTimes, this, std::placeholders::_1));
+}
+
+void PidWebServer::webHandleFeature(AsyncWebServerRequest *request) {
+  Log.notice(F("WEB : webServer callback for /api/feature(get)." CR));
+
+  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  JsonObject obj = response->getRoot().as<JsonObject>();
+
+  obj[PARAM_PLATFORM] = platform;
+#if defined(BOARD)
+  obj[PARAM_BOARD] = BOARD;
+#else
+  obj[PARAM_BOARD] = "UNDEFINED";
+#endif
+  obj[PARAM_APP_VER] = CFG_APPVER;
+  obj[PARAM_APP_BUILD] = CFG_GITREV;
+  obj[PARAM_FIRMWARE_FILE] = CFG_FILENAMEBIN;
+#if defined(ENABLE_BLE)
+  obj[PARAM_FEATURE_BLE_SUPPORTED] = true;
+#else
+  obj[PARAM_FEATURE_BLE_SUPPORTED] = false;
+#endif
+
+#if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
+  obj[PARAM_FEATURE_BLE_SENSOR] = true;
+#else
+  obj[PARAM_FEATURE_BLE_SENSOR] = false;
+#endif
+
+  response->setLength();
+  request->send(response);
 }
 
 void PidWebServer::webHandleConfigRead(AsyncWebServerRequest *request) {
@@ -176,18 +225,8 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
   // Generic params
   obj[PARAM_ID] = _webConfig->getID();
   obj[PARAM_MDNS] = _webConfig->getMDNS();
-#if defined(ESP32S2)
-  obj[PARAM_PLATFORM] = "esp32s2";
-#elif defined(ESP32)
-  obj[PARAM_PLATFORM] = "esp32";
-#else
-#error "Platform is not defined"
-#endif
-
   obj[PARAM_RSSI] = WiFi.RSSI();
   obj[PARAM_SSID] = WiFi.SSID();
-  obj[PARAM_APP_VER] = CFG_APPVER;
-  obj[PARAM_APP_BUILD] = CFG_GITREV;
   obj[PARAM_TOTAL_HEAP] = ESP.getHeapSize();
   obj[PARAM_FREE_HEAP] = ESP.getFreeHeap();
   obj[PARAM_IP] = WiFi.localIP().toString();
@@ -205,11 +244,14 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
     obj[PARAM_PID_BEER_TEMP] = tempControl.getBeerTemperature();
     obj[PARAM_PID_BEER_TEMP_CONNECTED] =
         tempControl.getBeerSensor()->isConnected();
-    obj[PARAM_PID_FRIDGE_TEMP] = serialized(String(tempControl.getFridgeTemperature(), DECIMALS_TEMP)); 
+    obj[PARAM_PID_FRIDGE_TEMP] =
+        serialized(String(tempControl.getFridgeTemperature(), DECIMALS_TEMP));
     obj[PARAM_PID_FRIDGE_TEMP_CONNECTED] =
         tempControl.getFridgeSensor()->isConnected();
-    obj[PARAM_PID_BEER_TARGET_TEMP] = serialized(String(tempControl.getBeerTemperatureSetting(), DECIMALS_TEMP)); 
-    obj[PARAM_PID_FRIDGE_TARGET_TEMP] = serialized(String(tempControl.getFridgeTemperatureSetting(), DECIMALS_TEMP));
+    obj[PARAM_PID_BEER_TARGET_TEMP] = serialized(
+        String(tempControl.getBeerTemperatureSetting(), DECIMALS_TEMP));
+    obj[PARAM_PID_FRIDGE_TARGET_TEMP] = serialized(
+        String(tempControl.getFridgeTemperatureSetting(), DECIMALS_TEMP));
     obj[PARAM_PID_TEMP_FORMAT] =
         String(tempControl.getControlConstants().tempFormat);
     obj[PARAM_PID_COOLING_ACTUATOR_ACTIVE] =
@@ -221,6 +263,57 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
     obj[PARAM_PID_TIME_SINCE_HEATING] = tempControl.timeSinceHeating();
     obj[PARAM_PID_TIME_SINCE_IDLE] = tempControl.timeSinceIdle();
   }
+
+  JsonArray temperatureDevices = obj[PARAM_TEMPERATURE_DEVICE].to<JsonArray>();
+  int tempIdx = 0;
+
+#if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
+  for (int i = 0; i < myMeasurementList.size(); i++) {
+    MeasurementEntry *entry = myMeasurementList.getMeasurementEntry(i);
+
+    switch (entry->getType()) {
+      case MeasurementType::Gravitymon: {
+        Log.notice("WEB: Processing Gravitymon data %d." CR, i);
+        const GravityData *gd = entry->getGravityData();
+
+        temperatureDevices[tempIdx][PARAM_NAME] = gd->getName();
+        temperatureDevices[tempIdx][PARAM_DEVICE] = gd->getId();
+        temperatureDevices[tempIdx][PARAM_TEMP] = gd->getTempC();
+        temperatureDevices[tempIdx][PARAM_UPDATE_TIME] = entry->getUpdateAge();
+        temperatureDevices[tempIdx][PARAM_SOURCE] = gd->getSourceAsString();
+        temperatureDevices[tempIdx][PARAM_TYPE] = gd->getTypeAsString();
+        tempIdx++;
+      } break;
+
+      case MeasurementType::Tilt:
+      case MeasurementType::TiltPro: {
+        Log.notice("WEB: Processing Tilt data %d." CR, i);
+        const TiltData *td = entry->getTiltData();
+
+        temperatureDevices[tempIdx][PARAM_NAME] = td->getTiltColor();
+        temperatureDevices[tempIdx][PARAM_DEVICE] = td->getId();
+        temperatureDevices[tempIdx][PARAM_TEMP] = td->getTempC();
+        temperatureDevices[tempIdx][PARAM_UPDATE_TIME] = entry->getUpdateAge();
+        temperatureDevices[tempIdx][PARAM_SOURCE] = td->getSourceAsString();
+        temperatureDevices[tempIdx][PARAM_TYPE] = td->getTypeAsString();
+        tempIdx++;
+      } break;
+
+      case MeasurementType::Rapt: {
+        Log.notice("WEB: Processing Rapt data %d." CR, i);
+        const RaptData *rd = entry->getRaptData();
+
+        temperatureDevices[tempIdx][PARAM_NAME] = rd->getId();
+        temperatureDevices[tempIdx][PARAM_DEVICE] = rd->getId();
+        temperatureDevices[tempIdx][PARAM_TEMP] = rd->getTempC();
+        temperatureDevices[tempIdx][PARAM_UPDATE_TIME] = entry->getUpdateAge();
+        temperatureDevices[tempIdx][PARAM_SOURCE] = rd->getSourceAsString();
+        temperatureDevices[tempIdx][PARAM_TYPE] = rd->getTypeAsString();
+        tempIdx++;
+      } break;
+    }
+  }
+#endif  // ENABLE_BLE && ENABLE_BLE_SENSOR
 
   response->setLength();
   request->send(response);

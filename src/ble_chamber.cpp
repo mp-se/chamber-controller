@@ -27,13 +27,6 @@ SOFTWARE.
 #include <log.hpp>
 #include <string>
 
-// Tilt UUID variants and data format, based on tilt-sim
-//
-// https://github.com/spouliot/tilt-sim
-//
-// Tilt data format is described here. Only SG and Temp is transmitted over BLE.
-// https://kvurd.com/blog/tilt-hydrometer-ibeacon-data-format/
-
 void BleSender::init() {
   if (_initFlag) return;
 
@@ -74,7 +67,7 @@ void BleSender::sendCustomBeaconData(float chamberTempC, float beerTempC) {
   mf += static_cast<char>((c >> 8));  // Chamber Temp
   mf += static_cast<char>((c & 0xFF));
   mf += static_cast<char>((b >> 8));  // Beer Temp
-  mf += static_cast<char>((b & 0xFF));  
+  mf += static_cast<char>((b & 0xFF));
   mf += static_cast<char>(0x00);
   mf += static_cast<char>(0x00);
   mf += static_cast<char>(0x00);

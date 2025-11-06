@@ -9,10 +9,21 @@ This is a project that I created to test out a PID controller for another projec
 
 This is still work in progress but so far I have been running this PID controller for a couple of weeks without issues.
 
+# Versions
+
+## 0.6.0 
+
+* Adding BLE temperature sensor support for Beer sensor so that controller can use Gravitymon ble as base for target temperature
+
+## 0.5.0 
+
+* Update web UI based on my new common component library. Updated dependecies. Now using the full 16Mb on the ESP32 PRO. Upgrading from 0.3 is not possible on the PRO due to new flash layout.
+
 # Features
 
 * Control heating and cooling output
 * Supports 2 temperature sensors for beer and chamber.
+* Support BLE sensor for beer temperature (Gravitymon, Tilt, RAPT Pill)
 * Control on either sensor target.
 * Sending data to influxdb v2 for analysis of PID algorithm and fine tuning.
 * Sending temperature data over bluetooth for use in my other projects

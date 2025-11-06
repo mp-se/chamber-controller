@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2025 Magnus
+Copyright (c) 2024-2025 Magnus
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,32 +21,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-#ifndef SRC_BLE_CHAMBER_HPP_
-#define SRC_BLE_CHAMBER_HPP_
+#ifndef SRC_TEMPSENSORBLE_HPP_
+#define SRC_TEMPSENSORBLE_HPP_
 
-#if defined(ENABLE_BLE) && defined(CHAMBER)
+#include <TempSensor.hpp>
+#include <Ticks.hpp>
+#include <log.hpp>
 
-#include <NimBLEBeacon.h>
-#include <NimBLEDevice.h>
+class DallasTemperature;
+class OneWire;
+typedef uint8_t DeviceAddress[8];
 
-class BleSender {
- private:
-  BLEAdvertising* _advertising = nullptr;
-  BLEUUID _uuid;
-  bool _initFlag = false;
-  int _beaconTime = 1000;
-
-  void dumpPayload(const char* payload, int len);
-
+class BleTempSensor : public BasicTempSensor {
  public:
-  BleSender() {}
+  BleTempSensor(String name) {
+    Log.verbose(F("TEMP: Creating BleTempSensor %s." CR), name.c_str());
+    _name = name;
+  }
 
-  void init();
+  ~BleTempSensor();
 
-  // Beacons
-  void sendCustomBeaconData(float chamberTempC, float beerTempC);
+  bool isConnected() const;
+  bool init();
+  temperature read();
+
+ private:
+  String _name;
 };
 
-#endif  // ENABLE_BLE && CHAMBER
+#endif  // SRC_TEMPSENSORBLE_HPP_
 
-#endif  // SRC_BLE_CHAMBER_HPP_
+// EOF

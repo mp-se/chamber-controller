@@ -31,17 +31,20 @@ class PidConfig : public BaseConfig {
  private:
   String _fridgeSensorId = "";
   String _beerSensorId = "";
+  String _beerBleSensorId = "";
   char _controllerMode = ControllerMode::off;
   float _targetTemperature = 5;
   float _fridgeSensorOffset = 0.0;
   float _beerSensorOffset = 0.0;
-  int _restartInterval = 60 * 4; // minutes 
+  int _restartInterval = 60 * 4;  // in minutes
   bool _enableCooling = false;
   bool _enableHeating = false;
   bool _invertPins = false;
-  bool _enableBle = false;
-
-  // TODO: Add option to define which MIN_TIMES profile to use.
+  bool _enableBlePush = false;
+  bool _enableBleScan = false;
+  bool _bleActiveScan = false;  // This is a constant for now
+  int _bleScanTime = 3;         // This is a constant for now
+  int _bleSensorValidTime = 15;
 
  public:
   PidConfig(String baseMDNS, String fileName);
@@ -60,6 +63,13 @@ class PidConfig : public BaseConfig {
   }
   bool isBeerSensorEnabled() const { return _beerSensorId.length() != 0; }
 
+  const char* getBeerBleSensorId() const { return _beerBleSensorId.c_str(); }
+  void setBeerBleSensorId(String s) {
+    _beerBleSensorId = s;
+    _saveNeeded = true;
+  }
+  bool isBeerBleSensorEnabled() const { return _beerBleSensorId.length() != 0; }
+
   float getFridgeSensorOffset() const { return _fridgeSensorOffset; }
   void setFridgeSensorOffset(float t) {
     _fridgeSensorOffset = t;
@@ -71,7 +81,7 @@ class PidConfig : public BaseConfig {
     _beerSensorOffset = t;
     _saveNeeded = true;
   }
-    
+
   float getTargetTemperature() const { return _targetTemperature; }
   void setTargetTemperature(float v) {
     _targetTemperature = v;
@@ -96,9 +106,15 @@ class PidConfig : public BaseConfig {
     _saveNeeded = true;
   }
 
-  bool isBleEnabled() const { return _enableBle; }
-  void setBleEnabled(bool b) {
-    _enableBle = b;
+  bool isBlePushEnabled() const { return _enableBlePush; }
+  void setBlePushEnabled(bool b) {
+    _enableBlePush = b;
+    _saveNeeded = true;
+  }
+
+  bool isBleScanEnabled() const { return _enableBleScan; }
+  void setBleScanEnabled(bool b) {
+    _enableBleScan = b;
     _saveNeeded = true;
   }
 
@@ -122,7 +138,27 @@ class PidConfig : public BaseConfig {
   bool isControllerBeerConstant() const {
     return _controllerMode == ControllerMode::beerConstant;
   }
-  bool isControllerOff() const { return _controllerMode == ControllerMode::off; }
+  bool isControllerOff() const {
+    return _controllerMode == ControllerMode::off;
+  }
+
+  int getBleScanTime() const { return _bleScanTime; }
+  // void setBleScanTime(int v) {
+  //   _bleScanTime = v;
+  //   _saveNeeded = true;
+  // }
+
+  bool getBleActiveScan() const { return _bleActiveScan; }
+  // void setBleActiveScan(bool b) {
+  //   _bleActiveScan = b;
+  //   _saveNeeded = true;
+  // }
+
+  int getBleSensorValidTime() const { return _bleSensorValidTime; }
+  void setBleSensorValidTime(int v) {
+    _bleSensorValidTime = v;
+    _saveNeeded = true;
+  }
 
   void createJson(JsonObject& doc) const override;
   void parseJson(JsonObject& doc) override;
