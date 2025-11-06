@@ -26,6 +26,7 @@ SOFTWARE.
 #include <LittleFS.h>
 #include <Wire.h>
 
+#include <cstdio>
 #include <display.hpp>
 #include <fonts.hpp>
 #include <functional>

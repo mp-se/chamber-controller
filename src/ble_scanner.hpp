@@ -69,7 +69,7 @@ class BleScanner {
   BLEScan *_bleScan = nullptr;
   BleDeviceCallbacks *_deviceCallbacks = nullptr;
   std::queue<std::unique_ptr<MeasurementBaseData>> _bleData;
-  std::map<String, uint32_t> _lastAddTimes;  
+  std::map<String, uint32_t> _lastAddTimes;
 
   TiltColor uuidToTiltColor(std::string uuid);
   void addData(std::unique_ptr<MeasurementBaseData> data);

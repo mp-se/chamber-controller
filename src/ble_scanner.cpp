@@ -459,7 +459,8 @@ void BleScanner::addData(std::unique_ptr<MeasurementBaseData> data) {
 
   if (_lastAddTimes.find(id) != _lastAddTimes.end() &&
       currentTime - _lastAddTimes[id] < BLE_THROTTLING_DELAY_MS) {
-    Log.notice(F("BLE: Skip adding data for %s, too soon since last add" CR), id.c_str());
+    Log.notice(F("BLE: Skip adding data for %s, too soon since last add" CR),
+               id.c_str());
     return;  // Skip adding to queue
   }
 

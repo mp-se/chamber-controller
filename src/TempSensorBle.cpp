@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+#if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
 
 #include <ActuatorDigitalPin.hpp>
 #include <Config.hpp>
@@ -82,5 +83,7 @@ temperature BleTempSensor::read() {
 
   return INVALID_TEMP;
 }
+
+#endif  // ENABLE_BLE && ENABLE_BLE_SENSOR
 
 // EOF

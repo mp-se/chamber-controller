@@ -27,10 +27,11 @@ SOFTWARE.
 #include <Config.hpp>
 #include <NumberFormats.hpp>
 #include <TempControl.hpp>
-#include <TempSensorOneWire.hpp>
 #include <TempSensorBle.hpp>
+#include <TempSensorOneWire.hpp>
 #include <ble_chamber.hpp>
 #include <ble_scanner.hpp>
+#include <cstdio>
 #include <display.hpp>
 #include <espframework.hpp>
 #include <log.hpp>
@@ -60,7 +61,9 @@ DigitalPinActuator *actuatorCooling = nullptr;
 DigitalPinActuator *actuatorHeating = nullptr;
 OneWireTempSensor *oneWireFridge = nullptr;
 OneWireTempSensor *oneWireBeer = nullptr;
+#if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
 BleTempSensor *bleBeer = nullptr;
+#endif  // ENABLE_BLE && ENABLE_BLE_SENSOR
 TempSensor *fridgeSensor = nullptr;
 TempSensor *beerSensor = nullptr;
 Display myDisplay;
@@ -454,10 +457,10 @@ void configureTempControl() {
   }
 
   if (myConfig.isBeerSensorEnabled()) {
-
-    if(strlen(myConfig.getBeerBleSensorId()) > 0) {
+#if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
+    if (strlen(myConfig.getBeerBleSensorId()) > 0) {
       Log.info(F("Main: Configuring beer sensor %s (BLE)." CR),
-              myConfig.getBeerBleSensorId());
+               myConfig.getBeerBleSensorId());
 
       if (bleBeer) {
         delete bleBeer;
@@ -472,9 +475,10 @@ void configureTempControl() {
       beerSensor = new TempSensor(TEMP_SENSOR_TYPE_BEER, bleBeer);
       beerSensor->init();
       tempControl.setBeerSensor(beerSensor);
-    } else {
+    } else 
+#endif  // ENABLE_BLE && ENABLE_BLE_SENSOR
       Log.info(F("Main: Configuring beer sensor %s (OneWire)." CR),
-              myConfig.getBeerSensorId());
+               myConfig.getBeerSensorId());
 
       DeviceAddress daBeer;
       parseBytes(daBeer, myConfig.getBeerSensorId(), sizeof(daBeer));
@@ -488,12 +492,14 @@ void configureTempControl() {
         beerSensor = nullptr;
       }
 
-      oneWireBeer =
-          new OneWireTempSensor(&oneWire, daBeer, myConfig.getBeerSensorOffset());
+      oneWireBeer = new OneWireTempSensor(&oneWire, daBeer,
+                                          myConfig.getBeerSensorOffset());
       beerSensor = new TempSensor(TEMP_SENSOR_TYPE_BEER, oneWireBeer);
       beerSensor->init();
       tempControl.setBeerSensor(beerSensor);
+#if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
     }
+#endif  // ENABLE_BLE && ENABLE_BLE_SENSOR
   }
 
   // Create the actuators

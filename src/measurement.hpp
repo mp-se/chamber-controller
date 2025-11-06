@@ -24,6 +24,8 @@ SOFTWARE.
 #ifndef SRC_MEASUREMENT_HPP_
 #define SRC_MEASUREMENT_HPP_
 
+#if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
+
 #include <Arduino.h>
 #include <FS.h>
 
@@ -324,5 +326,7 @@ class MeasurementList {
 };
 
 extern MeasurementList myMeasurementList;
+
+#endif  // ENABLE_BLE && ENABLE_BLE_SENSOR
 
 #endif  // SRC_MEASUREMENT_HPP_
