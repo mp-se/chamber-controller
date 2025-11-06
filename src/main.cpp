@@ -475,7 +475,7 @@ void configureTempControl() {
       beerSensor = new TempSensor(TEMP_SENSOR_TYPE_BEER, bleBeer);
       beerSensor->init();
       tempControl.setBeerSensor(beerSensor);
-    } else 
+    } else {
 #endif  // ENABLE_BLE && ENABLE_BLE_SENSOR
       Log.info(F("Main: Configuring beer sensor %s (OneWire)." CR),
                myConfig.getBeerSensorId());
