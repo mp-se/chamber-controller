@@ -294,6 +294,22 @@ void Display::createUI() {
   lv_style_set_text_align(&lvglData._styleLeft, LV_TEXT_ALIGN_LEFT);
   lv_style_set_text_align(&lvglData._styleCenter, LV_TEXT_ALIGN_CENTER);
   lv_style_set_text_align(&lvglData._styleStatusBar, LV_TEXT_ALIGN_CENTER);
+  
+  // Create standard button style with blue background
+  lv_style_init(&lvglData._styleBtnStandard);
+  lv_style_set_bg_color(&lvglData._styleBtnStandard, lv_color_hex(0x0066CC));  // Blue
+  lv_style_set_bg_opa(&lvglData._styleBtnStandard, LV_OPA_COVER);
+  lv_style_set_text_color(&lvglData._styleBtnStandard, lv_color_white());
+  lv_style_set_text_font(&lvglData._styleBtnStandard, &lv_font_montserrat_18);
+  lv_style_set_border_width(&lvglData._styleBtnStandard, 0);
+  
+  // Create selected button style with darker blue
+  lv_style_init(&lvglData._styleBtnSelected);
+  lv_style_set_bg_color(&lvglData._styleBtnSelected, lv_color_hex(0x004499));  // Darker blue
+  lv_style_set_bg_opa(&lvglData._styleBtnSelected, LV_OPA_COVER);
+  lv_style_set_text_color(&lvglData._styleBtnSelected, lv_color_white());
+  lv_style_set_text_font(&lvglData._styleBtnSelected, &lv_font_montserrat_18);
+  lv_style_set_border_width(&lvglData._styleBtnSelected, 0);
   // lv_style_set_outline_width(&_styleLeft, 1);
   // lv_style_set_outline_width(&_styleCenter, 1);
 
@@ -428,6 +444,7 @@ lv_obj_t *createButton(const char *label, int32_t x, int32_t y, int32_t w,
   lv_obj_set_size(btn, w, h);
   lv_obj_set_pos(btn, x, y);
   lv_obj_add_event_cb(btn, handler, LV_EVENT_ALL, NULL);
+  lv_obj_add_style(btn, &lvglData._styleBtnStandard, 0);  // Apply standard button style
   lv_obj_t *lbl = lv_label_create(btn);
   lv_label_set_text(lbl, label);
   lv_obj_center(lbl);
