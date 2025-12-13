@@ -21,9 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-#include "ui_chamber_controller.hpp"
-#include "ui_helpers.hpp"
-#include "ui_helpers.hpp"
+#if defined(ENABLE_LVGL)
+
+#include <ui_chamber_controller.hpp>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -297,3 +297,6 @@ void chamber_controller_cleanup(void) {
     memset(&g_state, 0, sizeof(g_state));
     g_disp = NULL;
 }
+#endif  // ENABLE_LVGL
+
+// EOF

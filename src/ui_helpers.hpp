@@ -24,11 +24,8 @@ SOFTWARE.
 #ifndef SRC_UI_HELPERS_HPP_
 #define SRC_UI_HELPERS_HPP_
 
+#if defined(ENABLE_LVGL)
 #include "lvgl.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * Theme mode enumeration
@@ -153,8 +150,8 @@ lv_obj_t* ui_create_styled_button(lv_obj_t* parent, const char* label_text,
                                   lv_event_cb_t callback,
                                   lv_color_t bg_color, lv_style_t* style);
 
-#ifdef __cplusplus
-}
-#endif
+#endif  // ENABLE_LVGL
 
 #endif  // SRC_UI_HELPERS_HPP_
+
+// EOF

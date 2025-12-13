@@ -32,6 +32,7 @@ SOFTWARE.
 #endif
 #if defined(ENABLE_LVGL)
 #include <lvgl.h>
+#include <ui_helpers.hpp>
 #endif
 
 enum FontSize { FONT_9 = 9, FONT_12 = 12, FONT_18 = 18, FONT_24 = 24 };
@@ -49,12 +50,9 @@ struct LVGL_Data {
   lv_obj_t* _btnOff;
   lv_obj_t* _btnUp;
   lv_obj_t* _btnDown;
-  lv_style_t _styleLeft;
-  lv_style_t _styleCenter;
-  lv_style_t _styleStatusBar;
-  lv_style_t _styleBtnSelected;
-  lv_style_t _styleBtnStandard;
   lv_display_t* _display;
+  ui_theme_t _theme;
+  ui_theme_colors_t _colors;
   String _dataMode;
   String _dataState;
   String _dataBeerTemp;
@@ -125,14 +123,7 @@ class Display {
 };
 
 #if defined(ENABLE_LVGL)
-// Wrappers to simplify interaction with LVGL
-lv_obj_t* createButton(const char* label, int32_t x, int32_t y, int32_t w,
-                       int32_t h, lv_event_cb_t handler);
-lv_obj_t* createLabel(const char* label, int32_t x, int32_t y, int32_t w,
-                      int32_t h, lv_style_t* style);
-void updateLabel(lv_obj_t* obj, const char* label);
-void setStyle(lv_obj_t* obj, lv_style_t* style);
-
+// LVGL event handlers
 void btnBeerEventHandler(lv_event_t* e);
 void btnChamberEventHandler(lv_event_t* e);
 void btnOffEventHandler(lv_event_t* e);

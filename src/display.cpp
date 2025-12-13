@@ -284,58 +284,34 @@ void Display::createUI() {
   lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
   lv_indev_set_read_cb(indev, touchscreenHandler);
 
-  // Create components
-  lv_style_init(&lvglData._styleLeft);
-  lv_style_init(&lvglData._styleCenter);
-  lv_style_init(&lvglData._styleStatusBar);
-  lv_style_set_text_font(&lvglData._styleLeft, &lv_font_montserrat_18);
-  lv_style_set_text_font(&lvglData._styleCenter, &lv_font_montserrat_18);
-  lv_style_set_text_font(&lvglData._styleStatusBar, &lv_font_montserrat_12);
-  lv_style_set_text_align(&lvglData._styleLeft, LV_TEXT_ALIGN_LEFT);
-  lv_style_set_text_align(&lvglData._styleCenter, LV_TEXT_ALIGN_CENTER);
-  lv_style_set_text_align(&lvglData._styleStatusBar, LV_TEXT_ALIGN_CENTER);
-  
-  // Create standard button style with blue background
-  lv_style_init(&lvglData._styleBtnStandard);
-  lv_style_set_bg_color(&lvglData._styleBtnStandard, lv_color_hex(0x0066CC));  // Blue
-  lv_style_set_bg_opa(&lvglData._styleBtnStandard, LV_OPA_COVER);
-  lv_style_set_text_color(&lvglData._styleBtnStandard, lv_color_white());
-  lv_style_set_text_font(&lvglData._styleBtnStandard, &lv_font_montserrat_18);
-  lv_style_set_border_width(&lvglData._styleBtnStandard, 0);
-  
-  // Create selected button style with darker blue
-  lv_style_init(&lvglData._styleBtnSelected);
-  lv_style_set_bg_color(&lvglData._styleBtnSelected, lv_color_hex(0x004499));  // Darker blue
-  lv_style_set_bg_opa(&lvglData._styleBtnSelected, LV_OPA_COVER);
-  lv_style_set_text_color(&lvglData._styleBtnSelected, lv_color_white());
-  lv_style_set_text_font(&lvglData._styleBtnSelected, &lv_font_montserrat_18);
-  lv_style_set_border_width(&lvglData._styleBtnSelected, 0);
-  // lv_style_set_outline_width(&_styleLeft, 1);
-  // lv_style_set_outline_width(&_styleCenter, 1);
+  // Initialize theme colors from ui_helpers
+  lvglData._theme = UI_THEME_LIGHT;
+  lvglData._colors = ui_get_theme_colors(lvglData._theme);
 
   Log.notice(F("DISP: Creating UI components." CR));
 
-  createLabel("Beer", 5, 82, 90, 26, &lvglData._styleLeft);
-  createLabel("Chamber", 5, 119, 90, 26, &lvglData._styleLeft);
+  lv_obj_t* scr = lv_scr_act();
+  
+  ui_create_label(scr, "Beer", 5, 82, 90, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
+  ui_create_label(scr, "Chamber", 5, 119, 90, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
 
-  lvglData._txtState = createLabel("", 5, 10, 195, 26, &lvglData._styleLeft);
-  lvglData._txtMode = createLabel("", 5, 44, 195, 26, &lvglData._styleLeft);
-  lvglData._txtBeerTemp =
-      createLabel("", 110, 82, 90, 26, &lvglData._styleLeft);
-  lvglData._txtChamberTemp =
-      createLabel("", 110, 119, 90, 26, &lvglData._styleLeft);
-  lvglData._txtTargetTemp =
-      createLabel("", 110, 171, 90, 26, &lvglData._styleCenter);
-  lvglData._txtStatusBar =
-      createLabel("", 5, 214, 305, 16, &lvglData._styleStatusBar);
+  lvglData._txtState = ui_create_label(scr, "", 5, 10, 195, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
+  lvglData._txtMode = ui_create_label(scr, "", 5, 44, 195, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
+  lvglData._txtBeerTemp = ui_create_label(scr, "", 110, 82, 90, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
+  lvglData._txtChamberTemp = ui_create_label(scr, "", 110, 119, 90, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
+  lvglData._txtTargetTemp = ui_create_label(scr, "", 110, 171, 90, 26, LV_TEXT_ALIGN_CENTER, lvglData._colors.text);
+  lvglData._txtStatusBar = ui_create_status_label(scr, "", 5, 214, 305, 16, LV_TEXT_ALIGN_CENTER, lvglData._colors.text);
 
-  lvglData._btnBeer =
-      createButton("Beer", 205, 10, 100, 44, btnBeerEventHandler);
-  lvglData._btnChamber =
-      createButton("Chamber", 205, 60, 100, 44, btnChamberEventHandler);
-  lvglData._btnOff = createButton("Off", 205, 110, 100, 44, btnOffEventHandler);
-  lvglData._btnUp = createButton("+", 230, 161, 44, 44, btnUpEventHandler);
-  lvglData._btnDown = createButton("-", 30, 161, 44, 44, btnDownEventHandler);
+  lvglData._btnBeer = ui_create_button(scr, "Beer", 205, 10, 100, 44,
+                                       btnBeerEventHandler, lvglData._colors.button_bg, lv_color_white());
+  lvglData._btnChamber = ui_create_button(scr, "Chamber", 205, 60, 100, 44,
+                                          btnChamberEventHandler, lvglData._colors.button_bg, lv_color_white());
+  lvglData._btnOff = ui_create_button(scr, "Off", 205, 110, 100, 44,
+                                      btnOffEventHandler, lvglData._colors.button_bg, lv_color_white());
+  lvglData._btnUp = ui_create_button(scr, "+", 230, 161, 44, 44,
+                                     btnUpEventHandler, lvglData._colors.button_bg, lv_color_white());
+  lvglData._btnDown = ui_create_button(scr, "-", 30, 161, 44, 44,
+                                       btnDownEventHandler, lvglData._colors.button_bg, lv_color_white());
 
   xTaskCreatePinnedToCore(lvgl_loop_handler,  // Function to implement the task
                           "LVGL_Handler",     // Name of the task
@@ -423,34 +399,6 @@ void btnDownEventHandler(lv_event_t *e) {
   }
 }
 
-lv_obj_t *createLabel(const char *label, int32_t x, int32_t y, int32_t w,
-                      int32_t h, lv_style_t *style) {
-  lv_obj_t *lbl = lv_label_create(lv_screen_active());
-  lv_label_set_text(lbl, label);
-  lv_obj_set_size(lbl, w, h);
-  lv_obj_set_pos(lbl, x, y);
-  lv_obj_add_style(lbl, style, 0);
-  return lbl;
-}
-
-void updateLabel(lv_obj_t *obj, const char *label) {
-  lv_label_set_text(obj, label);
-}
-
-lv_obj_t *createButton(const char *label, int32_t x, int32_t y, int32_t w,
-                       int32_t h, lv_event_cb_t handler) {
-  lv_obj_t *btn;
-  btn = lv_button_create(lv_screen_active());
-  lv_obj_set_size(btn, w, h);
-  lv_obj_set_pos(btn, x, y);
-  lv_obj_add_event_cb(btn, handler, LV_EVENT_ALL, NULL);
-  lv_obj_add_style(btn, &lvglData._styleBtnStandard, 0);  // Apply standard button style
-  lv_obj_t *lbl = lv_label_create(btn);
-  lv_label_set_text(lbl, label);
-  lv_obj_center(lbl);
-  return btn;
-}
-
 void lvgl_loop_handler(void *parameter) {
   LoopTimer taskLoop(500);
 
@@ -458,26 +406,25 @@ void lvgl_loop_handler(void *parameter) {
     if (taskLoop.hasExpired()) {
       taskLoop.reset();
 
-      // Set dark mode if this is enabled in the settings
+      // Update theme if darkmode changed
       lv_obj_t *scr = lv_scr_act();
-      lv_color_t color;
-
-      if (lvglData._darkmode) {
-        lv_obj_set_style_bg_color(scr, lv_color_hex(0x1F1F1F), LV_PART_MAIN);
-        lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, LV_PART_MAIN);
-        color = lv_color_white();
-      } else {
-        lv_obj_set_style_bg_color(scr, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-        lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, LV_PART_MAIN);
-        color = lv_color_black();
+      ui_theme_t theme = lvglData._darkmode ? UI_THEME_DARK : UI_THEME_LIGHT;
+      
+      if (theme != lvglData._theme) {
+        lvglData._theme = theme;
+        lvglData._colors = ui_get_theme_colors(lvglData._theme);
       }
 
-      lv_obj_set_style_text_color(lvglData._txtState, color, 0);
-      lv_obj_set_style_text_color(lvglData._txtMode, color, 0);
-      lv_obj_set_style_text_color(lvglData._txtBeerTemp, color, 0);
-      lv_obj_set_style_text_color(lvglData._txtChamberTemp, color, 0);
-      lv_obj_set_style_text_color(lvglData._txtTargetTemp, color, 0);
-      lv_obj_set_style_text_color(lvglData._txtStatusBar, color, 0);
+      // Apply theme colors to screen and text elements
+      lv_obj_set_style_bg_color(scr, lvglData._colors.bg, LV_PART_MAIN);
+      lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, LV_PART_MAIN);
+
+      lv_obj_set_style_text_color(lvglData._txtState, lvglData._colors.text, 0);
+      lv_obj_set_style_text_color(lvglData._txtMode, lvglData._colors.text, 0);
+      lv_obj_set_style_text_color(lvglData._txtBeerTemp, lvglData._colors.text, 0);
+      lv_obj_set_style_text_color(lvglData._txtChamberTemp, lvglData._colors.text, 0);
+      lv_obj_set_style_text_color(lvglData._txtTargetTemp, lvglData._colors.text, 0);
+      lv_obj_set_style_text_color(lvglData._txtStatusBar, lvglData._colors.text, 0);
 
       // Show/Hide buttons
       if (!lvglData._showBeerBtn)
@@ -494,13 +441,13 @@ void lvgl_loop_handler(void *parameter) {
       char s[20];
       snprintf(s, sizeof(s), "%0.1F°%c", lvglData._targetTemperature,
                lvglData._tempFormat);
-      updateLabel(lvglData._txtTargetTemp, s);
+      lv_label_set_text(lvglData._txtTargetTemp, s);
 
-      updateLabel(lvglData._txtState, lvglData._dataState.c_str());
-      updateLabel(lvglData._txtMode, lvglData._dataMode.c_str());
-      updateLabel(lvglData._txtBeerTemp, lvglData._dataBeerTemp.c_str());
-      updateLabel(lvglData._txtChamberTemp, lvglData._dataChamberTemp.c_str());
-      updateLabel(lvglData._txtStatusBar, lvglData._dataStatusBar.c_str());
+      lv_label_set_text(lvglData._txtState, lvglData._dataState.c_str());
+      lv_label_set_text(lvglData._txtMode, lvglData._dataMode.c_str());
+      lv_label_set_text(lvglData._txtBeerTemp, lvglData._dataBeerTemp.c_str());
+      lv_label_set_text(lvglData._txtChamberTemp, lvglData._dataChamberTemp.c_str());
+      lv_label_set_text(lvglData._txtStatusBar, lvglData._dataStatusBar.c_str());
     }
 
     lv_task_handler();

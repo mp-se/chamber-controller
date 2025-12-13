@@ -24,13 +24,9 @@ SOFTWARE.
 #ifndef SRC_UI_CHAMBER_CONTROLLER_HPP_
 #define SRC_UI_CHAMBER_CONTROLLER_HPP_
 
-#include "ui_helpers.hpp"
+#if defined(ENABLE_LVGL)
 
-#include <lvgl.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <ui_helpers.hpp>
 
 /**
  * Initialize chamber controller UI
@@ -112,8 +108,8 @@ void chamber_controller_set_theme(bool darkmode);
  */
 void chamber_controller_cleanup(void);
 
-#ifdef __cplusplus
-}
-#endif
+#endif  // ENABLE_LVGL
 
 #endif  // SRC_UI_CHAMBER_CONTROLLER_HPP_
+
+// EOF
