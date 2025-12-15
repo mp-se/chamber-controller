@@ -11,6 +11,11 @@ This is still work in progress but so far I have been running this PID controlle
 
 # Versions
 
+## 0.6.1
+
+* Fixing issue with beer button not hidden when ble tempsensor is not found or ble scanning is disabled
+* Refactored TFT UI so it can be run in simulator on my laptop
+
 ## 0.6.0 
 
 * Adding BLE temperature sensor support for Beer sensor so that controller can use Gravitymon ble as base for target temperature

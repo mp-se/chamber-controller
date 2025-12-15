@@ -181,8 +181,8 @@ void runLoop() {
 
     Log.verbose(F("Loop: Running temp control." CR));
 
-    myDisplay.updateButtons(strlen(myConfig.getBeerSensorId()),
-                            strlen(myConfig.getFridgeSensorId()));
+    myDisplay.updateButtons(tempControl.getBeerSensor()->isConnected(),
+                            tempControl.getFridgeSensor()->isConnected());
 
     float beer = NAN, fridge = NAN;
 
@@ -458,7 +458,7 @@ void configureTempControl() {
 
   if (myConfig.isBeerSensorEnabled()) {
 #if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
-    if (strlen(myConfig.getBeerBleSensorId()) > 0) {
+    if (myConfig.isBeerBleSensorEnabled() && myConfig.isBleScanEnabled()) {
       Log.info(F("Main: Configuring beer sensor %s (BLE)." CR),
                myConfig.getBeerBleSensorId());
 

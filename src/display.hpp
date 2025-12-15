@@ -33,41 +33,10 @@ SOFTWARE.
 #if defined(ENABLE_LVGL)
 #include <lvgl.h>
 #include <ui_helpers.hpp>
+#include <ui_chamber_controller.hpp>
 #endif
 
 enum FontSize { FONT_9 = 9, FONT_12 = 12, FONT_18 = 18, FONT_24 = 24 };
-
-#if defined(ENABLE_LVGL)
-struct LVGL_Data {
-  lv_obj_t* _txtMode;
-  lv_obj_t* _txtState;
-  lv_obj_t* _txtBeerTemp;
-  lv_obj_t* _txtChamberTemp;
-  lv_obj_t* _txtTargetTemp;
-  lv_obj_t* _txtStatusBar;
-  lv_obj_t* _btnBeer;
-  lv_obj_t* _btnChamber;
-  lv_obj_t* _btnOff;
-  lv_obj_t* _btnUp;
-  lv_obj_t* _btnDown;
-  lv_display_t* _display;
-  ui_theme_t _theme;
-  ui_theme_colors_t _colors;
-  String _dataMode;
-  String _dataState;
-  String _dataBeerTemp;
-  String _dataChamberTemp;
-  String _dataStatusBar;
-  bool _showBeerBtn;
-  bool _showChamberBtn;
-  volatile float _targetTemperature;
-  volatile char _mode;
-  char _tempFormat = 'C';
-  bool _darkmode = false;
-};
-
-extern struct LVGL_Data lvglData;
-#endif
 
 class Display {
  public:
@@ -86,6 +55,19 @@ class Display {
   Rotation _rotation = ROTATION_90;
   uint32_t _backgroundColor = TFT_BLACK;
 
+#if defined(ENABLE_LVGL)
+  // LVGL display and theme
+  lv_display_t* _display = NULL;
+  ui_theme_t _theme = UI_THEME_LIGHT;
+  ui_theme_colors_t _colors;
+  
+  // Data state
+  volatile float _targetTemperature = 20.0f;
+  volatile char _mode = 'b';
+  char _tempFormat = 'C';
+  bool _darkmode = false;
+#endif
+
  public:
   Display() {}
 
@@ -102,12 +84,12 @@ class Display {
   // Misc methods
   void setTargetTemperature(float t) {
 #if defined(ENABLE_LVGL)
-    lvglData._targetTemperature = t;
+    _targetTemperature = t;
 #endif
   }
   void setMode(char m) {
 #if defined(ENABLE_LVGL)
-    lvglData._mode = m;
+    _mode = m;
 #endif
   }
   void updateTemperatures(const char* mode, const char* state,

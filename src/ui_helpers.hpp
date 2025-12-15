@@ -25,7 +25,11 @@ SOFTWARE.
 #define SRC_UI_HELPERS_HPP_
 
 #if defined(ENABLE_LVGL)
-#include "lvgl.h"
+#include <lvgl.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Theme mode enumeration
@@ -43,6 +47,7 @@ typedef struct {
     lv_color_t text;        // Text color
     lv_color_t border;      // Border/accent color
     lv_color_t button_bg;   // Button background color
+    lv_color_t button_text; // Button text color
 } ui_theme_colors_t;
 
 /**
@@ -61,7 +66,7 @@ void ui_apply_theme_to_object(lv_obj_t* obj, const ui_theme_colors_t* colors);
 void ui_apply_theme_to_screen(lv_obj_t* scr, const ui_theme_colors_t* colors);
 
 /**
- * Create a label with specific position, size, alignment, and color
+ * Create a label with specific position, size, alignment, color, and font
  * @param parent Parent object
  * @param text Label text
  * @param x X position
@@ -70,13 +75,15 @@ void ui_apply_theme_to_screen(lv_obj_t* scr, const ui_theme_colors_t* colors);
  * @param h Height
  * @param align Text alignment (LV_TEXT_ALIGN_LEFT, etc.)
  * @param color Text color
+ * @param font Text font (e.g., &lv_font_montserrat_18)
  * @return Created label object
  */
 lv_obj_t* ui_create_label(lv_obj_t* parent, const char* text,
                           lv_coord_t x, lv_coord_t y,
                           lv_coord_t w, lv_coord_t h,
                           lv_text_align_t align,
-                          lv_color_t color);
+                          lv_color_t color,
+                          const lv_font_t* font);
 
 /**
  * Create a styled label with predefined style
@@ -95,7 +102,7 @@ lv_obj_t* ui_create_styled_label(lv_obj_t* parent, const char* text,
                                  lv_style_t* style);
 
 /**
- * Create a status bar label (smaller font, 12px)
+ * Create a status bar label
  * @param parent Parent object
  * @param text Label text
  * @param x X position
@@ -104,13 +111,15 @@ lv_obj_t* ui_create_styled_label(lv_obj_t* parent, const char* text,
  * @param h Height
  * @param align Text alignment
  * @param color Text color
+ * @param font Text font (e.g., &lv_font_montserrat_12)
  * @return Created label object
  */
 lv_obj_t* ui_create_status_label(lv_obj_t* parent, const char* text,
                                  lv_coord_t x, lv_coord_t y,
                                  lv_coord_t w, lv_coord_t h,
                                  lv_text_align_t align,
-                                 lv_color_t color);
+                                 lv_color_t color,
+                                 const lv_font_t* font);
 
 /**
  * Create a button with label
@@ -123,13 +132,15 @@ lv_obj_t* ui_create_status_label(lv_obj_t* parent, const char* text,
  * @param callback Event callback (NULL for no callback)
  * @param bg_color Background color
  * @param text_color Text color
+ * @param font Text font (e.g., &lv_font_montserrat_18)
  * @return Created button object
  */
 lv_obj_t* ui_create_button(lv_obj_t* parent, const char* label_text,
                            lv_coord_t x, lv_coord_t y,
                            lv_coord_t w, lv_coord_t h,
                            lv_event_cb_t callback,
-                           lv_color_t bg_color, lv_color_t text_color);
+                           lv_color_t bg_color, lv_color_t text_color,
+                           const lv_font_t* font);
 
 /**
  * Create a styled button with predefined style
@@ -149,6 +160,10 @@ lv_obj_t* ui_create_styled_button(lv_obj_t* parent, const char* label_text,
                                   lv_coord_t w, lv_coord_t h,
                                   lv_event_cb_t callback,
                                   lv_color_t bg_color, lv_style_t* style);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // ENABLE_LVGL
 

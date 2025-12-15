@@ -33,13 +33,12 @@ SOFTWARE.
 #include <log.hpp>
 #include <looptimer.hpp>
 #include <main.hpp>
+#include <pidconfig.hpp>
 
 constexpr auto TTF_CALIBRATION_FILENAME = "/tft.dat";
 
-TaskHandle_t lvglTaskHandler;
-
 #if defined(ENABLE_LVGL)
-struct LVGL_Data lvglData;
+TaskHandle_t lvglTaskHandler;
 #endif
 
 void Display::setup() {
@@ -131,8 +130,10 @@ void Display::clear(uint32_t color) {
 
 void Display::updateButtons(bool beerEnabled, bool chamberEnabled) {
 #if defined(ENABLE_LVGL)
-  lvglData._showBeerBtn = beerEnabled;
-  lvglData._showChamberBtn = chamberEnabled;
+  // Update button visibility using new API
+  Log.notice(F("DISP: Updating button visibility: Beer=%d, Chamber=%d" CR), beerEnabled, chamberEnabled);
+  chamber_controller_set_beer_button_visible(beerEnabled);
+  chamber_controller_set_chamber_button_visible(chamberEnabled);
 #endif
 }
 
@@ -141,31 +142,21 @@ void Display::updateTemperatures(const char *mode, const char *state,
                                  float chamberTemp, char tempFormat,
                                  bool darkmode) {
 #if defined(ENABLE_LVGL)
-  if (!_tft) return;
+  _tempFormat = tempFormat;
+  _darkmode = darkmode;
 
-  lvglData._darkmode = darkmode;
-  lvglData._tempFormat = tempFormat;
-  lvglData._dataMode = mode;
-  lvglData._dataState = state;
-  lvglData._dataStatusBar = statusBar;
-
-  char s[20];
-
-  // Beer Temp
-  if (isnan(beerTemp))
-    snprintf(s, sizeof(s), "-- °%c", tempFormat);
-  else
-    snprintf(s, sizeof(s), "%0.1F°%c", beerTemp, tempFormat);
-
-  lvglData._dataBeerTemp = s;
-
-  // Beer Temp
-  if (isnan(chamberTemp))
-    snprintf(s, sizeof(s), "-- °%c", tempFormat);
-  else
-    snprintf(s, sizeof(s), "%0.1F°%c", chamberTemp, tempFormat);
-
-  lvglData._dataChamberTemp = s;
+  // Update the new UI using chamber_controller API
+  chamber_controller_set_mode(mode);
+  chamber_controller_set_state(state);
+  chamber_controller_set_beer_temp(beerTemp, myConfig.getTempFormat());
+  chamber_controller_set_chamber_temp(chamberTemp, myConfig.getTempFormat()); 
+  chamber_controller_set_status(statusBar);
+  
+  // Update target temp
+  chamber_controller_set_target_temp(_targetTemperature, myConfig.getTempFormat());
+  
+  // Update theme if changed
+  chamber_controller_set_theme(darkmode);
 #endif
 }
 
@@ -238,9 +229,11 @@ bool Display::getTouch(uint16_t *x, uint16_t *y) {
     if (_rotation == Rotation::ROTATION_90) {
       *x = yt;
       *y = TFT_HEIGHT - xt;
+      Log.verbose(F("DISP: Touch ROTATION_90: raw(%u,%u) -> display(%u,%u)" CR), xt, yt, *x, *y);
     } else {  // Rotation::ROTATION_270
-      *x = yt;
-      *y = TFT_HEIGHT - xt;
+      *x = TFT_WIDTH - yt;
+      *y = xt;
+      Log.verbose(F("DISP: Touch ROTATION_270: raw(%u,%u) -> display(%u,%u)" CR), xt, yt, *x, *y);
     }
   }
 
@@ -254,11 +247,20 @@ void Display::createUI() {
 #if defined(ENABLE_LVGL)
   if (!_tft) return;
 
-  Log.notice(F("DISP: Using LVL v%d.%d.%d." CR), lv_version_major(),
+  Log.notice(F("DISP: Using LVGL v%d.%d.%d." CR), lv_version_major(),
              lv_version_minor(), lv_version_patch());
 
   lv_init();
   lv_log_register_print_cb(log_print);
+
+  Log.notice(F("DISP: Display dimensions: %d x %d, Rotation=%d (1=90°, 3=270°)" CR), TFT_WIDTH, TFT_HEIGHT, _rotation);
+  Log.notice(F("DISP: Button positions - Beer(205,10,100,44) Chamber(205,60,100,44) Off(205,110,100,44) Down(30,161,44,44) Up(230,161,44,44)" CR));
+
+  Log.notice(F("DISP: Display dimensions: %d x %d, Rotation=%d (1=90°, 3=270°)" CR), TFT_WIDTH, TFT_HEIGHT, _rotation);
+  Log.notice(F("DISP: Button positions - Beer(205,10,100,44) Chamber(205,60,100,44) Off(205,110,100,44) Down(30,161,44,44) Up(230,161,44,44)" CR));
+
+  Log.notice(F("DISP: Display configured - Width=%d Height=%d Rotation=%d" CR), TFT_WIDTH, TFT_HEIGHT, _rotation);
+  Log.notice(F("DISP: Expected layout: 320x240 with buttons at: Beer(205,10) Chamber(205,60) Off(205,110) Down(30,161) Up(230,161)" CR));
 
 #define DRAW_BUF_SIZE (TFT_WIDTH * TFT_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
 
@@ -270,13 +272,12 @@ void Display::createUI() {
         DRAW_BUF_SIZE);
   }
 
-  lvglData._display =
-      lv_tft_espi_create(TFT_WIDTH, TFT_HEIGHT, draw_buf, DRAW_BUF_SIZE);
+  _display = lv_tft_espi_create(TFT_WIDTH, TFT_HEIGHT, draw_buf, DRAW_BUF_SIZE);
 
   if (_rotation == Rotation::ROTATION_90) {
-    lv_display_set_rotation(lvglData._display, LV_DISPLAY_ROTATION_90);
+    lv_display_set_rotation(_display, LV_DISPLAY_ROTATION_90);
   } else {  // Rotation::ROTATION_270
-    lv_display_set_rotation(lvglData._display, LV_DISPLAY_ROTATION_270);
+    lv_display_set_rotation(_display, LV_DISPLAY_ROTATION_270);
   }
 
   // Initialize an LVGL input device object (Touchscreen)
@@ -285,33 +286,20 @@ void Display::createUI() {
   lv_indev_set_read_cb(indev, touchscreenHandler);
 
   // Initialize theme colors from ui_helpers
-  lvglData._theme = UI_THEME_LIGHT;
-  lvglData._colors = ui_get_theme_colors(lvglData._theme);
+  _theme = UI_THEME_LIGHT;
+  _colors = ui_get_theme_colors(_theme);
 
   Log.notice(F("DISP: Creating UI components." CR));
 
-  lv_obj_t* scr = lv_scr_act();
-  
-  ui_create_label(scr, "Beer", 5, 82, 90, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
-  ui_create_label(scr, "Chamber", 5, 119, 90, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
-
-  lvglData._txtState = ui_create_label(scr, "", 5, 10, 195, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
-  lvglData._txtMode = ui_create_label(scr, "", 5, 44, 195, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
-  lvglData._txtBeerTemp = ui_create_label(scr, "", 110, 82, 90, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
-  lvglData._txtChamberTemp = ui_create_label(scr, "", 110, 119, 90, 26, LV_TEXT_ALIGN_LEFT, lvglData._colors.text);
-  lvglData._txtTargetTemp = ui_create_label(scr, "", 110, 171, 90, 26, LV_TEXT_ALIGN_CENTER, lvglData._colors.text);
-  lvglData._txtStatusBar = ui_create_status_label(scr, "", 5, 214, 305, 16, LV_TEXT_ALIGN_CENTER, lvglData._colors.text);
-
-  lvglData._btnBeer = ui_create_button(scr, "Beer", 205, 10, 100, 44,
-                                       btnBeerEventHandler, lvglData._colors.button_bg, lv_color_white());
-  lvglData._btnChamber = ui_create_button(scr, "Chamber", 205, 60, 100, 44,
-                                          btnChamberEventHandler, lvglData._colors.button_bg, lv_color_white());
-  lvglData._btnOff = ui_create_button(scr, "Off", 205, 110, 100, 44,
-                                      btnOffEventHandler, lvglData._colors.button_bg, lv_color_white());
-  lvglData._btnUp = ui_create_button(scr, "+", 230, 161, 44, 44,
-                                     btnUpEventHandler, lvglData._colors.button_bg, lv_color_white());
-  lvglData._btnDown = ui_create_button(scr, "-", 30, 161, 44, 44,
-                                       btnDownEventHandler, lvglData._colors.button_bg, lv_color_white());
+  // Initialize the new chamber controller UI with button callbacks
+  Log.notice(F("DISP: Initializing chamber controller UI" CR));
+  chamber_controller_init(_display, _darkmode,
+                         btnBeerEventHandler,
+                         btnChamberEventHandler,
+                         btnOffEventHandler,
+                         btnUpEventHandler,
+                         btnDownEventHandler);
+  Log.notice(F("DISP: Chamber controller UI initialized" CR));
 
   xTaskCreatePinnedToCore(lvgl_loop_handler,  // Function to implement the task
                           "LVGL_Handler",     // Name of the task
@@ -331,16 +319,16 @@ void Display::handleButtonEvent(char btn) {
     case 'o':
     case 'b':
     case 'f':
-      lvglData._mode = btn;
-      setNewControllerMode(lvglData._mode, lvglData._targetTemperature);
+      _mode = btn;
+      setNewControllerMode(_mode, _targetTemperature);
       break;
 
     case '+':
-      lvglData._targetTemperature += 0.5;
+      _targetTemperature += 0.5;
       break;
 
     case '-':
-      lvglData._targetTemperature -= 0.5;
+      _targetTemperature -= 0.5;
       break;
   }
 #endif
@@ -362,39 +350,38 @@ void touchscreenHandler(lv_indev_t *indev, lv_indev_data_t *data) {
     data->state = LV_INDEV_STATE_PRESSED;
     data->point.x = x;
     data->point.y = y;
-
-    // Log.notice(F("LVGL : %d:%d." CR), x, y);
+    Log.verbose(F("LVGL: Touch point (%u,%u) sent to LVGL" CR), x, y);
   } else {
     data->state = LV_INDEV_STATE_RELEASED;
   }
 }
 
 void btnBeerEventHandler(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+  if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
     myDisplay.handleButtonEvent('b');
   }
 }
 
 void btnChamberEventHandler(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+  if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
     myDisplay.handleButtonEvent('f');
   }
 }
 
 void btnOffEventHandler(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+  if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
     myDisplay.handleButtonEvent('o');
   }
 }
 
 void btnUpEventHandler(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+  if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
     myDisplay.handleButtonEvent('+');
   }
 }
 
 void btnDownEventHandler(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+  if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
     myDisplay.handleButtonEvent('-');
   }
 }
@@ -405,52 +392,14 @@ void lvgl_loop_handler(void *parameter) {
   for (;;) {
     if (taskLoop.hasExpired()) {
       taskLoop.reset();
-
-      // Update theme if darkmode changed
-      lv_obj_t *scr = lv_scr_act();
-      ui_theme_t theme = lvglData._darkmode ? UI_THEME_DARK : UI_THEME_LIGHT;
-      
-      if (theme != lvglData._theme) {
-        lvglData._theme = theme;
-        lvglData._colors = ui_get_theme_colors(lvglData._theme);
-      }
-
-      // Apply theme colors to screen and text elements
-      lv_obj_set_style_bg_color(scr, lvglData._colors.bg, LV_PART_MAIN);
-      lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, LV_PART_MAIN);
-
-      lv_obj_set_style_text_color(lvglData._txtState, lvglData._colors.text, 0);
-      lv_obj_set_style_text_color(lvglData._txtMode, lvglData._colors.text, 0);
-      lv_obj_set_style_text_color(lvglData._txtBeerTemp, lvglData._colors.text, 0);
-      lv_obj_set_style_text_color(lvglData._txtChamberTemp, lvglData._colors.text, 0);
-      lv_obj_set_style_text_color(lvglData._txtTargetTemp, lvglData._colors.text, 0);
-      lv_obj_set_style_text_color(lvglData._txtStatusBar, lvglData._colors.text, 0);
-
-      // Show/Hide buttons
-      if (!lvglData._showBeerBtn)
-        lv_obj_add_flag(lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
-      else
-        lv_obj_remove_flag(lvglData._btnBeer, LV_OBJ_FLAG_HIDDEN);
-
-      if (!lvglData._showChamberBtn)
-        lv_obj_add_flag(lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
-      else
-        lv_obj_remove_flag(lvglData._btnChamber, LV_OBJ_FLAG_HIDDEN);
-
-      // Update text
-      char s[20];
-      snprintf(s, sizeof(s), "%0.1F°%c", lvglData._targetTemperature,
-               lvglData._tempFormat);
-      lv_label_set_text(lvglData._txtTargetTemp, s);
-
-      lv_label_set_text(lvglData._txtState, lvglData._dataState.c_str());
-      lv_label_set_text(lvglData._txtMode, lvglData._dataMode.c_str());
-      lv_label_set_text(lvglData._txtBeerTemp, lvglData._dataBeerTemp.c_str());
-      lv_label_set_text(lvglData._txtChamberTemp, lvglData._dataChamberTemp.c_str());
-      lv_label_set_text(lvglData._txtStatusBar, lvglData._dataStatusBar.c_str());
+      // UI updates are handled by Display::updateTemperatures() calls
     }
 
     lv_task_handler();
+    
+    // Apply queued UI updates (thread-safe state application)
+    chamber_controller_loop();
+    
     lv_tick_inc(5);
     delay(5);
   }

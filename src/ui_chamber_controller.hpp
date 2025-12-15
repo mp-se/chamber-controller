@@ -28,14 +28,31 @@ SOFTWARE.
 
 #include <ui_helpers.hpp>
 
+
+#include <lvgl.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialize chamber controller UI
  * Must be called after hw_display_init()
  * 
  * @param disp LVGL display object
  * @param darkmode Initial theme (true=dark, false=light)
+ * @param cb_beer Beer button event callback
+ * @param cb_chamber Chamber button event callback
+ * @param cb_off Off button event callback
+ * @param cb_up Up button event callback
+ * @param cb_down Down button event callback
  */
-void chamber_controller_init(lv_disp_t* disp, bool darkmode);
+void chamber_controller_init(lv_disp_t* disp, bool darkmode,
+                             lv_event_cb_t cb_beer,
+                             lv_event_cb_t cb_chamber,
+                             lv_event_cb_t cb_off,
+                             lv_event_cb_t cb_up,
+                             lv_event_cb_t cb_down);
 
 /**
  * Update beer temperature display
@@ -43,7 +60,7 @@ void chamber_controller_init(lv_disp_t* disp, bool darkmode);
  * 
  * @param temp Temperature in Celsius (-99.9 to 99.9), or NaN for unavailable
  */
-void chamber_controller_set_beer_temp(float temp);
+void chamber_controller_set_beer_temp(float temp, const char unit);
 
 /**
  * Update chamber temperature display
@@ -51,14 +68,14 @@ void chamber_controller_set_beer_temp(float temp);
  * 
  * @param temp Temperature in Celsius, or NaN for unavailable
  */
-void chamber_controller_set_chamber_temp(float temp);
+void chamber_controller_set_chamber_temp(float temp, const char unit);
 
 /**
  * Update target temperature display
  * 
  * @param temp Target temperature in Celsius
  */
-void chamber_controller_set_target_temp(float temp);
+void chamber_controller_set_target_temp(float temp, const char unit);
 
 /**
  * Update display mode (beer/chamber/off)
@@ -103,10 +120,22 @@ void chamber_controller_set_chamber_button_visible(bool visible);
 void chamber_controller_set_theme(bool darkmode);
 
 /**
+ * Chamber controller UI loop handler
+ * Call from LVGL background thread (lvgl_loop_handler) to apply pending UI updates
+ * This is thread-safe: main thread queues updates via setter functions,
+ * this function applies them from the LVGL thread
+ */
+void chamber_controller_loop(void);
+
+/**
  * Cleanup and destroy UI
  * Call when shutting down
  */
 void chamber_controller_cleanup(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // ENABLE_LVGL
 
