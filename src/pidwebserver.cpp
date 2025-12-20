@@ -101,6 +101,9 @@ void PidWebServer::setupWebHandlers() {
   BaseWebServer::setupWebHandlers();
 
   MDNS.addService("chamberctl", "tcp", 80);
+  MDNS.addServiceTxt("chamberctl", "tcp", "ver", CFG_APPVER);
+  MDNS.addServiceTxt("chamberctl", "tcp", "app", CFG_APPNAME);
+  MDNS.addServiceTxt("chamberctl", "tcp", "id", _webConfig->getID());
 
   _server->on(
       "/api/status", HTTP_GET,

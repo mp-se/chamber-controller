@@ -26,10 +26,9 @@ SOFTWARE.
 
 #if defined(ENABLE_LVGL)
 
-#include <ui_helpers.hpp>
-
-
 #include <lvgl.h>
+
+#include <ui_helpers.hpp>
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,7 +37,7 @@ extern "C" {
 /**
  * Initialize chamber controller UI
  * Must be called after hw_display_init()
- * 
+ *
  * @param disp LVGL display object
  * @param darkmode Initial theme (true=dark, false=light)
  * @param cb_beer Beer button event callback
@@ -48,16 +47,14 @@ extern "C" {
  * @param cb_down Down button event callback
  */
 void chamber_controller_init(lv_disp_t* disp, bool darkmode,
-                             lv_event_cb_t cb_beer,
-                             lv_event_cb_t cb_chamber,
-                             lv_event_cb_t cb_off,
-                             lv_event_cb_t cb_up,
+                             lv_event_cb_t cb_beer, lv_event_cb_t cb_chamber,
+                             lv_event_cb_t cb_off, lv_event_cb_t cb_up,
                              lv_event_cb_t cb_down);
 
 /**
  * Update beer temperature display
  * Handles NaN values appropriately
- * 
+ *
  * @param temp Temperature in Celsius (-99.9 to 99.9), or NaN for unavailable
  */
 void chamber_controller_set_beer_temp(float temp, const char unit);
@@ -65,64 +62,64 @@ void chamber_controller_set_beer_temp(float temp, const char unit);
 /**
  * Update chamber temperature display
  * Handles NaN values appropriately
- * 
+ *
  * @param temp Temperature in Celsius, or NaN for unavailable
  */
 void chamber_controller_set_chamber_temp(float temp, const char unit);
 
 /**
  * Update target temperature display
- * 
+ *
  * @param temp Target temperature in Celsius
  */
 void chamber_controller_set_target_temp(float temp, const char unit);
 
 /**
  * Update display mode (beer/chamber/off)
- * 
+ *
  * @param mode Mode string (e.g., "Beer", "Chamber", "Off")
  */
 void chamber_controller_set_mode(const char* mode);
 
 /**
  * Update state message
- * 
+ *
  * @param state State string (e.g., "Heating", "Cooling", "Idle")
  */
 void chamber_controller_set_state(const char* state);
 
 /**
  * Update status bar message
- * 
+ *
  * @param status Status string
  */
 void chamber_controller_set_status(const char* status);
 
 /**
  * Show/hide beer button
- * 
+ *
  * @param visible true to show, false to hide
  */
 void chamber_controller_set_beer_button_visible(bool visible);
 
 /**
  * Show/hide chamber button
- * 
+ *
  * @param visible true to show, false to hide
  */
 void chamber_controller_set_chamber_button_visible(bool visible);
 
 /**
  * Set UI theme (light or dark mode)
- * 
+ *
  * @param darkmode true for dark theme, false for light theme
  */
 void chamber_controller_set_theme(bool darkmode);
 
 /**
  * Chamber controller UI loop handler
- * Call from LVGL background thread (lvgl_loop_handler) to apply pending UI updates
- * This is thread-safe: main thread queues updates via setter functions,
+ * Call from LVGL background thread (lvgl_loop_handler) to apply pending UI
+ * updates This is thread-safe: main thread queues updates via setter functions,
  * this function applies them from the LVGL thread
  */
 void chamber_controller_loop(void);

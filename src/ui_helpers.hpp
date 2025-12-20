@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2024-2025 Magnus
+Copyright (c) 2025 Magnus
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,19 +35,19 @@ extern "C" {
  * Theme mode enumeration
  */
 typedef enum {
-    UI_THEME_LIGHT,
-    UI_THEME_DARK,
+  UI_THEME_LIGHT,
+  UI_THEME_DARK,
 } ui_theme_t;
 
 /**
  * Color theme definition
  */
 typedef struct {
-    lv_color_t bg;          // Background color
-    lv_color_t text;        // Text color
-    lv_color_t border;      // Border/accent color
-    lv_color_t button_bg;   // Button background color
-    lv_color_t button_text; // Button text color
+  lv_color_t bg;           // Background color
+  lv_color_t text;         // Text color
+  lv_color_t border;       // Border/accent color
+  lv_color_t button_bg;    // Button background color
+  lv_color_t button_text;  // Button text color
 } ui_theme_colors_t;
 
 /**
@@ -78,11 +78,9 @@ void ui_apply_theme_to_screen(lv_obj_t* scr, const ui_theme_colors_t* colors);
  * @param font Text font (e.g., &lv_font_montserrat_18)
  * @return Created label object
  */
-lv_obj_t* ui_create_label(lv_obj_t* parent, const char* text,
-                          lv_coord_t x, lv_coord_t y,
-                          lv_coord_t w, lv_coord_t h,
-                          lv_text_align_t align,
-                          lv_color_t color,
+lv_obj_t* ui_create_label(lv_obj_t* parent, const char* text, lv_coord_t x,
+                          lv_coord_t y, lv_coord_t w, lv_coord_t h,
+                          lv_text_align_t align, lv_color_t color,
                           const lv_font_t* font);
 
 /**
@@ -97,9 +95,8 @@ lv_obj_t* ui_create_label(lv_obj_t* parent, const char* text,
  * @return Created label object
  */
 lv_obj_t* ui_create_styled_label(lv_obj_t* parent, const char* text,
-                                 lv_coord_t x, lv_coord_t y,
-                                 lv_coord_t w, lv_coord_t h,
-                                 lv_style_t* style);
+                                 lv_coord_t x, lv_coord_t y, lv_coord_t w,
+                                 lv_coord_t h, lv_style_t* style);
 
 /**
  * Create a status bar label
@@ -115,11 +112,9 @@ lv_obj_t* ui_create_styled_label(lv_obj_t* parent, const char* text,
  * @return Created label object
  */
 lv_obj_t* ui_create_status_label(lv_obj_t* parent, const char* text,
-                                 lv_coord_t x, lv_coord_t y,
-                                 lv_coord_t w, lv_coord_t h,
-                                 lv_text_align_t align,
-                                 lv_color_t color,
-                                 const lv_font_t* font);
+                                 lv_coord_t x, lv_coord_t y, lv_coord_t w,
+                                 lv_coord_t h, lv_text_align_t align,
+                                 lv_color_t color, const lv_font_t* font);
 
 /**
  * Create a button with label
@@ -136,9 +131,8 @@ lv_obj_t* ui_create_status_label(lv_obj_t* parent, const char* text,
  * @return Created button object
  */
 lv_obj_t* ui_create_button(lv_obj_t* parent, const char* label_text,
-                           lv_coord_t x, lv_coord_t y,
-                           lv_coord_t w, lv_coord_t h,
-                           lv_event_cb_t callback,
+                           lv_coord_t x, lv_coord_t y, lv_coord_t w,
+                           lv_coord_t h, lv_event_cb_t callback,
                            lv_color_t bg_color, lv_color_t text_color,
                            const lv_font_t* font);
 
@@ -156,9 +150,8 @@ lv_obj_t* ui_create_button(lv_obj_t* parent, const char* label_text,
  * @return Created button object
  */
 lv_obj_t* ui_create_styled_button(lv_obj_t* parent, const char* label_text,
-                                  lv_coord_t x, lv_coord_t y,
-                                  lv_coord_t w, lv_coord_t h,
-                                  lv_event_cb_t callback,
+                                  lv_coord_t x, lv_coord_t y, lv_coord_t w,
+                                  lv_coord_t h, lv_event_cb_t callback,
                                   lv_color_t bg_color, lv_style_t* style);
 
 #ifdef __cplusplus
