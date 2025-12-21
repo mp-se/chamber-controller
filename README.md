@@ -15,6 +15,8 @@ This is still work in progress but so far I have been running this PID controlle
 
 * Fixing issue with beer button not hidden when ble tempsensor is not found or ble scanning is disabled
 * Refactored TFT UI so it can be run in simulator on my laptop
+* Updated all dependecies to latest versions
+* Added attributes to mdns broadcast for use in my other software
 
 ## 0.6.0 
 
