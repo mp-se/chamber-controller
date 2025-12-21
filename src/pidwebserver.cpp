@@ -105,46 +105,40 @@ void PidWebServer::setupWebHandlers() {
   MDNS.addServiceTxt("chamberctl", "tcp", "app", CFG_APPNAME);
   MDNS.addServiceTxt("chamberctl", "tcp", "id", _webConfig->getID());
 
-  _server->on(
+    _server->on(
       "/api/status", HTTP_GET,
-      std::bind(&PidWebServer::webHandleStatus, this, std::placeholders::_1));
-  _server->on(
+      [this](AsyncWebServerRequest *request) { this->webHandleStatus(request); });
+    _server->on(
       "/api/temps", HTTP_GET,
-      std::bind(&PidWebServer::webHandleTemps, this, std::placeholders::_1));
-  _server->on(
+      [this](AsyncWebServerRequest *request) { this->webHandleTemps(request); });
+    _server->on(
       "/api/feature", HTTP_GET,
-      std::bind(&PidWebServer::webHandleFeature, this, std::placeholders::_1));
+      [this](AsyncWebServerRequest *request) { this->webHandleFeature(request); });
 
   AsyncCallbackJsonWebHandler *handler;
-  _server->on("/api/config", HTTP_GET,
-              std::bind(&PidWebServer::webHandleConfigRead, this,
-                        std::placeholders::_1));
-  handler = new AsyncCallbackJsonWebHandler(
-      "/api/config", std::bind(&PidWebServer::webHandleConfigWrite, this,
-                               std::placeholders::_1, std::placeholders::_2));
+    _server->on("/api/config", HTTP_GET,
+          [this](AsyncWebServerRequest *request) { this->webHandleConfigRead(request); });
+    handler = new AsyncCallbackJsonWebHandler(
+      "/api/config",
+      [this](AsyncWebServerRequest *request, JsonVariant &json) { this->webHandleConfigWrite(request, json); });
   _server->addHandler(handler);
-  handler = new AsyncCallbackJsonWebHandler(
-      "/api/mode", std::bind(&PidWebServer::webHandleMode, this,
-                             std::placeholders::_1, std::placeholders::_2));
+    handler = new AsyncCallbackJsonWebHandler(
+      "/api/mode",
+      [this](AsyncWebServerRequest *request, JsonVariant &json) { this->webHandleMode(request, json); });
   _server->addHandler(handler);
-  _server->on("/api/sensor/status", HTTP_GET,
-              std::bind(&PidWebServer::webHandleListSensorStatus, this,
-                        std::placeholders::_1));
-  _server->on("/api/sensor", HTTP_GET,
-              std::bind(&PidWebServer::webHandleListSensor, this,
-                        std::placeholders::_1));
-  _server->on("/api/pid/cc", HTTP_GET,
-              std::bind(&PidWebServer::webHandleControlConstants, this,
-                        std::placeholders::_1));
-  _server->on("/api/pid/cs", HTTP_GET,
-              std::bind(&PidWebServer::webHandleControlSettings, this,
-                        std::placeholders::_1));
-  _server->on("/api/pid/cv", HTTP_GET,
-              std::bind(&PidWebServer::webHandleControlVariables, this,
-                        std::placeholders::_1));
-  _server->on(
+    _server->on("/api/sensor/status", HTTP_GET,
+          [this](AsyncWebServerRequest *request) { this->webHandleListSensorStatus(request); });
+    _server->on("/api/sensor", HTTP_GET,
+          [this](AsyncWebServerRequest *request) { this->webHandleListSensor(request); });
+    _server->on("/api/pid/cc", HTTP_GET,
+          [this](AsyncWebServerRequest *request) { this->webHandleControlConstants(request); });
+    _server->on("/api/pid/cs", HTTP_GET,
+          [this](AsyncWebServerRequest *request) { this->webHandleControlSettings(request); });
+    _server->on("/api/pid/cv", HTTP_GET,
+          [this](AsyncWebServerRequest *request) { this->webHandleControlVariables(request); });
+    _server->on(
       "/api/pid/mt", HTTP_GET,
-      std::bind(&PidWebServer::webHandleMinTimes, this, std::placeholders::_1));
+      [this](AsyncWebServerRequest *request) { this->webHandleMinTimes(request); });
 }
 
 void PidWebServer::webHandleFeature(AsyncWebServerRequest *request) {
