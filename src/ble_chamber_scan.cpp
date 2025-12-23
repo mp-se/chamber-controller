@@ -27,8 +27,10 @@ SOFTWARE.
 #include <cmath>
 #include <cstdio>
 #include <log.hpp>
+#include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <utils.hpp>
 #include <vector>
 
@@ -142,7 +144,7 @@ void BleScanner::proccesGravitymonBeacon(const std::string &advertStringHex,
     float battery = b == 0xffff ? NAN : static_cast<float>(b) / 1000;
     float gravity = g == 0xffff ? NAN : static_cast<float>(g) / 10000;
     float temp = t == 0xffff ? NAN : static_cast<float>(t) / 1000;
-    
+
     char chip[20];
     snprintf(chip, sizeof(chip), "%06x", chipId);
 
@@ -175,8 +177,8 @@ void BleScanner::processGravitymonEddystoneBeacon(
   float temp = t == 0xffff ? NAN : static_cast<float>(t) / 1000;
   float gravity = g == 0xffff ? NAN : static_cast<float>(g) / 10000;
   float angle = a == 0xffff ? NAN : static_cast<float>(a) / 100;
-  uint32_t chipId = (payload[33] << 24) | (payload[34] << 16) | (payload[35] << 8) |
-           (payload[36]);
+  uint32_t chipId = (payload[33] << 24) | (payload[34] << 16) |
+                    (payload[35] << 8) | (payload[36]);
 
   char chip[20];
   snprintf(chip, sizeof(chip), "%06x", chipId);

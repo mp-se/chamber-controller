@@ -105,40 +105,49 @@ void PidWebServer::setupWebHandlers() {
   MDNS.addServiceTxt("chamberctl", "tcp", "app", CFG_APPNAME);
   MDNS.addServiceTxt("chamberctl", "tcp", "id", _webConfig->getID());
 
-    _server->on(
-      "/api/status", HTTP_GET,
-      [this](AsyncWebServerRequest *request) { this->webHandleStatus(request); });
-    _server->on(
-      "/api/temps", HTTP_GET,
-      [this](AsyncWebServerRequest *request) { this->webHandleTemps(request); });
-    _server->on(
-      "/api/feature", HTTP_GET,
-      [this](AsyncWebServerRequest *request) { this->webHandleFeature(request); });
+  _server->on("/api/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    this->webHandleStatus(request);
+  });
+  _server->on("/api/temps", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    this->webHandleTemps(request);
+  });
+  _server->on("/api/feature", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    this->webHandleFeature(request);
+  });
 
   AsyncCallbackJsonWebHandler *handler;
-    _server->on("/api/config", HTTP_GET,
-          [this](AsyncWebServerRequest *request) { this->webHandleConfigRead(request); });
-    handler = new AsyncCallbackJsonWebHandler(
-      "/api/config",
-      [this](AsyncWebServerRequest *request, JsonVariant &json) { this->webHandleConfigWrite(request, json); });
+  _server->on("/api/config", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    this->webHandleConfigRead(request);
+  });
+  handler = new AsyncCallbackJsonWebHandler(
+      "/api/config", [this](AsyncWebServerRequest *request, JsonVariant &json) {
+        this->webHandleConfigWrite(request, json);
+      });
   _server->addHandler(handler);
-    handler = new AsyncCallbackJsonWebHandler(
-      "/api/mode",
-      [this](AsyncWebServerRequest *request, JsonVariant &json) { this->webHandleMode(request, json); });
+  handler = new AsyncCallbackJsonWebHandler(
+      "/api/mode", [this](AsyncWebServerRequest *request, JsonVariant &json) {
+        this->webHandleMode(request, json);
+      });
   _server->addHandler(handler);
-    _server->on("/api/sensor/status", HTTP_GET,
-          [this](AsyncWebServerRequest *request) { this->webHandleListSensorStatus(request); });
-    _server->on("/api/sensor", HTTP_GET,
-          [this](AsyncWebServerRequest *request) { this->webHandleListSensor(request); });
-    _server->on("/api/pid/cc", HTTP_GET,
-          [this](AsyncWebServerRequest *request) { this->webHandleControlConstants(request); });
-    _server->on("/api/pid/cs", HTTP_GET,
-          [this](AsyncWebServerRequest *request) { this->webHandleControlSettings(request); });
-    _server->on("/api/pid/cv", HTTP_GET,
-          [this](AsyncWebServerRequest *request) { this->webHandleControlVariables(request); });
-    _server->on(
-      "/api/pid/mt", HTTP_GET,
-      [this](AsyncWebServerRequest *request) { this->webHandleMinTimes(request); });
+  _server->on("/api/sensor/status", HTTP_GET,
+              [this](AsyncWebServerRequest *request) {
+                this->webHandleListSensorStatus(request);
+              });
+  _server->on("/api/sensor", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    this->webHandleListSensor(request);
+  });
+  _server->on("/api/pid/cc", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    this->webHandleControlConstants(request);
+  });
+  _server->on("/api/pid/cs", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    this->webHandleControlSettings(request);
+  });
+  _server->on("/api/pid/cv", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    this->webHandleControlVariables(request);
+  });
+  _server->on("/api/pid/mt", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    this->webHandleMinTimes(request);
+  });
 }
 
 void PidWebServer::webHandleFeature(AsyncWebServerRequest *request) {

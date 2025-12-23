@@ -131,7 +131,8 @@ void Display::clear(uint32_t color) {
 void Display::updateButtons(bool beerEnabled, bool chamberEnabled) {
 #if defined(ENABLE_LVGL)
   // Update button visibility using new API
-  Log.notice(F("DISP: Updating button visibility: Beer=%d, Chamber=%d" CR), beerEnabled, chamberEnabled);
+  Log.notice(F("DISP: Updating button visibility: Beer=%d, Chamber=%d" CR),
+             beerEnabled, chamberEnabled);
   chamber_controller_set_beer_button_visible(beerEnabled);
   chamber_controller_set_chamber_button_visible(chamberEnabled);
 #endif
@@ -149,12 +150,13 @@ void Display::updateTemperatures(const char *mode, const char *state,
   chamber_controller_set_mode(mode);
   chamber_controller_set_state(state);
   chamber_controller_set_beer_temp(beerTemp, myConfig.getTempFormat());
-  chamber_controller_set_chamber_temp(chamberTemp, myConfig.getTempFormat()); 
+  chamber_controller_set_chamber_temp(chamberTemp, myConfig.getTempFormat());
   chamber_controller_set_status(statusBar);
-  
+
   // Update target temp
-  chamber_controller_set_target_temp(_targetTemperature, myConfig.getTempFormat());
-  
+  chamber_controller_set_target_temp(_targetTemperature,
+                                     myConfig.getTempFormat());
+
   // Update theme if changed
   chamber_controller_set_theme(darkmode);
 #endif
@@ -229,11 +231,14 @@ bool Display::getTouch(uint16_t *x, uint16_t *y) {
     if (_rotation == Rotation::ROTATION_90) {
       *x = yt;
       *y = TFT_HEIGHT - xt;
-      Log.verbose(F("DISP: Touch ROTATION_90: raw(%u,%u) -> display(%u,%u)" CR), xt, yt, *x, *y);
+      Log.verbose(F("DISP: Touch ROTATION_90: raw(%u,%u) -> display(%u,%u)" CR),
+                  xt, yt, *x, *y);
     } else {  // Rotation::ROTATION_270
       *x = TFT_WIDTH - yt;
       *y = xt;
-      Log.verbose(F("DISP: Touch ROTATION_270: raw(%u,%u) -> display(%u,%u)" CR), xt, yt, *x, *y);
+      Log.verbose(
+          F("DISP: Touch ROTATION_270: raw(%u,%u) -> display(%u,%u)" CR), xt,
+          yt, *x, *y);
     }
   }
 
@@ -253,14 +258,25 @@ void Display::createUI() {
   lv_init();
   lv_log_register_print_cb(log_print);
 
-  Log.notice(F("DISP: Display dimensions: %d x %d, Rotation=%d (1=90°, 3=270°)" CR), TFT_WIDTH, TFT_HEIGHT, _rotation);
-  Log.notice(F("DISP: Button positions - Beer(205,10,100,44) Chamber(205,60,100,44) Off(205,110,100,44) Down(30,161,44,44) Up(230,161,44,44)" CR));
+  Log.notice(
+      F("DISP: Display dimensions: %d x %d, Rotation=%d (1=90°, 3=270°)" CR),
+      TFT_WIDTH, TFT_HEIGHT, _rotation);
+  Log.notice(
+      F("DISP: Button positions - Beer(205,10,100,44) Chamber(205,60,100,44) "
+        "Off(205,110,100,44) Down(30,161,44,44) Up(230,161,44,44)" CR));
 
-  Log.notice(F("DISP: Display dimensions: %d x %d, Rotation=%d (1=90°, 3=270°)" CR), TFT_WIDTH, TFT_HEIGHT, _rotation);
-  Log.notice(F("DISP: Button positions - Beer(205,10,100,44) Chamber(205,60,100,44) Off(205,110,100,44) Down(30,161,44,44) Up(230,161,44,44)" CR));
+  Log.notice(
+      F("DISP: Display dimensions: %d x %d, Rotation=%d (1=90°, 3=270°)" CR),
+      TFT_WIDTH, TFT_HEIGHT, _rotation);
+  Log.notice(
+      F("DISP: Button positions - Beer(205,10,100,44) Chamber(205,60,100,44) "
+        "Off(205,110,100,44) Down(30,161,44,44) Up(230,161,44,44)" CR));
 
-  Log.notice(F("DISP: Display configured - Width=%d Height=%d Rotation=%d" CR), TFT_WIDTH, TFT_HEIGHT, _rotation);
-  Log.notice(F("DISP: Expected layout: 320x240 with buttons at: Beer(205,10) Chamber(205,60) Off(205,110) Down(30,161) Up(230,161)" CR));
+  Log.notice(F("DISP: Display configured - Width=%d Height=%d Rotation=%d" CR),
+             TFT_WIDTH, TFT_HEIGHT, _rotation);
+  Log.notice(
+      F("DISP: Expected layout: 320x240 with buttons at: Beer(205,10) "
+        "Chamber(205,60) Off(205,110) Down(30,161) Up(230,161)" CR));
 
 #define DRAW_BUF_SIZE (TFT_WIDTH * TFT_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
 
@@ -293,12 +309,9 @@ void Display::createUI() {
 
   // Initialize the new chamber controller UI with button callbacks
   Log.notice(F("DISP: Initializing chamber controller UI" CR));
-  chamber_controller_init(_display, _darkmode,
-                         btnBeerEventHandler,
-                         btnChamberEventHandler,
-                         btnOffEventHandler,
-                         btnUpEventHandler,
-                         btnDownEventHandler);
+  chamber_controller_init(_display, _darkmode, btnBeerEventHandler,
+                          btnChamberEventHandler, btnOffEventHandler,
+                          btnUpEventHandler, btnDownEventHandler);
   Log.notice(F("DISP: Chamber controller UI initialized" CR));
 
   xTaskCreatePinnedToCore(lvgl_loop_handler,  // Function to implement the task
@@ -396,10 +409,10 @@ void lvgl_loop_handler(void *parameter) {
     }
 
     lv_task_handler();
-    
+
     // Apply queued UI updates (thread-safe state application)
     chamber_controller_loop();
-    
+
     lv_tick_inc(5);
     delay(5);
   }

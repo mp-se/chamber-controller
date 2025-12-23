@@ -34,7 +34,7 @@ typedef uint8_t DeviceAddress[8];
 
 class BleTempSensor : public BasicTempSensor {
  public:
-  BleTempSensor(String name) {
+  explicit BleTempSensor(String name) {
     Log.verbose(F("TEMP: Creating BleTempSensor %s." CR), name.c_str());
     _name = name;
   }

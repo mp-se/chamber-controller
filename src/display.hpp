@@ -32,8 +32,9 @@ SOFTWARE.
 #endif
 #if defined(ENABLE_LVGL)
 #include <lvgl.h>
-#include <ui_helpers.hpp>
+
 #include <ui_chamber_controller.hpp>
+#include <ui_helpers.hpp>
 #endif
 
 enum FontSize { FONT_9 = 9, FONT_12 = 12, FONT_18 = 18, FONT_24 = 24 };
@@ -60,7 +61,7 @@ class Display {
   lv_display_t* _display = NULL;
   ui_theme_t _theme = UI_THEME_LIGHT;
   ui_theme_colors_t _colors;
-  
+
   // Data state
   volatile float _targetTemperature = 20.0f;
   volatile char _mode = 'b';
