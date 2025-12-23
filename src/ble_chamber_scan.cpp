@@ -23,7 +23,7 @@ SOFTWARE.
  */
 #if defined(CHAMBER) && defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
 
-#include <ble_scanner.hpp>
+#include <ble_chamber_scan.hpp>
 #include <cmath>
 #include <cstdio>
 #include <log.hpp>
@@ -125,28 +125,24 @@ void BleScanner::proccesGravitymonBeacon(const std::string &advertStringHex,
                                          NimBLEAddress address) {
   const char *payload = advertStringHex.c_str();
 
-  float battery;
-  float temp;
-  float gravity;
-  float angle;
-  uint32_t chipId;
-
   if (*(payload + 4) == 'G' && *(payload + 5) == 'R' && *(payload + 6) == 'A' &&
       *(payload + 7) == 'V') {
-    chipId = (*(payload + 12) << 24) | (*(payload + 13) << 16) |
-             (*(payload + 14) << 8) | *(payload + 15);
-    angle = static_cast<float>((*(payload + 16) << 8) | *(payload + 17)) / 100;
-    battery =
-        static_cast<float>((*(payload + 18) << 8) | *(payload + 19)) / 1000;
-    gravity =
-        static_cast<float>((*(payload + 20) << 8) | *(payload + 21)) / 10000;
-    temp = static_cast<float>((*(payload + 22) << 8) | *(payload + 23)) / 1000;
+    uint16_t a =
+        static_cast<uint16_t>((*(payload + 16) << 8) | *(payload + 17));
+    uint16_t b =
+        static_cast<uint16_t>((*(payload + 18) << 8) | *(payload + 19));
+    uint16_t g =
+        static_cast<uint16_t>((*(payload + 20) << 8) | *(payload + 21));
+    uint16_t t =
+        static_cast<uint16_t>((*(payload + 22) << 8) | *(payload + 23));
 
-    if (isnan(angle) || isinf(angle)) angle = 0.0f;
-    if (isnan(battery) || isinf(battery)) battery = 0.0f;
-    if (isnan(gravity) || isinf(gravity)) gravity = 0.0f;
-    if (isnan(temp) || isinf(temp)) temp = 0.0f;
-
+    uint32_t chipId = (*(payload + 12) << 24) | (*(payload + 13) << 16) |
+                      (*(payload + 14) << 8) | *(payload + 15);
+    float angle = a == 0xffff ? NAN : static_cast<float>(a) / 100;
+    float battery = b == 0xffff ? NAN : static_cast<float>(b) / 1000;
+    float gravity = g == 0xffff ? NAN : static_cast<float>(g) / 10000;
+    float temp = t == 0xffff ? NAN : static_cast<float>(t) / 1000;
+    
     char chip[20];
     snprintf(chip, sizeof(chip), "%06x", chipId);
 
@@ -170,23 +166,17 @@ void BleScanner::processGravitymonEddystoneBeacon(
   // 0b 09 67 72 61 76 69 74 79 6d 6f 6e 02 01 06 03 03 aa fe 11 16 aa fe 20 00
   // 0c 8b 10 8b 00 00 30 39 00 00 16 2e
 
-  float battery;
-  float temp;
-  float gravity;
-  float angle;
-  uint32_t chipId;
+  uint16_t b = static_cast<uint16_t>((payload[25] << 8) | payload[26]);
+  uint16_t t = static_cast<uint16_t>((payload[27] << 8) | payload[28]);
+  uint16_t g = static_cast<uint16_t>((payload[29] << 8) | payload[30]);
+  uint16_t a = static_cast<uint16_t>((payload[31] << 8) | payload[32]);
 
-  battery = static_cast<float>((payload[25] << 8) | payload[26]) / 1000;
-  temp = static_cast<float>((payload[27] << 8) | payload[28]) / 1000;
-  gravity = static_cast<float>((payload[29] << 8) | payload[30]) / 10000;
-  angle = static_cast<float>((payload[31] << 8) | payload[32]) / 100;
-  chipId = (payload[33] << 24) | (payload[34] << 16) | (payload[35] << 8) |
+  float battery = b == 0xffff ? NAN : static_cast<float>(b) / 1000;
+  float temp = t == 0xffff ? NAN : static_cast<float>(t) / 1000;
+  float gravity = g == 0xffff ? NAN : static_cast<float>(g) / 10000;
+  float angle = a == 0xffff ? NAN : static_cast<float>(a) / 100;
+  uint32_t chipId = (payload[33] << 24) | (payload[34] << 16) | (payload[35] << 8) |
            (payload[36]);
-
-  if (isnan(battery) || isinf(battery)) battery = 0.0f;
-  if (isnan(temp) || isinf(temp)) temp = 0.0f;
-  if (isnan(gravity) || isinf(gravity)) gravity = 0.0f;
-  if (isnan(angle) || isinf(angle)) angle = 0.0f;
 
   char chip[20];
   snprintf(chip, sizeof(chip), "%06x", chipId);

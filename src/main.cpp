@@ -30,7 +30,7 @@ SOFTWARE.
 #include <TempSensorBle.hpp>
 #include <TempSensorOneWire.hpp>
 #include <ble_chamber.hpp>
-#include <ble_scanner.hpp>
+#include <ble_chamber_scan.hpp>
 #include <cstdio>
 #include <display.hpp>
 #include <espframework.hpp>
@@ -288,8 +288,7 @@ void runLoop() {
 #if defined(ENABLE_BLE)
     if (myConfig.isBlePushEnabled()) {
       Log.notice(F("Main: Sending temperature over BLE." CR));
-      bleSender.sendCustomBeaconData(isnan(fridge) ? 0 : fridge,
-                                     isnan(beer) ? 0 : beer);
+      bleSender.sendCustomBeaconData(fridge, beer);
     }
 #endif
   }

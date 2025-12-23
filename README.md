@@ -17,6 +17,7 @@ This is still work in progress but so far I have been running this PID controlle
 * Refactored TFT UI so it can be run in simulator on my laptop
 * Updated all dependecies to latest versions
 * Added attributes to mdns broadcast for use in my other software
+* (Bug) Fixed BLE sender to send tag for invalid value data is not available.
 
 ## 0.6.0 
 
