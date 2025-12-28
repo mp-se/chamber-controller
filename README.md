@@ -2,6 +2,10 @@
 ![release](https://img.shields.io/github/v/release/mp-se/chamber-controller?label=latest%20release)
 ![issues](https://img.shields.io/github/issues/mp-se/chamber-controller)
 ![pr](https://img.shields.io/github/issues-pr/mp-se/chamber-controller)
+![dev_build](https://img.shields.io/github/actions/workflow/status/mp-se/chamber-controller/pio-build.yaml?branch=dev)
+![License](https://img.shields.io/github/license/mp-se/chamber-controller)
+![GitHub Stars](https://img.shields.io/github/stars/mp-se/chamber-controller)
+![Last Commit](https://img.shields.io/github/last-commit/mp-se/chamber-controller)
 
 # Overview
 
