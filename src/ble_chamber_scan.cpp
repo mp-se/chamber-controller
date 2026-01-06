@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021-2025 Magnus
+Copyright (c) 2021-2026 Magnus
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -419,7 +419,7 @@ void BleScanner::proccesRaptBeacon(const std::string &advertStringHex,
     floatUnion.b[1] = *(payload + 15);
     floatUnion.b[2] = *(payload + 14);
     floatUnion.b[3] = *(payload + 13);
-    gravity = floatUnion.f / 1000;
+    gravity = floatUnion.f;
 
     angleX = static_cast<float>((*(payload + 17) << 8) | *(payload + 18)) / 16;
     angleY = static_cast<float>((*(payload + 19) << 8) | *(payload + 20)) / 16;
