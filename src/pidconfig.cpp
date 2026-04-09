@@ -1,25 +1,20 @@
 /*
-MIT License
-
-Copyright (c) 2024-2026 Magnus
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+ * Chamber Controller
+ * Copyright (c) 2024-2026 Magnus
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 #include <ArduinoJson.h>
 
@@ -57,6 +52,11 @@ void PidConfig::createJson(JsonObject& doc) const {
   doc[PARAM_BLE_PUSH_ENABLED] = isBlePushEnabled();
   doc[PARAM_BLE_SCAN_ENABLED] = isBleScanEnabled();
   doc[PARAM_BLE_SENSOR_VALID_TIME] = getBleSensorValidTime();
+  doc[PARAM_REMOTE_CONTROL_ACTIVE] = getRemoteControlActive();
+  doc[PARAM_REMOTE_PREVIOUS_BLE_SENSOR_ID] = getRemotePreviousBleSensorId();
+  doc[PARAM_REMOTE_PREVIOUS_MODE] = String(getRemotePreviousMode());
+  doc[PARAM_REMOTE_PREVIOUS_TARGET_TEMP] =
+      serialized(String(getRemotePreviousTargetTemp(), DECIMALS_TEMP));
 }
 
 void PidConfig::parseJson(JsonObject& doc) {
@@ -104,6 +104,17 @@ void PidConfig::parseJson(JsonObject& doc) {
     setBleScanEnabled(doc[PARAM_BLE_SCAN_ENABLED].as<bool>());
   if (!doc[PARAM_BLE_SENSOR_VALID_TIME].isNull())
     setBleSensorValidTime(doc[PARAM_BLE_SENSOR_VALID_TIME].as<int>());
+  if (!doc[PARAM_REMOTE_CONTROL_ACTIVE].isNull())
+    setRemoteControlActive(doc[PARAM_REMOTE_CONTROL_ACTIVE].as<bool>());
+  if (!doc[PARAM_REMOTE_PREVIOUS_BLE_SENSOR_ID].isNull())
+    setRemotePreviousBleSensorId(doc[PARAM_REMOTE_PREVIOUS_BLE_SENSOR_ID]);
+  if (!doc[PARAM_REMOTE_PREVIOUS_MODE].isNull()) {
+    String s = doc[PARAM_REMOTE_PREVIOUS_MODE];
+    setRemotePreviousMode(s.charAt(0));
+  }
+  if (!doc[PARAM_REMOTE_PREVIOUS_TARGET_TEMP].isNull())
+    setRemotePreviousTargetTemp(
+        doc[PARAM_REMOTE_PREVIOUS_TARGET_TEMP].as<float>());
 }
 
 // EOF

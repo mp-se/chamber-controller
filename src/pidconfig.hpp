@@ -1,25 +1,20 @@
 /*
-MIT License
-
-Copyright (c) 2024-2026 Magnus
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+ * Chamber Controller
+ * Copyright (c) 2024-2026 Magnus
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 #ifndef SRC_PIDCONFIG_HPP_
 #define SRC_PIDCONFIG_HPP_
@@ -29,10 +24,11 @@ SOFTWARE.
 
 class PidConfig : public BaseConfig {
  private:
+  // PID controller settings
+  char _controllerMode = ControllerMode::off;
   String _fridgeSensorId = "";
   String _beerSensorId = "";
   String _beerBleSensorId = "";
-  char _controllerMode = ControllerMode::off;
   float _targetTemperature = 5;
   float _fridgeSensorOffset = 0.0;
   float _beerSensorOffset = 0.0;
@@ -40,11 +36,19 @@ class PidConfig : public BaseConfig {
   bool _enableCooling = false;
   bool _enableHeating = false;
   bool _invertPins = false;
+
+  // BLE settings
   bool _enableBlePush = false;
   bool _enableBleScan = false;
-  bool _bleActiveScan = false;  // This is a constant for now
-  int _bleScanTime = 3;         // This is a constant for now
+  bool _bleActiveScan = false;
+  int _bleScanTime = 3;
   int _bleSensorValidTime = 15;
+
+  // Params for remote control via brewlogger
+  bool _remoteControlActive = false;
+  String _remotePreviousBleSensorId = "";
+  char _remotePreviousMode = ControllerMode::off;
+  float _remotePreviousTargetTemp = 5.0;
 
  public:
   PidConfig(String baseMDNS, String fileName);
@@ -157,6 +161,34 @@ class PidConfig : public BaseConfig {
   int getBleSensorValidTime() const { return _bleSensorValidTime; }
   void setBleSensorValidTime(int v) {
     _bleSensorValidTime = v;
+    _saveNeeded = true;
+  }
+
+  bool getRemoteControlActive() const { return _remoteControlActive; }
+  void setRemoteControlActive(bool b) {
+    _remoteControlActive = b;
+    _saveNeeded = true;
+  }
+
+  const char* getRemotePreviousBleSensorId() const {
+    return _remotePreviousBleSensorId.c_str();
+  }
+  void setRemotePreviousBleSensorId(String s) {
+    _remotePreviousBleSensorId = s;
+    _saveNeeded = true;
+  }
+
+  char getRemotePreviousMode() const { return _remotePreviousMode; }
+  void setRemotePreviousMode(char c) {
+    _remotePreviousMode = c;
+    _saveNeeded = true;
+  }
+
+  float getRemotePreviousTargetTemp() const {
+    return _remotePreviousTargetTemp;
+  }
+  void setRemotePreviousTargetTemp(float f) {
+    _remotePreviousTargetTemp = f;
     _saveNeeded = true;
   }
 

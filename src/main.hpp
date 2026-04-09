@@ -1,25 +1,20 @@
 /*
-MIT License
-
-Copyright (c) 2024-2026 Magnus
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+ * Chamber Controller
+ * Copyright (c) 2024-2026 Magnus
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 #ifndef SRC_MAIN_HPP_
 #define SRC_MAIN_HPP_
@@ -51,6 +46,13 @@ constexpr auto PARAM_BLE_PUSH_ENABLED = "ble_push_enabled";
 constexpr auto PARAM_BLE_SENSOR_VALID_TIME = "ble_sensor_valid_time";
 constexpr auto PARAM_FRIDGE_SENSOR_OFFSET = "fridge_sensor_offset";
 constexpr auto PARAM_BEER_SENSOR_OFFSET = "beer_sensor_offset";
+
+constexpr auto PARAM_REMOTE_CONTROL_ACTIVE = "remote_control_active";
+constexpr auto PARAM_REMOTE_PREVIOUS_BLE_SENSOR_ID =
+    "remote_previous_ble_sensor_id";
+constexpr auto PARAM_REMOTE_PREVIOUS_MODE = "remote_previous_mode";
+constexpr auto PARAM_REMOTE_PREVIOUS_TARGET_TEMP =
+    "remote_previous_target_temp";
 
 #define DECIMALS_TEMP 2
 

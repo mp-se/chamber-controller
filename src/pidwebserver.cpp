@@ -1,25 +1,20 @@
 /*
-MIT License
-
-Copyright (c) 2024-2026 Magnus
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+ * Chamber Controller
+ * Copyright (c) 2024-2026 Magnus
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 #include <DallasTemperature.h>
 #include <LittleFS.h>
@@ -77,6 +72,7 @@ constexpr auto PARAM_PID_TIME_SINCE_IDLE = "pid_time_since_idle";
 
 constexpr auto PARAM_NEW_MODE = "new_mode";
 constexpr auto PARAM_NEW_TEMPERATURE = "new_temperature";
+constexpr auto PARAM_NEW_BLE_SENSOR = "new_ble_sensor";
 
 constexpr auto PARAM_SENSORS = "sensors";
 
@@ -127,6 +123,11 @@ void PidWebServer::setupWebHandlers() {
   handler = new AsyncCallbackJsonWebHandler(
       "/api/mode", [this](AsyncWebServerRequest *request, JsonVariant &json) {
         this->webHandleMode(request, json);
+      });
+  _server->addHandler(handler);
+  handler = new AsyncCallbackJsonWebHandler(
+      "/api/remote", [this](AsyncWebServerRequest *request, JsonVariant &json) {
+        this->webHandleRemoteMode(request, json);
       });
   _server->addHandler(handler);
   _server->on("/api/sensor/status", HTTP_GET,
@@ -355,40 +356,169 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
   bool success = false;
   String message = "Mode updated";
 
-  if (!obj[PARAM_NEW_MODE].isNull() && !obj[PARAM_NEW_TEMPERATURE].isNull()) {
-    char newMode = obj[PARAM_NEW_MODE].as<String>().charAt(0);
-    float newTemp = obj[PARAM_NEW_TEMPERATURE].as<float>();
+  if (obj[PARAM_NEW_MODE].isNull() || obj[PARAM_NEW_TEMPERATURE].isNull() ||
+      obj[PARAM_NEW_MODE].as<String>().length() != 1) {
+    request->send(400);
+    return;
+  }
 
-    Log.notice(F("WEB : Target mode %c, temp %F." CR), newMode, newTemp);
+  char newMode = toupper(obj[PARAM_NEW_MODE].as<String>().charAt(0));
+  float newTemp = obj[PARAM_NEW_TEMPERATURE].as<float>();
 
-    switch (newMode) {
-      case ControllerMode::beerConstant:
-        if (myConfig.isBeerSensorEnabled() &&
-            (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
-          setNewControllerMode(ControllerMode::beerConstant, newTemp);
-          success = true;
-        } else {
-          success = false;
-          message = "Lack beer sensor or cooling/heating actuator";
-        }
-        break;
+  Log.notice(F("WEB : Target mode %c, temp %F." CR), newMode, newTemp);
 
-      case ControllerMode::fridgeConstant:
-        if (myConfig.isFridgeSensorEnabled() &&
-            (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
-          setNewControllerMode(ControllerMode::fridgeConstant, newTemp);
-          success = true;
-        } else {
-          success = false;
-          message = "Lack chamber sensor or cooling/heating actuator";
-        }
-        break;
-
-      case ControllerMode::off:
-        setNewControllerMode(ControllerMode::off, newTemp);
+  switch (newMode) {
+    case ControllerMode::beerConstant:
+      if ((myConfig.isBeerSensorEnabled() ||
+           myConfig.isBeerBleSensorEnabled()) &&
+          (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
+        setNewControllerMode(ControllerMode::beerConstant, newTemp);
         success = true;
-        break;
+      } else {
+        success = false;
+        message = "Lack beer sensor or cooling/heating actuator";
+      }
+      break;
+
+    case ControllerMode::fridgeConstant:
+      if (myConfig.isFridgeSensorEnabled() &&
+          (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
+        setNewControllerMode(ControllerMode::fridgeConstant, newTemp);
+        success = true;
+      } else {
+        success = false;
+        message = "Lack chamber sensor or cooling/heating actuator";
+      }
+      break;
+
+    case ControllerMode::off:
+      setNewControllerMode(ControllerMode::off, newTemp);
+      success = true;
+      break;
+
+    default:
+      request->send(400);
+      break;
+  }
+
+  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  obj = response->getRoot().as<JsonObject>();
+  obj[PARAM_SUCCESS] = success;
+  obj[PARAM_PID_MODE] = String(tempControl.getMode());
+  obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
+  obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
+  obj[PARAM_MESSAGE] = message;
+  response->setLength();
+  request->send(response);
+}
+
+void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest *request,
+                                       JsonVariant &json) {
+  if (!isAuthenticated(request) || runMode != RunMode::pidMode) {
+    return;
+  }
+
+  Log.notice(F("WEB : webServer callback for /api/remote." CR));
+
+  /*
+   * This endpoint is for brewlogger to remotely set the controller mode and
+   * block manual control. Via this endpoint its also possible to set and use
+   * gravitymon device as temperature sensor.
+   *
+   * Mode options; F - Fridge constant, B - Beer constant, O - Off, R - Restore
+   * previous
+   *
+   * { "new_mode": "B", "new_temperature": 20.0, "new_ble_sensor": "ABC123" }
+   */
+
+  JsonObject obj = json.as<JsonObject>();
+  bool success = false;
+  String message;
+  String newBleSensorId = "";
+
+  if (obj[PARAM_NEW_MODE].isNull() || obj[PARAM_NEW_TEMPERATURE].isNull() ||
+      obj[PARAM_NEW_MODE].as<String>().length() != 1) {
+    request->send(400);
+    return;
+  }
+
+  char newMode = toupper(obj[PARAM_NEW_MODE].as<String>().charAt(0));
+  float newTemp = obj[PARAM_NEW_TEMPERATURE].as<float>();
+
+  if (!obj[PARAM_NEW_BLE_SENSOR].isNull()) {
+    newBleSensorId = obj[PARAM_NEW_BLE_SENSOR].as<String>();
+  }
+
+  if (myConfig.getRemoteControlActive()) {
+    if (newMode == 'R') {  // If mode is = R then we restore the saved setttings
+                           // and leave remote mode
+      // Use saved settings
+      newMode = myConfig.getRemotePreviousMode();
+      newTemp = myConfig.getRemotePreviousTargetTemp();
+      newBleSensorId = myConfig.getRemotePreviousBleSensorId();
+      // Inactivate remote mode
+      myConfig.setRemoteControlActive(false);
+      myConfig.saveFile();
     }
+
+    // Continue with main loop to set the new mode and temp
+
+  } else {
+    if (newMode == 'R') {  // If mode is = R then ignore, not valid since we are
+                           // not in remote mode
+      request->send(400);
+      return;
+    }
+
+    // Save current setting
+    myConfig.setRemotePreviousMode(myConfig.getControllerMode());
+    myConfig.setRemotePreviousBleSensorId(myConfig.getBeerBleSensorId());
+    myConfig.setRemotePreviousTargetTemp(myConfig.getTargetTemperature());
+
+    // Activate remote mode
+    myConfig.setRemoteControlActive(true);
+    myConfig.setBeerBleSensorId(newBleSensorId);
+    myConfig.saveFile();
+
+    // Continue with main loop to set the new mode and temp
+  }
+
+  Log.notice(F("WEB : Target mode %c, temp %F, sensor %s." CR), newMode,
+             newTemp, newBleSensorId.c_str());
+
+  switch (newMode) {
+    case ControllerMode::beerConstant:
+      if ((myConfig.isBeerSensorEnabled() ||
+           myConfig.isBeerBleSensorEnabled()) &&
+          (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
+        setNewControllerMode(ControllerMode::beerConstant, newTemp);
+        success = true;
+      } else {
+        success = false;
+        message = "Lack beer sensor or cooling/heating actuator";
+      }
+      break;
+
+    case ControllerMode::fridgeConstant:
+      if (myConfig.isFridgeSensorEnabled() &&
+          (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
+        setNewControllerMode(ControllerMode::fridgeConstant, newTemp);
+        success = true;
+      } else {
+        success = false;
+        message = "Lack chamber sensor or cooling/heating actuator";
+      }
+      break;
+
+    case ControllerMode::off:
+      setNewControllerMode(ControllerMode::off, newTemp);
+      success = true;
+      message = "Turning off controller";
+      break;
+
+    default:
+      request->send(400);
+      break;
   }
 
   AsyncJsonResponse *response = new AsyncJsonResponse(false);
