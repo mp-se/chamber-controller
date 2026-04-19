@@ -19,6 +19,8 @@ This is still work in progress but so far I have been running this PID controlle
 
 * New api to allow for remote control via brewlogger
 * (Bug) Fixed issue with setting mode when Ble sensor is used.
+* (Bug) Added pins for s3 board that was missing
+* (Bug) Enable bluetooth in s3 build
 
 ## 0.7.0
 
@@ -71,7 +73,7 @@ All the configuration is done using a web interface running on the device but af
 |-------|---------|---------|---------|
 | ESP32 Pro | 25 | 26 | 13 |
 | ESP32 S2 Mini | 5 | 7 | 9 |
-| ESP32 S3 Mini | 4 | 12 | 13 |
+| ESP32 S3 Mini | 4 | 12 |  13 |
 
 # Integration
 
