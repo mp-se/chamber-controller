@@ -28,6 +28,10 @@ namespace Pins {
 constexpr auto heatingPin = 5;
 constexpr auto coolingPin = 7;
 constexpr auto oneWirePin = 9;
+#elif defined(ESP32S3)
+constexpr auto heatingPin = 4;
+constexpr auto coolingPin = 12;
+constexpr auto oneWirePin = 13;
 #elif defined(ESP32)
 constexpr auto heatingPin = 25;
 constexpr auto coolingPin = 26;

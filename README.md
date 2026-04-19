@@ -64,3 +64,63 @@ Its not possible to upgrade from versions older than 0.3 to 0.4+ for the esp32pr
 # Software & Wifi Setup
 
 All the configuration is done using a web interface running on the device but after flashing there is a need to setup the wifi support. After installation the device will create an SSID called Chamber with the password 'password'. Join this network and then navigate to http://192.168.4.1 to open up the user interface. Under WIFI you can scan for existing networks, select the one you want and enter the SSID. Once the wifi is settings is saved you can reset the device and it should connect to the network. If you have an display the IP adress is shown on the bottom of the screen.
+
+# Hardware - PINS
+
+| Board | Heating | Cooling | OneWire |
+|-------|---------|---------|---------|
+| ESP32 Pro | 25 | 26 | 13 |
+| ESP32 S2 Mini | 5 | 7 | 9 |
+| ESP32 S3 Mini | 4 | 12 | 13 |
+
+# Integration
+
+I got a few questions about integration towards Home Assistant and that is quite easy using the REST integration. This will fetch the data every 60 seconds.
+
+```
+  - platform: rest
+    name: "Fridge Temperature"
+    resource: "http://keezer.home.arpa/api/status"
+    method: GET
+    scan_interval: 60
+    value_template: "{{ value_json.pid_fridge_temp }}"
+    unit_of_measurement: "°C" 
+    device_class: temperature
+    state_class: measurement
+```
+
+Here is an example on what is available in the payload
+
+```json
+{
+  "id": "000000",
+  "mdns": "keezer",
+  "rssi": -68,
+  "wifi_ssid": "wifi_name",
+  "total_heap": 192628,
+  "free_heap": 95892,
+  "ip": "ip_address",
+  "wifi_setup": false,
+  "uptime_seconds": 46,
+  "uptime_minutes": 38,
+  "uptime_hours": 0,
+  "uptime_days": 0,
+  "pid_mode": "f",
+  "pid_state": 0,
+  "pid_state_string": "Idle",
+  "pid_beer_temp": 0,
+  "pid_beer_temp_connected": false,
+  "pid_fridge_temp": 5.30,
+  "pid_fridge_temp_connected": true,
+  "pid_beer_target_temp": 0.00,
+  "pid_fridge_target_temp": 5.00,
+  "pid_temp_format": "C",
+  "pid_cooling_actuator_active": false,
+  "pid_heating_actuator_active": false,
+  "pid_wait_time": 0,
+  "pid_time_since_cooling": 2327,
+  "pid_time_since_heating": 2327,
+  "pid_time_since_idle": 0,
+  "temperature_device": []
+}
+```
