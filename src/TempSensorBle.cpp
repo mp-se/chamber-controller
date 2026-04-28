@@ -38,7 +38,7 @@ bool BleTempSensor::init() {
 
 bool BleTempSensor::isConnected() const {
   for (int i = 0; i < myMeasurementList.size(); i++) {
-    MeasurementEntry *entry = myMeasurementList.getMeasurementEntry(i);
+    MeasurementEntry* entry = myMeasurementList.getMeasurementEntry(i);
 
     if (entry->getId() == _name) {
       // Consider the sensor connected if data is updated within the valid time
@@ -52,7 +52,7 @@ bool BleTempSensor::isConnected() const {
 
 temperature BleTempSensor::read() {
   for (int i = 0; i < myMeasurementList.size(); i++) {
-    MeasurementEntry *entry = myMeasurementList.getMeasurementEntry(i);
+    MeasurementEntry* entry = myMeasurementList.getMeasurementEntry(i);
 
     if (entry->getId() == _name) {
       // Consider the sensor connected if data is updated within the valid time

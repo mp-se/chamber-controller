@@ -52,15 +52,15 @@ MeasurementList myMeasurementList;
 #endif
 
 OneWire oneWire;
-DigitalPinActuator *actuatorCooling = nullptr;
-DigitalPinActuator *actuatorHeating = nullptr;
-OneWireTempSensor *oneWireFridge = nullptr;
-OneWireTempSensor *oneWireBeer = nullptr;
+DigitalPinActuator* actuatorCooling = nullptr;
+DigitalPinActuator* actuatorHeating = nullptr;
+OneWireTempSensor* oneWireFridge = nullptr;
+OneWireTempSensor* oneWireBeer = nullptr;
 #if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
-BleTempSensor *bleBeer = nullptr;
+BleTempSensor* bleBeer = nullptr;
 #endif  // ENABLE_BLE && ENABLE_BLE_SENSOR
-TempSensor *fridgeSensor = nullptr;
-TempSensor *beerSensor = nullptr;
+TempSensor* fridgeSensor = nullptr;
+TempSensor* beerSensor = nullptr;
 Display myDisplay;
 #if defined(ENABLE_BLE)
 BleSender bleSender;
@@ -176,8 +176,12 @@ void runLoop() {
 
     Log.verbose(F("Loop: Running temp control." CR));
 
-    myDisplay.updateButtons(tempControl.getBeerSensor()->isConnected(),
-                            tempControl.getFridgeSensor()->isConnected());
+    if (myConfig.getRemoteControlActive()) {
+      myDisplay.updateButtons(false, false);
+    } else {
+      myDisplay.updateButtons(tempControl.getBeerSensor()->isConnected(),
+                              tempControl.getFridgeSensor()->isConnected());
+    }
 
     float beer = NAN, fridge = NAN;
 
@@ -445,7 +449,7 @@ void configureTempControl() {
     }
 
     oneWireFridge = new OneWireTempSensor(&oneWire, daFridge,
-                                          myConfig.getFridgeSensorOffset());
+                                          myConfig.getFridgeSensorOffset(), myConfig.getFridgeSensorId());
     fridgeSensor = new TempSensor(TEMP_SENSOR_TYPE_FRIDGE, oneWireFridge);
     fridgeSensor->init();
     tempControl.setFridgeSensor(fridgeSensor);
@@ -488,7 +492,7 @@ void configureTempControl() {
       }
 
       oneWireBeer = new OneWireTempSensor(&oneWire, daBeer,
-                                          myConfig.getBeerSensorOffset());
+                                          myConfig.getBeerSensorOffset(), myConfig.getBeerSensorId());
       beerSensor = new TempSensor(TEMP_SENSOR_TYPE_BEER, oneWireBeer);
       beerSensor->init();
       tempControl.setBeerSensor(beerSensor);

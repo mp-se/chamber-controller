@@ -49,7 +49,7 @@ constexpr auto CHAR_UUID = "2AC4";
 extern MeasurementList myMeasurementList;
 
 void BleDeviceCallbacks::onResult(
-    const NimBLEAdvertisedDevice *advertisedDevice) {
+    const NimBLEAdvertisedDevice* advertisedDevice) {
   if (advertisedDevice->getName() == "gravitymon") {
     bool eddyStone = false;
 
@@ -118,9 +118,9 @@ void BleDeviceCallbacks::onResult(
   }
 }
 
-void BleScanner::proccesGravitymonBeacon(const std::string &advertStringHex,
+void BleScanner::proccesGravitymonBeacon(const std::string& advertStringHex,
                                          NimBLEAddress address) {
-  const char *payload = advertStringHex.c_str();
+  const char* payload = advertStringHex.c_str();
 
   if (*(payload + 4) == 'G' && *(payload + 5) == 'R' && *(payload + 6) == 'A' &&
       *(payload + 7) == 'V') {
@@ -155,7 +155,7 @@ void BleScanner::proccesGravitymonBeacon(const std::string &advertStringHex,
 }
 
 void BleScanner::processGravitymonEddystoneBeacon(
-    NimBLEAddress address, const std::vector<uint8_t> &payload) {
+    NimBLEAddress address, const std::vector<uint8_t>& payload) {
   //                                                                      <--------------
   //                                                                      beacon
   //                                                                      data
@@ -221,8 +221,8 @@ bool BleScanner::scan() {
   return true;
 }
 
-void BleScanner::proccesTiltBeacon(const std::string &advertStringHex,
-                                   const int8_t &currentRSSI) {
+void BleScanner::proccesTiltBeacon(const std::string& advertStringHex,
+                                   const int8_t& currentRSSI) {
   TiltColor color;
 
   // Check that this is an iBeacon packet
@@ -317,9 +317,9 @@ TiltColor BleScanner::uuidToTiltColor(std::string uuid) {
   return TiltColor::None;
 }
 
-void BleScanner::proccesRaptBeacon(const std::string &advertStringHex,
+void BleScanner::proccesRaptBeacon(const std::string& advertStringHex,
                                    NimBLEAddress address) {
-  const char *payload = advertStringHex.c_str();
+  const char* payload = advertStringHex.c_str();
 
   float battery;
   float temp;

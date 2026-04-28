@@ -39,6 +39,7 @@ class BleTempSensor : public BasicTempSensor {
   bool isConnected() const;
   bool init();
   temperature read();
+  String getName() const { return _name; }
 
  private:
   String _name;

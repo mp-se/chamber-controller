@@ -28,30 +28,30 @@
 
 class PidWebServer : public BaseWebServer {
  private:
-  PidPush *_push;
+  PidPush* _push;
   volatile bool _sensorScanTask = false;
   volatile bool _tempControllerInitTask = false;
   std::list<String> _sensors;
 
   void setupWebHandlers();
-  void webHandleStatus(AsyncWebServerRequest *request);
-  void webHandleFeature(AsyncWebServerRequest *request);
-  void webHandleTemps(AsyncWebServerRequest *request);
-  void webHandleConfigRead(AsyncWebServerRequest *request);
-  void webHandleConfigWrite(AsyncWebServerRequest *request, JsonVariant &json);
+  void webHandleStatus(AsyncWebServerRequest* request);
+  void webHandleFeature(AsyncWebServerRequest* request);
+  void webHandleTemps(AsyncWebServerRequest* request);
+  void webHandleConfigRead(AsyncWebServerRequest* request);
+  void webHandleConfigWrite(AsyncWebServerRequest* request, JsonVariant& json);
 
-  void webHandleMode(AsyncWebServerRequest *request, JsonVariant &json);
-  void webHandleRemoteMode(AsyncWebServerRequest *request, JsonVariant &json);
-  void webHandleListSensor(AsyncWebServerRequest *request);
-  void webHandleListSensorStatus(AsyncWebServerRequest *request);
+  void webHandleMode(AsyncWebServerRequest* request, JsonVariant& json);
+  void webHandleRemoteMode(AsyncWebServerRequest* request, JsonVariant& json);
+  void webHandleListSensor(AsyncWebServerRequest* request);
+  void webHandleListSensorStatus(AsyncWebServerRequest* request);
 
-  void webHandleControlConstants(AsyncWebServerRequest *request);
-  void webHandleControlSettings(AsyncWebServerRequest *request);
-  void webHandleControlVariables(AsyncWebServerRequest *request);
-  void webHandleMinTimes(AsyncWebServerRequest *request);
+  void webHandleControlConstants(AsyncWebServerRequest* request);
+  void webHandleControlSettings(AsyncWebServerRequest* request);
+  void webHandleControlVariables(AsyncWebServerRequest* request);
+  void webHandleMinTimes(AsyncWebServerRequest* request);
 
  public:
-  explicit PidWebServer(WebConfigInterface *config, PidPush *push);
+  explicit PidWebServer(WebConfigInterface* config, PidPush* push);
 
   void loop();
 };

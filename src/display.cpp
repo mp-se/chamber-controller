@@ -92,7 +92,7 @@ void Display::setFont(FontSize f) {
 #endif
 }
 
-void Display::printLine(int l, const String &text) {
+void Display::printLine(int l, const String& text) {
 #if defined(ENABLE_TFT)
   if (!_tft) return;
 
@@ -102,7 +102,7 @@ void Display::printLine(int l, const String &text) {
 #endif
 }
 
-void Display::printLineCentered(int l, const String &text) {
+void Display::printLineCentered(int l, const String& text) {
 #if defined(ENABLE_TFT)
   if (!_tft) return;
 
@@ -133,8 +133,8 @@ void Display::updateButtons(bool beerEnabled, bool chamberEnabled) {
 #endif
 }
 
-void Display::updateTemperatures(const char *mode, const char *state,
-                                 const char *statusBar, float beerTemp,
+void Display::updateTemperatures(const char* mode, const char* state,
+                                 const char* statusBar, float beerTemp,
                                  float chamberTemp, char tempFormat,
                                  bool darkmode) {
 #if defined(ENABLE_LVGL)
@@ -182,7 +182,7 @@ void Display::calibrateTouch() {
 
   if (file) {
     Log.info(F("DISP: Loading touch calibration data from file." CR));
-    file.read(reinterpret_cast<uint8_t *>(&this->_touchCalibrationlData),
+    file.read(reinterpret_cast<uint8_t*>(&this->_touchCalibrationlData),
               sizeof(_touchCalibrationlData));
     file.close();
   } else {
@@ -199,7 +199,7 @@ void Display::calibrateTouch() {
     file = LittleFS.open(TTF_CALIBRATION_FILENAME, "w");
 
     if (file) {
-      file.write(reinterpret_cast<uint8_t *>(&this->_touchCalibrationlData),
+      file.write(reinterpret_cast<uint8_t*>(&this->_touchCalibrationlData),
                  sizeof(_touchCalibrationlData));
       file.close();
     } else {
@@ -214,7 +214,7 @@ void Display::calibrateTouch() {
 #endif
 }
 
-bool Display::getTouch(uint16_t *x, uint16_t *y) {
+bool Display::getTouch(uint16_t* x, uint16_t* y) {
 #if defined(ENABLE_TFT)
   uint16_t xt, yt;
   uint8_t b = _tft->getTouch(&xt, &yt);
@@ -275,7 +275,7 @@ void Display::createUI() {
 
 #define DRAW_BUF_SIZE (TFT_WIDTH * TFT_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
 
-  void *draw_buf = ps_malloc(DRAW_BUF_SIZE);
+  void* draw_buf = ps_malloc(DRAW_BUF_SIZE);
 
   if (!draw_buf) {
     Log.error(
@@ -292,7 +292,7 @@ void Display::createUI() {
   }
 
   // Initialize an LVGL input device object (Touchscreen)
-  lv_indev_t *indev = lv_indev_create();
+  lv_indev_t* indev = lv_indev_create();
   lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
   lv_indev_set_read_cb(indev, touchscreenHandler);
 
@@ -346,12 +346,12 @@ void Display::handleButtonEvent(char btn) {
 // **************************************************************************************************
 
 #if defined(ENABLE_LVGL)
-void log_print(lv_log_level_t level, const char *buf) {
+void log_print(lv_log_level_t level, const char* buf) {
   LV_UNUSED(level);
   Log.notice(F("LVGL: %s." CR), buf);
 }
 
-void touchscreenHandler(lv_indev_t *indev, lv_indev_data_t *data) {
+void touchscreenHandler(lv_indev_t* indev, lv_indev_data_t* data) {
   uint16_t x = 0, y = 0;
 
   if (myDisplay.getTouch(&x, &y)) {
@@ -364,37 +364,37 @@ void touchscreenHandler(lv_indev_t *indev, lv_indev_data_t *data) {
   }
 }
 
-void btnBeerEventHandler(lv_event_t *e) {
+void btnBeerEventHandler(lv_event_t* e) {
   if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
     myDisplay.handleButtonEvent('b');
   }
 }
 
-void btnChamberEventHandler(lv_event_t *e) {
+void btnChamberEventHandler(lv_event_t* e) {
   if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
     myDisplay.handleButtonEvent('f');
   }
 }
 
-void btnOffEventHandler(lv_event_t *e) {
+void btnOffEventHandler(lv_event_t* e) {
   if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
     myDisplay.handleButtonEvent('o');
   }
 }
 
-void btnUpEventHandler(lv_event_t *e) {
+void btnUpEventHandler(lv_event_t* e) {
   if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
     myDisplay.handleButtonEvent('+');
   }
 }
 
-void btnDownEventHandler(lv_event_t *e) {
+void btnDownEventHandler(lv_event_t* e) {
   if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
     myDisplay.handleButtonEvent('-');
   }
 }
 
-void lvgl_loop_handler(void *parameter) {
+void lvgl_loop_handler(void* parameter) {
   LoopTimer taskLoop(500);
 
   for (;;) {

@@ -69,6 +69,7 @@ constexpr auto PARAM_PID_WAIT_TIME = "pid_wait_time";
 constexpr auto PARAM_PID_TIME_SINCE_COOLING = "pid_time_since_cooling";
 constexpr auto PARAM_PID_TIME_SINCE_HEATING = "pid_time_since_heating";
 constexpr auto PARAM_PID_TIME_SINCE_IDLE = "pid_time_since_idle";
+constexpr auto PARAM_BLE_SENSOR = "ble_sensor";
 
 constexpr auto PARAM_NEW_MODE = "new_mode";
 constexpr auto PARAM_NEW_TEMPERATURE = "new_temperature";
@@ -87,7 +88,7 @@ constexpr auto PARAM_UPDATE_TIME = "update_time";
 
 extern OneWire oneWire;
 
-PidWebServer::PidWebServer(WebConfigInterface *config, PidPush *push)
+PidWebServer::PidWebServer(WebConfigInterface* config, PidPush* push)
     : BaseWebServer(config) {
   _push = push;
 }
@@ -101,60 +102,60 @@ void PidWebServer::setupWebHandlers() {
   MDNS.addServiceTxt("chamberctl", "tcp", "app", CFG_APPNAME);
   MDNS.addServiceTxt("chamberctl", "tcp", "id", _webConfig->getID());
 
-  _server->on("/api/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  _server->on("/api/status", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleStatus(request);
   });
-  _server->on("/api/temps", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  _server->on("/api/temps", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleTemps(request);
   });
-  _server->on("/api/feature", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  _server->on("/api/feature", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleFeature(request);
   });
 
-  AsyncCallbackJsonWebHandler *handler;
-  _server->on("/api/config", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  AsyncCallbackJsonWebHandler* handler;
+  _server->on("/api/config", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleConfigRead(request);
   });
   handler = new AsyncCallbackJsonWebHandler(
-      "/api/config", [this](AsyncWebServerRequest *request, JsonVariant &json) {
+      "/api/config", [this](AsyncWebServerRequest* request, JsonVariant& json) {
         this->webHandleConfigWrite(request, json);
       });
   _server->addHandler(handler);
   handler = new AsyncCallbackJsonWebHandler(
-      "/api/mode", [this](AsyncWebServerRequest *request, JsonVariant &json) {
+      "/api/mode", [this](AsyncWebServerRequest* request, JsonVariant& json) {
         this->webHandleMode(request, json);
       });
   _server->addHandler(handler);
   handler = new AsyncCallbackJsonWebHandler(
-      "/api/remote", [this](AsyncWebServerRequest *request, JsonVariant &json) {
+      "/api/remote", [this](AsyncWebServerRequest* request, JsonVariant& json) {
         this->webHandleRemoteMode(request, json);
       });
   _server->addHandler(handler);
   _server->on("/api/sensor/status", HTTP_GET,
-              [this](AsyncWebServerRequest *request) {
+              [this](AsyncWebServerRequest* request) {
                 this->webHandleListSensorStatus(request);
               });
-  _server->on("/api/sensor", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  _server->on("/api/sensor", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleListSensor(request);
   });
-  _server->on("/api/pid/cc", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  _server->on("/api/pid/cc", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleControlConstants(request);
   });
-  _server->on("/api/pid/cs", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  _server->on("/api/pid/cs", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleControlSettings(request);
   });
-  _server->on("/api/pid/cv", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  _server->on("/api/pid/cv", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleControlVariables(request);
   });
-  _server->on("/api/pid/mt", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  _server->on("/api/pid/mt", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleMinTimes(request);
   });
 }
 
-void PidWebServer::webHandleFeature(AsyncWebServerRequest *request) {
+void PidWebServer::webHandleFeature(AsyncWebServerRequest* request) {
   Log.notice(F("WEB : webServer callback for /api/feature(get)." CR));
 
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
 
   obj[PARAM_PLATFORM] = platform;
@@ -182,21 +183,21 @@ void PidWebServer::webHandleFeature(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-void PidWebServer::webHandleConfigRead(AsyncWebServerRequest *request) {
+void PidWebServer::webHandleConfigRead(AsyncWebServerRequest* request) {
   if (!isAuthenticated(request)) {
     return;
   }
 
   Log.notice(F("WEB : webServer callback for /api/config(read)." CR));
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
   _webConfig->createJson(obj);
   response->setLength();
   request->send(response);
 }
 
-void PidWebServer::webHandleConfigWrite(AsyncWebServerRequest *request,
-                                        JsonVariant &json) {
+void PidWebServer::webHandleConfigWrite(AsyncWebServerRequest* request,
+                                        JsonVariant& json) {
   if (!isAuthenticated(request)) {
     return;
   }
@@ -216,7 +217,7 @@ void PidWebServer::webHandleConfigWrite(AsyncWebServerRequest *request,
     _tempControllerInitTask = true;
   }
 
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   obj = response->getRoot().as<JsonObject>();
   obj[PARAM_SUCCESS] = true;
   obj[PARAM_MESSAGE] = "Configuration updated";
@@ -224,9 +225,9 @@ void PidWebServer::webHandleConfigWrite(AsyncWebServerRequest *request,
   request->send(response);
 }
 
-void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
+void PidWebServer::webHandleStatus(AsyncWebServerRequest* request) {
   // Log.notice(F("WEB : webServer callback for /api/status." CR));
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
 
   // Generic params
@@ -245,6 +246,7 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
 
   // Pid controller
   if (runMode == RunMode::pidMode) {
+    obj[PARAM_REMOTE_CONTROL_ACTIVE] = myConfig.getRemoteControlActive();
     obj[PARAM_PID_MODE] = String(tempControl.getMode());
     obj[PARAM_PID_STATE] = tempControl.getState();
     obj[PARAM_PID_STATE_STRING] = tempControl.getStateAsString();
@@ -269,6 +271,9 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
     obj[PARAM_PID_TIME_SINCE_COOLING] = tempControl.timeSinceCooling();
     obj[PARAM_PID_TIME_SINCE_HEATING] = tempControl.timeSinceHeating();
     obj[PARAM_PID_TIME_SINCE_IDLE] = tempControl.timeSinceIdle();
+
+    obj[PARAM_FRIDGE_SENSOR_ID] = tempControl.getFridgeSensor()->getSensorName();
+    obj[PARAM_BEER_SENSOR_ID] = tempControl.getBeerSensor()->getSensorName();
   }
 
   JsonArray temperatureDevices = obj[PARAM_TEMPERATURE_DEVICE].to<JsonArray>();
@@ -276,12 +281,12 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
 
 #if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
   for (int i = 0; i < myMeasurementList.size(); i++) {
-    MeasurementEntry *entry = myMeasurementList.getMeasurementEntry(i);
+    MeasurementEntry* entry = myMeasurementList.getMeasurementEntry(i);
 
     switch (entry->getType()) {
       case MeasurementType::Gravitymon: {
         Log.notice("WEB: Processing Gravitymon data %d." CR, i);
-        const GravityData *gd = entry->getGravityData();
+        const GravityData* gd = entry->getGravityData();
 
         temperatureDevices[tempIdx][PARAM_NAME] = gd->getName();
         temperatureDevices[tempIdx][PARAM_DEVICE] = gd->getId();
@@ -295,7 +300,7 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
       case MeasurementType::Tilt:
       case MeasurementType::TiltPro: {
         Log.notice("WEB: Processing Tilt data %d." CR, i);
-        const TiltData *td = entry->getTiltData();
+        const TiltData* td = entry->getTiltData();
 
         temperatureDevices[tempIdx][PARAM_NAME] = td->getTiltColor();
         temperatureDevices[tempIdx][PARAM_DEVICE] = td->getId();
@@ -308,7 +313,7 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
 
       case MeasurementType::Rapt: {
         Log.notice("WEB: Processing Rapt data %d." CR, i);
-        const RaptData *rd = entry->getRaptData();
+        const RaptData* rd = entry->getRaptData();
 
         temperatureDevices[tempIdx][PARAM_NAME] = rd->getId();
         temperatureDevices[tempIdx][PARAM_DEVICE] = rd->getId();
@@ -326,9 +331,9 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-void PidWebServer::webHandleTemps(AsyncWebServerRequest *request) {
+void PidWebServer::webHandleTemps(AsyncWebServerRequest* request) {
   // Log.notice(F("WEB : webServer callback for /api/temps." CR));
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
 
   if (runMode == RunMode::pidMode) {
@@ -345,8 +350,8 @@ void PidWebServer::webHandleTemps(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
-                                 JsonVariant &json) {
+void PidWebServer::webHandleMode(AsyncWebServerRequest* request,
+                                 JsonVariant& json) {
   if (!isAuthenticated(request) || runMode != RunMode::pidMode) {
     return;
   }
@@ -354,7 +359,7 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
   Log.notice(F("WEB : webServer callback for /api/mode." CR));
   JsonObject obj = json.as<JsonObject>();
   bool success = false;
-  String message = "Mode updated";
+  String message = "";
 
   if (obj[PARAM_NEW_MODE].isNull() || obj[PARAM_NEW_TEMPERATURE].isNull() ||
       obj[PARAM_NEW_MODE].as<String>().length() != 1) {
@@ -362,7 +367,7 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
     return;
   }
 
-  char newMode = toupper(obj[PARAM_NEW_MODE].as<String>().charAt(0));
+  char newMode = tolower(obj[PARAM_NEW_MODE].as<String>().charAt(0));
   float newTemp = obj[PARAM_NEW_TEMPERATURE].as<float>();
 
   Log.notice(F("WEB : Target mode %c, temp %F." CR), newMode, newTemp);
@@ -374,6 +379,7 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
           (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
         setNewControllerMode(ControllerMode::beerConstant, newTemp);
         success = true;
+        message = "Mode updated to Beer Constant";
       } else {
         success = false;
         message = "Lack beer sensor or cooling/heating actuator";
@@ -385,6 +391,7 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
           (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
         setNewControllerMode(ControllerMode::fridgeConstant, newTemp);
         success = true;
+        message = "Mode updated to Fridge Constant";
       } else {
         success = false;
         message = "Lack chamber sensor or cooling/heating actuator";
@@ -394,14 +401,15 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
     case ControllerMode::off:
       setNewControllerMode(ControllerMode::off, newTemp);
       success = true;
+      message = "Mode updated to OFF";
       break;
 
     default:
       request->send(400);
-      break;
+      return;
   }
 
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   obj = response->getRoot().as<JsonObject>();
   obj[PARAM_SUCCESS] = success;
   obj[PARAM_PID_MODE] = String(tempControl.getMode());
@@ -412,8 +420,8 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest *request,
   request->send(response);
 }
 
-void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest *request,
-                                       JsonVariant &json) {
+void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest* request,
+                                       JsonVariant& json) {
   if (!isAuthenticated(request) || runMode != RunMode::pidMode) {
     return;
   }
@@ -442,20 +450,29 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest *request,
     return;
   }
 
-  char newMode = toupper(obj[PARAM_NEW_MODE].as<String>().charAt(0));
+  char newMode = tolower(obj[PARAM_NEW_MODE].as<String>().charAt(0));
   float newTemp = obj[PARAM_NEW_TEMPERATURE].as<float>();
 
-  if (!obj[PARAM_NEW_BLE_SENSOR].isNull()) {
+  if (!obj[PARAM_NEW_BLE_SENSOR].isNull() && myConfig.isBleScanEnabled()) {
     newBleSensorId = obj[PARAM_NEW_BLE_SENSOR].as<String>();
   }
 
   if (myConfig.getRemoteControlActive()) {
-    if (newMode == 'R') {  // If mode is = R then we restore the saved setttings
+    if (newMode == 'r') {  // If mode is = R then we restore the saved setttings
                            // and leave remote mode
+
+      Log.notice(
+          F("WEB : Restoring previous settings and leaving remote mode." CR));
+
       // Use saved settings
       newMode = myConfig.getRemotePreviousMode();
       newTemp = myConfig.getRemotePreviousTargetTemp();
-      newBleSensorId = myConfig.getRemotePreviousBleSensorId();
+      if (myConfig.isBleScanEnabled()) {
+        // Only restore ble sensor if beer ble sensor is enabled, otherwise
+        // ignore since it might cause issues if user has disabled beer ble
+        // sensor after activating remote mode
+        newBleSensorId = myConfig.getRemotePreviousBleSensorId();
+      }
       // Inactivate remote mode
       myConfig.setRemoteControlActive(false);
       myConfig.saveFile();
@@ -464,7 +481,7 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest *request,
     // Continue with main loop to set the new mode and temp
 
   } else {
-    if (newMode == 'R') {  // If mode is = R then ignore, not valid since we are
+    if (newMode == 'r') {  // If mode is = R then ignore, not valid since we are
                            // not in remote mode
       request->send(400);
       return;
@@ -472,12 +489,20 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest *request,
 
     // Save current setting
     myConfig.setRemotePreviousMode(myConfig.getControllerMode());
-    myConfig.setRemotePreviousBleSensorId(myConfig.getBeerBleSensorId());
     myConfig.setRemotePreviousTargetTemp(myConfig.getTargetTemperature());
 
     // Activate remote mode
     myConfig.setRemoteControlActive(true);
-    myConfig.setBeerBleSensorId(newBleSensorId);
+
+    if (myConfig.isBleScanEnabled() &&
+        newBleSensorId.length() >
+            0) {  // Only restore ble sensor if beer ble sensor is enabled,
+                  // otherwise ignore since it might cause issues if user has
+                  // disabled beer ble sensor after activating remote mode
+      myConfig.setRemotePreviousBleSensorId(myConfig.getBeerBleSensorId());
+      myConfig.setBeerBleSensorId(newBleSensorId);
+    }
+
     myConfig.saveFile();
 
     // Continue with main loop to set the new mode and temp
@@ -493,6 +518,7 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest *request,
           (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
         setNewControllerMode(ControllerMode::beerConstant, newTemp);
         success = true;
+        message = "Set mode to Beer Constant";
       } else {
         success = false;
         message = "Lack beer sensor or cooling/heating actuator";
@@ -504,6 +530,7 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest *request,
           (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
         setNewControllerMode(ControllerMode::fridgeConstant, newTemp);
         success = true;
+        message = "Set mode to Fridge Constant";
       } else {
         success = false;
         message = "Lack chamber sensor or cooling/heating actuator";
@@ -521,24 +548,25 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest *request,
       break;
   }
 
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   obj = response->getRoot().as<JsonObject>();
   obj[PARAM_SUCCESS] = success;
   obj[PARAM_PID_MODE] = String(tempControl.getMode());
   obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
   obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
   obj[PARAM_MESSAGE] = message;
+  obj[PARAM_BLE_SENSOR] = myConfig.getBeerBleSensorId();
   response->setLength();
   request->send(response);
 }
 
-void PidWebServer::webHandleControlConstants(AsyncWebServerRequest *request) {
+void PidWebServer::webHandleControlConstants(AsyncWebServerRequest* request) {
   if (!isAuthenticated(request)) {
     return;
   }
 
   Log.notice(F("WEB : webServer callback for /api/pid/cc." CR));
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
   if (runMode == RunMode::pidMode)
     tempControl.getControlConstants().toJsonReadable(obj);
@@ -546,13 +574,13 @@ void PidWebServer::webHandleControlConstants(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-void PidWebServer::webHandleControlSettings(AsyncWebServerRequest *request) {
+void PidWebServer::webHandleControlSettings(AsyncWebServerRequest* request) {
   if (!isAuthenticated(request)) {
     return;
   }
 
   Log.notice(F("WEB : webServer callback for /api/pid/cs." CR));
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
   if (runMode == RunMode::pidMode)
     tempControl.getControlSettings().toJsonReadable(obj);
@@ -560,13 +588,13 @@ void PidWebServer::webHandleControlSettings(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-void PidWebServer::webHandleControlVariables(AsyncWebServerRequest *request) {
+void PidWebServer::webHandleControlVariables(AsyncWebServerRequest* request) {
   if (!isAuthenticated(request)) {
     return;
   }
 
   Log.notice(F("WEB : webServer callback for /api/pid/cv." CR));
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
   if (runMode == RunMode::pidMode)
     tempControl.getControlVariables().toJsonReadable(obj);
@@ -574,13 +602,13 @@ void PidWebServer::webHandleControlVariables(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-void PidWebServer::webHandleMinTimes(AsyncWebServerRequest *request) {
+void PidWebServer::webHandleMinTimes(AsyncWebServerRequest* request) {
   if (!isAuthenticated(request)) {
     return;
   }
 
   Log.notice(F("WEB : webServer callback for /api/pid/mt." CR));
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
   if (runMode == RunMode::pidMode)
     tempControl.getMinTimes().toJsonReadable(obj);
@@ -588,13 +616,13 @@ void PidWebServer::webHandleMinTimes(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-void PidWebServer::webHandleListSensor(AsyncWebServerRequest *request) {
+void PidWebServer::webHandleListSensor(AsyncWebServerRequest* request) {
   if (!isAuthenticated(request)) {
     return;
   }
 
   Log.notice(F("WEB : webServer callback for /api/sensor." CR));
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
 
   obj[PARAM_SUCCESS] = true;
@@ -604,13 +632,13 @@ void PidWebServer::webHandleListSensor(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-void PidWebServer::webHandleListSensorStatus(AsyncWebServerRequest *request) {
+void PidWebServer::webHandleListSensorStatus(AsyncWebServerRequest* request) {
   if (!isAuthenticated(request)) {
     return;
   }
 
   Log.notice(F("WEB : webServer callback for /api/sensor/status." CR));
-  AsyncJsonResponse *response = new AsyncJsonResponse(false);
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
   JsonObject obj = response->getRoot().as<JsonObject>();
 
   obj[PARAM_STATUS] = static_cast<bool>(_sensorScanTask);
