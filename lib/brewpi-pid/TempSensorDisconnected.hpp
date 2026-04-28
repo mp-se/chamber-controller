@@ -30,6 +30,7 @@ class DisconnectedTempSensor : public BasicTempSensor {
   bool isConnected() const { return false; }
 
   bool init() { return read() != TEMP_SENSOR_DISCONNECTED; }
+  String getName() const { return "Disconnected"; }
 
   temperature read() { return TEMP_SENSOR_DISCONNECTED; }
 };

@@ -88,6 +88,10 @@ void TempSensor::update() {
   }
 }
 
+String TempSensor::getSensorName() const {
+  return _sensor ? _sensor->getName() : "Unknown";
+}
+
 temperature TempSensor::readFastFiltered() {
   return fastFilter.readOutput();  // return most recent unfiltered value
 }

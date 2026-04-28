@@ -31,7 +31,7 @@ typedef uint8_t DeviceAddress[8];
 class OneWireTempSensor : public BasicTempSensor {
  public:
   OneWireTempSensor(OneWire* bus, DeviceAddress address,
-                    float calibrationOffsetC) {
+                    float calibrationOffsetC, String name) {
     // Log.verbose(F("TEMP: Creating OneWireTempSensor with offset %d." CR),
     //             calibrationOffsetC);
     char buff[10];
@@ -39,6 +39,7 @@ class OneWireTempSensor : public BasicTempSensor {
 
     _oneWire = bus;
     _sensor = NULL;
+    _name = name;
     _connected = true;
     memcpy(_sensorAddress, address, sizeof(DeviceAddress));
     _calibrationOffset = fixed4_4(stringToTempDiff(buff) >> (TEMP_FIXED_POINT_BITS - TEMP_CALIBRATION_OFFSET_PRECISION));
@@ -50,7 +51,8 @@ class OneWireTempSensor : public BasicTempSensor {
 
   bool init();
   temperature read();
-
+  String getName() const { return _name; }
+  
  private:
   constexpr static uint8_t _sensorPrecision = 4;
 
@@ -64,6 +66,7 @@ class OneWireTempSensor : public BasicTempSensor {
   DeviceAddress _sensorAddress;
   fixed4_4 _calibrationOffset;
   bool _connected;
+  String _name;
 };
 
 #endif  // SRC_TEMPSENSORONEWIRE_HPP_

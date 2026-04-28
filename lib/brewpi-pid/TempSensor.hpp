@@ -68,6 +68,7 @@ class TempSensor {
   void setSlowFilterCoefficients(uint8_t b);
   void setSlopeFilterCoefficients(uint8_t b);
   BasicTempSensor& sensor();
+  String getSensorName() const;
 
  private:
   BasicTempSensor* _sensor = NULL;

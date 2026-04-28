@@ -31,6 +31,7 @@ class BasicTempSensor {
   virtual bool isConnected() const = 0;
   virtual bool init() = 0;
   virtual temperature read() = 0;
+  virtual String getName() const = 0;
 };
 
 #endif  // SRC_TEMPSENSORBASIC_HPP_
