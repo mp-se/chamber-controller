@@ -272,7 +272,8 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest* request) {
     obj[PARAM_PID_TIME_SINCE_HEATING] = tempControl.timeSinceHeating();
     obj[PARAM_PID_TIME_SINCE_IDLE] = tempControl.timeSinceIdle();
 
-    obj[PARAM_FRIDGE_SENSOR_ID] = tempControl.getFridgeSensor()->getSensorName();
+    obj[PARAM_FRIDGE_SENSOR_ID] =
+        tempControl.getFridgeSensor()->getSensorName();
     obj[PARAM_BEER_SENSOR_ID] = tempControl.getBeerSensor()->getSensorName();
   }
 
@@ -443,15 +444,19 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest* request,
   bool success = false;
   String message;
   String newBleSensorId = "";
+  float newTemp = NAN;
 
-  if (obj[PARAM_NEW_MODE].isNull() || obj[PARAM_NEW_TEMPERATURE].isNull() ||
+  if (obj[PARAM_NEW_MODE].isNull() ||
       obj[PARAM_NEW_MODE].as<String>().length() != 1) {
     request->send(400);
     return;
   }
 
+  if (!obj[PARAM_NEW_TEMPERATURE].isNull()) {
+    newTemp = obj[PARAM_NEW_TEMPERATURE].as<float>();
+  }
+
   char newMode = tolower(obj[PARAM_NEW_MODE].as<String>().charAt(0));
-  float newTemp = obj[PARAM_NEW_TEMPERATURE].as<float>();
 
   if (!obj[PARAM_NEW_BLE_SENSOR].isNull() && myConfig.isBleScanEnabled()) {
     newBleSensorId = obj[PARAM_NEW_BLE_SENSOR].as<String>();
@@ -474,6 +479,9 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest* request,
         newBleSensorId = myConfig.getRemotePreviousBleSensorId();
       }
       // Inactivate remote mode
+      myConfig.setRemotePreviousMode(ControllerMode::off);
+      myConfig.setRemotePreviousTargetTemp(10.0);
+      myConfig.setRemotePreviousBleSensorId("");
       myConfig.setRemoteControlActive(false);
       myConfig.saveFile();
     }
@@ -487,9 +495,19 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest* request,
       return;
     }
 
-    // Save current setting
-    myConfig.setRemotePreviousMode(myConfig.getControllerMode());
-    myConfig.setRemotePreviousTargetTemp(myConfig.getTargetTemperature());
+    if (obj[PARAM_NEW_TEMPERATURE].isNull()) {
+      request->send(400);
+      return;
+    }
+
+    // If remote control is not enabled we store the settings so we can restore them later.
+    if(!myConfig.getRemoteControlActive()) {
+      myConfig.setRemotePreviousMode(myConfig.getControllerMode());
+      myConfig.setRemotePreviousTargetTemp(myConfig.getTargetTemperature());
+      if(myConfig.isBleScanEnabled() && newBleSensorId.length() > 0) {
+        myConfig.setRemotePreviousBleSensorId(myConfig.getBeerBleSensorId());
+      }
+    }
 
     // Activate remote mode
     myConfig.setRemoteControlActive(true);
@@ -499,17 +517,19 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest* request,
             0) {  // Only restore ble sensor if beer ble sensor is enabled,
                   // otherwise ignore since it might cause issues if user has
                   // disabled beer ble sensor after activating remote mode
-      myConfig.setRemotePreviousBleSensorId(myConfig.getBeerBleSensorId());
       myConfig.setBeerBleSensorId(newBleSensorId);
     }
 
     myConfig.saveFile();
-
-    // Continue with main loop to set the new mode and temp
   }
 
   Log.notice(F("WEB : Target mode %c, temp %F, sensor %s." CR), newMode,
              newTemp, newBleSensorId.c_str());
+
+  if (isnan(newTemp)) {
+    request->send(400);
+    return;
+  }
 
   switch (newMode) {
     case ControllerMode::beerConstant:

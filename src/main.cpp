@@ -449,7 +449,8 @@ void configureTempControl() {
     }
 
     oneWireFridge = new OneWireTempSensor(&oneWire, daFridge,
-                                          myConfig.getFridgeSensorOffset(), myConfig.getFridgeSensorId());
+                                          myConfig.getFridgeSensorOffset(),
+                                          myConfig.getFridgeSensorId());
     fridgeSensor = new TempSensor(TEMP_SENSOR_TYPE_FRIDGE, oneWireFridge);
     fridgeSensor->init();
     tempControl.setFridgeSensor(fridgeSensor);
@@ -492,7 +493,8 @@ void configureTempControl() {
       }
 
       oneWireBeer = new OneWireTempSensor(&oneWire, daBeer,
-                                          myConfig.getBeerSensorOffset(), myConfig.getBeerSensorId());
+                                          myConfig.getBeerSensorOffset(),
+                                          myConfig.getBeerSensorId());
       beerSensor = new TempSensor(TEMP_SENSOR_TYPE_BEER, oneWireBeer);
       beerSensor->init();
       tempControl.setBeerSensor(beerSensor);
