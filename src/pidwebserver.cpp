@@ -252,11 +252,14 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest* request) {
     obj[PARAM_PID_STATE_STRING] = tempControl.getStateAsString();
     obj[PARAM_PID_BEER_TEMP] = tempControl.getBeerTemperature();
     obj[PARAM_PID_BEER_TEMP_CONNECTED] =
-        tempControl.getBeerSensor()->isConnected();
+        tempControl.getBeerSensor() ? tempControl.getBeerSensor()->isConnected()
+                                    : false;
     obj[PARAM_PID_FRIDGE_TEMP] =
         serialized(String(tempControl.getFridgeTemperature(), DECIMALS_TEMP));
     obj[PARAM_PID_FRIDGE_TEMP_CONNECTED] =
-        tempControl.getFridgeSensor()->isConnected();
+        tempControl.getFridgeSensor()
+            ? tempControl.getFridgeSensor()->isConnected()
+            : false;
     obj[PARAM_PID_BEER_TARGET_TEMP] = serialized(
         String(tempControl.getBeerTemperatureSetting(), DECIMALS_TEMP));
     obj[PARAM_PID_FRIDGE_TARGET_TEMP] = serialized(
@@ -264,17 +267,26 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest* request) {
     obj[PARAM_PID_TEMP_FORMAT] =
         String(tempControl.getControlConstants().tempFormat);
     obj[PARAM_PID_COOLING_ACTUATOR_ACTIVE] =
-        tempControl.getCoolingActuator()->isActive();
+        tempControl.getCoolingActuator()
+            ? tempControl.getCoolingActuator()->isActive()
+            : false;
     obj[PARAM_PID_HEATING_ACTUATOR_ACTIVE] =
-        tempControl.getHeatingActuator()->isActive();
+        tempControl.getHeatingActuator()
+            ? tempControl.getHeatingActuator()->isActive()
+            : false;
     obj[PARAM_PID_WAIT_TIME] = tempControl.getWaitTime();
     obj[PARAM_PID_TIME_SINCE_COOLING] = tempControl.timeSinceCooling();
     obj[PARAM_PID_TIME_SINCE_HEATING] = tempControl.timeSinceHeating();
     obj[PARAM_PID_TIME_SINCE_IDLE] = tempControl.timeSinceIdle();
 
     obj[PARAM_FRIDGE_SENSOR_ID] =
-        tempControl.getFridgeSensor()->getSensorName();
-    obj[PARAM_BEER_SENSOR_ID] = tempControl.getBeerSensor()->getSensorName();
+        tempControl.getFridgeSensor()
+            ? tempControl.getFridgeSensor()->getSensorName()
+            : "";
+    obj[PARAM_BEER_SENSOR_ID] =
+        tempControl.getBeerSensor()
+            ? tempControl.getBeerSensor()->getSensorName()
+            : "";
   }
 
   JsonArray temperatureDevices = obj[PARAM_TEMPERATURE_DEVICE].to<JsonArray>();
@@ -500,11 +512,12 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest* request,
       return;
     }
 
-    // If remote control is not enabled we store the settings so we can restore them later.
-    if(!myConfig.getRemoteControlActive()) {
+    // If remote control is not enabled we store the settings so we can restore
+    // them later.
+    if (!myConfig.getRemoteControlActive()) {
       myConfig.setRemotePreviousMode(myConfig.getControllerMode());
       myConfig.setRemotePreviousTargetTemp(myConfig.getTargetTemperature());
-      if(myConfig.isBleScanEnabled() && newBleSensorId.length() > 0) {
+      if (myConfig.isBleScanEnabled() && newBleSensorId.length() > 0) {
         myConfig.setRemotePreviousBleSensorId(myConfig.getBeerBleSensorId());
       }
     }

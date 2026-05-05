@@ -179,18 +179,23 @@ void runLoop() {
     if (myConfig.getRemoteControlActive()) {
       myDisplay.updateButtons(false, false);
     } else {
-      myDisplay.updateButtons(tempControl.getBeerSensor()->isConnected(),
-                              tempControl.getFridgeSensor()->isConnected());
+      bool beerConnected = tempControl.getBeerSensor()
+                               ? tempControl.getBeerSensor()->isConnected()
+                               : false;
+      bool fridgeConnected = tempControl.getFridgeSensor()
+                                 ? tempControl.getFridgeSensor()->isConnected()
+                                 : false;
+      myDisplay.updateButtons(beerConnected, fridgeConnected);
     }
 
     float beer = NAN, fridge = NAN;
 
-    if (!tempControl.isDefaultBeerSensor() &&
+    if (!tempControl.isDefaultBeerSensor() && tempControl.getBeerSensor() &&
         tempControl.getBeerSensor()->isConnected()) {
       beer = tempControl.getBeerTemperature();
     }
 
-    if (!tempControl.isDefaultFridgeSensor() &&
+    if (!tempControl.isDefaultFridgeSensor() && tempControl.getFridgeSensor() &&
         tempControl.getFridgeSensor()->isConnected()) {
       fridge = tempControl.getFridgeTemperature();
     }
@@ -292,10 +297,26 @@ void runLoop() {
 #endif
   }
 
-  // if (validateLoop.hasExipred()) {
-  //   validateLoop.reset();
-  //   validateTempControl();
-  // }
+  if (validateLoop.hasExpired()) {
+    validateLoop.reset();
+
+    // Check if sensors have changed and reconfigure if needed
+    if (tempControl.getBeerSensor() &&
+        tempControl.getBeerSensor()->getSensorName() !=
+            myConfig.getBeerSensorId() &&
+        tempControl.getBeerSensor()->getSensorName() !=
+            myConfig.getBeerBleSensorId()) {
+      Log.info(
+          F("Main: Beer sensor has changed, reconfiguring temp control." CR));
+      configureTempControl();
+    } else if (tempControl.getFridgeSensor() &&
+               tempControl.getFridgeSensor()->getSensorName() !=
+                   myConfig.getFridgeSensorId()) {
+      Log.info(
+          F("Main: Fridge sensor has changed, reconfiguring temp control." CR));
+      configureTempControl();
+    }
+  }
 
   if (pushLoop.hasExpired()) {
     pushLoop.reset();
@@ -317,8 +338,12 @@ void runLoop() {
                tempControl.getFridgeTemperature(),
                tempControl.getBeerTemperatureSetting(),
                tempControl.getFridgeTemperatureSetting(),
-               tempControl.getCoolingActuator()->isActive() ? 1 : 0,
-               tempControl.getHeatingActuator()->isActive() ? 1 : 0,
+               tempControl.getCoolingActuator()
+                   ? tempControl.getCoolingActuator()->isActive() ? 1 : 0
+                   : 0,
+               tempControl.getHeatingActuator()
+                   ? tempControl.getHeatingActuator()->isActive() ? 1 : 0
+                   : 0,
                tempControl.getState());
 
       Log.info(F("Main: Pushing data to influxdb2." CR));
@@ -379,8 +404,10 @@ void validateTempControl() {
     needInitialize = true;
   }
 
-  bool fridge = tempControl.getFridgeSensor()->isConnected();
-  bool beer = tempControl.getBeerSensor()->isConnected();
+  bool fridge = tempControl.getFridgeSensor() ?
+  tempControl.getFridgeSensor()->isConnected() : false; bool beer =
+  tempControl.getBeerSensor() ? tempControl.getBeerSensor()->isConnected() :
+  false;
 
   // Check fridge sensor if settings are correct
   if (myConfig.isFridgeSensorEnabled() && fridge) {
