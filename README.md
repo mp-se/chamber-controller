@@ -9,7 +9,7 @@
 
 # Overview
 
-This is a project that I created to test out a PID controller for another project that I'm working on. It's based on the BrewPI software where I have extracted the PID controller into a library that can be reused. That library can be found here; https://github.com/mp-se/brewpi-pid-library to honour that licence agreement. 
+This is a project that I created to test out a PID controller for another project that I'm working on. It's based on the BrewPI software where I have extracted the PID controller into a library that can be reused. That library can be found here; https://github.com/mp-se/brewpi-pid-library to honour that licence agreement. This project might contain a newer version of that library with customizations for this project.
 
 This is still work in progress but so far I have been running this PID controller for a couple of weeks without issues.
 
@@ -18,6 +18,7 @@ This is still work in progress but so far I have been running this PID controlle
 ## 0.8.0
 
 * New api to allow for remote control via brewlogger
+* Added check to re-init temp control if sensors change
 * (Bug) Fixed issue with setting mode when Ble sensor is used.
 * (Bug) Added pins for s3 board that was missing
 * (Bug) Enable bluetooth in s3 build
