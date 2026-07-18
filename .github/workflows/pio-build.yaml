@@ -14,12 +14,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
     
-      - name: Checkout UI
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build UI
+        working-directory: ui
         run: |
-          echo "Checkout UI"
-          git clone https://github.com/mp-se/chamber-controller-ui chamber-controller-ui 
-          cp chamber-controller-ui/dist/assets/style.css.gz html/app.css.gz
-          cp chamber-controller-ui/dist/assets/index.js.gz html/app.js.gz
+          npm install
+          npm run build
+          cd ..
+          ./copy_ui.sh
 
       - name: Setup PlatformIO
         uses: n-vr/setup-platformio-action@v1.0.1    
