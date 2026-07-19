@@ -35,6 +35,7 @@ class PidConfig : public BaseConfig {
   int _restartInterval = 60 * 4;  // in minutes
   bool _enableCooling = false;
   bool _enableHeating = false;
+  bool _enableFan = false;
   bool _invertPins = false;
 
   // BLE settings
@@ -101,6 +102,12 @@ class PidConfig : public BaseConfig {
   bool isHeatingEnabled() const { return _enableHeating; }
   void setHeatingEnabled(bool b) {
     _enableHeating = b;
+    _saveNeeded = true;
+  }
+
+  bool isFanEnabled() const { return _enableFan; }
+  void setFanEnabled(bool b) {
+    _enableFan = b;
     _saveNeeded = true;
   }
 

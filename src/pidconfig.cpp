@@ -45,6 +45,7 @@ void PidConfig::createJson(JsonObject& doc) const {
       serialized(String(getTargetTemperature(), DECIMALS_TEMP));
   doc[PARAM_ENABLE_COOLING] = isCoolingEnabled();
   doc[PARAM_ENABLE_HEATING] = isHeatingEnabled();
+  doc[PARAM_ENABLE_FAN] = isFanEnabled();
   doc[PARAM_INVERT_PINS] = isPinsInverted();
   doc[PARAM_RESTART_INTERVAL] = getRestartInterval();
   // doc[PARAM_BLE_ENABLED] = isBlePushEnabled(); // This variable is the same
@@ -87,6 +88,8 @@ void PidConfig::parseJson(JsonObject& doc) {
     setCoolingEnabled(doc[PARAM_ENABLE_COOLING].as<bool>());
   if (!doc[PARAM_ENABLE_HEATING].isNull())
     setHeatingEnabled(doc[PARAM_ENABLE_HEATING].as<bool>());
+  if (!doc[PARAM_ENABLE_FAN].isNull())
+    setFanEnabled(doc[PARAM_ENABLE_FAN].as<bool>());
   if (!doc[PARAM_INVERT_PINS].isNull())
     setPinsInverted(doc[PARAM_INVERT_PINS].as<bool>());
   if (!doc[PARAM_RESTART_INTERVAL].isNull())

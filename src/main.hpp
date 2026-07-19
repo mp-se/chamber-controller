@@ -36,6 +36,7 @@ constexpr auto PARAM_CONTROLLER_MODE = "controller_mode";
 constexpr auto PARAM_TARGET_TEMPERATURE = "target_temperature";
 constexpr auto PARAM_ENABLE_COOLING = "enable_cooling";
 constexpr auto PARAM_ENABLE_HEATING = "enable_heating";
+constexpr auto PARAM_ENABLE_FAN = "enable_fan";
 constexpr auto PARAM_INVERT_PINS = "invert_pins";
 constexpr auto PARAM_RESTART_INTERVAL = "restart_interval";
 constexpr auto PARAM_BLE_ENABLED =

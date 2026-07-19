@@ -102,6 +102,13 @@ class TempControl {
   const Actuator* getCoolingActuator() { return _cooler; }
   bool isDefaultCoolingActator() { return _cooler == &defaultActuator; }
 
+  void setFanActuator(Actuator* actuator) {
+    Log.verbose(F("BREW: TempControl new fanActuator %x" CR), actuator);
+    _fan = actuator;
+  }
+  const Actuator* getFanActuator() { return _fan; }
+  bool isDefaultFanActator() { return _fan == &defaultActuator; }
+
   void setBeerSensor(TempSensor* sensor) {
     Log.verbose(F("BREW: TempControl new beerSensor %x" CR), sensor);
     _beerSensor = sensor;
@@ -207,6 +214,7 @@ class TempControl {
   TempSensor* _fridgeSensor;  //!< Temp sensor monitoring fridge
   Actuator* _heater;          //!< Actuator used to call for heat
   Actuator* _cooler;          //!< Actuator used to call for cool
+  Actuator* _fan;             //!< Actuator used to run the fan
 
   // Control parameters
   ControlConstants _cc;

@@ -65,6 +65,7 @@ constexpr auto PARAM_PID_COOLING_ACTUATOR_ACTIVE =
     "pid_cooling_actuator_active";
 constexpr auto PARAM_PID_HEATING_ACTUATOR_ACTIVE =
     "pid_heating_actuator_active";
+constexpr auto PARAM_PID_FAN_ACTUATOR_ACTIVE = "pid_fan_actuator_active";
 constexpr auto PARAM_PID_WAIT_TIME = "pid_wait_time";
 constexpr auto PARAM_PID_TIME_SINCE_COOLING = "pid_time_since_cooling";
 constexpr auto PARAM_PID_TIME_SINCE_HEATING = "pid_time_since_heating";
@@ -212,7 +213,8 @@ void PidWebServer::webHandleConfigWrite(AsyncWebServerRequest* request,
   if (!obj[PARAM_FRIDGE_SENSOR_ID].isNull() ||
       !obj[PARAM_BEER_SENSOR_ID].isNull() ||
       !obj[PARAM_ENABLE_COOLING].isNull() ||
-      !obj[PARAM_ENABLE_HEATING].isNull() || !obj[PARAM_TEMP_FORMAT].isNull()) {
+      !obj[PARAM_ENABLE_HEATING].isNull() || !obj[PARAM_ENABLE_FAN].isNull() ||
+      !obj[PARAM_TEMP_FORMAT].isNull()) {
     // TODO: Check probe delta
     _tempControllerInitTask = true;
   }
@@ -274,6 +276,10 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest* request) {
         tempControl.getHeatingActuator()
             ? tempControl.getHeatingActuator()->isActive()
             : false;
+
+    obj[PARAM_PID_FAN_ACTUATOR_ACTIVE] =
+        tempControl.getFanActuator() ? tempControl.getFanActuator()->isActive()
+                                     : false;
     obj[PARAM_PID_WAIT_TIME] = tempControl.getWaitTime();
     obj[PARAM_PID_TIME_SINCE_COOLING] = tempControl.timeSinceCooling();
     obj[PARAM_PID_TIME_SINCE_HEATING] = tempControl.timeSinceHeating();

@@ -54,6 +54,7 @@ MeasurementList myMeasurementList;
 OneWire oneWire;
 DigitalPinActuator* actuatorCooling = nullptr;
 DigitalPinActuator* actuatorHeating = nullptr;
+DigitalPinActuator* actuatorFan = nullptr;
 OneWireTempSensor* oneWireFridge = nullptr;
 OneWireTempSensor* oneWireBeer = nullptr;
 #if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
@@ -288,6 +289,15 @@ void runLoop() {
                                  myConfig.getTempFormat(),
                                  myConfig.getDarkMode());
     tempControl.loop();
+
+    if (myConfig.isFanEnabled() && actuatorFan) {
+      bool coolingActive = tempControl.getCoolingActuator() &&
+                           tempControl.getCoolingActuator()->isActive();
+      bool heatingActive = tempControl.getHeatingActuator() &&
+                           tempControl.getHeatingActuator()->isActive();
+      Log.notice(F("Main: Fan actuator %s." CR), (coolingActive || heatingActive) ? "active" : "inactive");
+      actuatorFan->setActive(coolingActive || heatingActive);
+    }
 
 #if defined(ENABLE_BLE)
     if (myConfig.isBlePushEnabled()) {
@@ -541,6 +551,11 @@ void configureTempControl() {
                                              myConfig.isPinsInverted());
   }
 
+  if (!actuatorFan) {
+    actuatorFan = new DigitalPinActuator(Config::Pins::fanPin,
+                                         myConfig.isPinsInverted());
+  }
+
   if (myConfig.isCoolingEnabled()) {
     Log.info(F("Main: Configuring cooling actuator." CR));
     tempControl.setCoolingActuator(actuatorCooling);
@@ -549,6 +564,11 @@ void configureTempControl() {
   if (myConfig.isHeatingEnabled()) {
     Log.info(F("Main: Configuring cooling actuator." CR));
     tempControl.setHeatingActuator(actuatorHeating);
+  }
+
+  if (myConfig.isFanEnabled()) {
+    Log.info(F("Main: Configuring fan actuator." CR));
+    tempControl.setFanActuator(actuatorFan);
   }
 
   if (myConfig.isControllerFridgeConstant()) {

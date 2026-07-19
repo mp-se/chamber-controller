@@ -68,6 +68,7 @@ void TempControl::init(MinTimesSettingsChoice choice) {
 
   _heater = &defaultActuator;
   _cooler = &defaultActuator;
+  _fan = &defaultActuator;
 
   loadDefaultConstants();
   loadDefaultSettings();
