@@ -52,6 +52,7 @@ export const useStatusStore = defineStore('status', {
       pid_temp_format: '',
       pid_cooling_actuator_active: false,
       pid_heating_actuator_active: false,
+      pid_fan_actuator_active: false,
       pid_wait_time: 0,
       pid_time_since_cooling: 0,
       pid_time_since_heating: 0,
@@ -84,7 +85,7 @@ export const useStatusStore = defineStore('status', {
         this.uptime_minutes = json.uptime_minutes
         this.uptime_hours = json.uptime_hours
         this.uptime_days = json.uptime_days
-        
+
         this.remote_control_active = json.remote_control_active
 
         this.pid_mode = json.pid_mode
@@ -99,6 +100,7 @@ export const useStatusStore = defineStore('status', {
         this.pid_temp_format = json.pid_temp_format
         this.pid_cooling_actuator_active = json.pid_cooling_actuator_active
         this.pid_heating_actuator_active = json.pid_heating_actuator_active
+        this.pid_fan_actuator_active = json.pid_fan_actuator_active
         this.pid_wait_time = json.pid_wait_time
         this.pid_time_since_cooling = json.pid_time_since_cooling
         this.pid_time_since_heating = json.pid_time_since_heating
@@ -107,7 +109,14 @@ export const useStatusStore = defineStore('status', {
         this.fridge_sensor_id = json.fridge_sensor_id
         this.beer_sensor_id = json.beer_sensor_id
 
-        this.temperature_device = json.temperature_device
+        if (json.temperature_device) {
+          this.temperature_device = json.temperature_device.map((device) => {
+            return {
+              ...device,
+              temp: (Math.round(device.temp * 100) / 100).toFixed(2)
+            }
+          })
+        }
 
         logInfo('statusStore:load()', 'Fetching /api/status completed')
         return true

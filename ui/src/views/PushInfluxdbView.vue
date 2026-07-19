@@ -19,7 +19,7 @@
 <template>
   <div class="container">
     <p></p>
-    <p class="h3">Push - Influxdb v2</p>
+    <p class="h3">{{ t('push_influxdb.title') }}</p>
     <hr />
 
     <form @submit.prevent="save" class="needs-validation" novalidate>
@@ -29,8 +29,8 @@
             v-model="config.influxdb2_target"
             type="url"
             maxlength="120"
-            label="Server"
-            help="URL to push target, use format http://servername.com/resource (Supports http and https)"
+            :label="t('push_influxdb.server_label')"
+            :help="t('push_influxdb.server_help')"
             :disabled="global.disabled"
           />
         </div>
@@ -38,8 +38,8 @@
           <BsInputText
             v-model="config.influxdb2_org"
             maxlength="50"
-            label="Organisation"
-            help="Identifier to what organisation to use"
+            :label="t('push_influxdb.org_label')"
+            :help="t('push_influxdb.org_help')"
             :disabled="global.disabled"
           />
         </div>
@@ -47,8 +47,8 @@
           <BsInputText
             v-model="config.influxdb2_bucket"
             maxlength="50"
-            label="Bucket"
-            help="Identifier for the data bucket to use"
+            :label="t('push_influxdb.bucket_label')"
+            :help="t('push_influxdb.bucket_help')"
             :disabled="global.disabled"
           />
         </div>
@@ -57,8 +57,8 @@
             v-model="config.influxdb2_token"
             type="password"
             maxlength="100"
-            label="Authentication token"
-            help="Authentication token for accessing data bucket"
+            :label="t('push_influxdb.token_label')"
+            :help="t('push_influxdb.token_help')"
             :disabled="global.disabled"
           />
         </div>
@@ -79,7 +79,7 @@
               aria-hidden="true"
               v-show="global.disabled"
             ></span>
-            &nbsp;Save
+            &nbsp;{{ t('push_influxdb.save') }}
           </button>
         </div>
       </div>
@@ -90,10 +90,17 @@
 <script setup>
 import { validateCurrentForm } from '@mp-se/espframework-ui-components'
 import { global, config } from '@/modules/pinia'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const save = async () => {
   if (!validateCurrentForm()) return
 
   await config.saveAll()
 }
+
+defineExpose({
+  save
+})
 </script>

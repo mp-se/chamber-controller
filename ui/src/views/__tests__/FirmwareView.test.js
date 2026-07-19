@@ -2,7 +2,15 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import FirmwareView from '../FirmwareView.vue'
 import { createPinia, setActivePinia } from 'pinia'
+import { useGlobalStore } from '@/modules/globalStore'
 import { sharedHttpClient as http } from '@mp-se/espframework-ui-components'
+
+// Mock the pinia module
+vi.mock('@/modules/pinia', () => ({
+  get global() {
+    return useGlobalStore()
+  }
+}))
 
 // Mock the UI components library
 vi.mock('@mp-se/espframework-ui-components', () => ({
@@ -187,7 +195,10 @@ describe('FirmwareView (interaction tests)', () => {
     expect(uploadBtn.exists()).toBe(true)
   })
 
-  it('displays version information when available', () => {
+  it('displays version information when available', async () => {
+    const { global: globalStore } = await import('@/modules/pinia')
+    globalStore.app_ver = '1.2.3'
+    globalStore.app_build = 'beta'
     const wrapper = mount(FirmwareView, {
       global: {
         stubs: {

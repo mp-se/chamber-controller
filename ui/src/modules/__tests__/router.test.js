@@ -15,10 +15,8 @@ import router from '../router'
 import { global } from '@/modules/pinia'
 
 describe('router module - actual router instance', () => {
-  let testRouter
-
   beforeEach(() => {
-    testRouter = router
+    // testRouter = router
   })
 
   describe('router instance', () => {
@@ -133,9 +131,7 @@ describe('router module - actual router instance', () => {
 
     it('no duplicate route paths (except catch-all)', () => {
       const routes = router.getRoutes()
-      const paths = routes
-        .map((r) => r.path)
-        .filter((p) => !p.includes(':'))
+      const paths = routes.map((r) => r.path).filter((p) => !p.includes(':'))
       const uniquePaths = new Set(paths)
       expect(paths.length).toBe(uniquePaths.size)
     })
@@ -154,7 +150,7 @@ describe('router module - actual router instance', () => {
 
     it('has other routes', () => {
       const otherRoutes = router.getRoutes().filter((r) => r.path?.startsWith('/other'))
-      expect(otherRoutes.length).toBe(4)
+      expect(otherRoutes.length).toBe(5)
     })
 
     it('device routes always start with /device', () => {
@@ -315,7 +311,7 @@ describe('router module - actual router instance', () => {
       // Navigate to trigger the hook
       try {
         await router.push('/device/settings')
-      } catch (e) {
+      } catch {
         // May fail but hook should execute
       }
 
@@ -325,20 +321,20 @@ describe('router module - actual router instance', () => {
 
     it('guard early return when disabled=true', () => {
       global.disabled = true
-      
+
       // Simulate guard logic
       let guardResult = undefined
       if (global.disabled) {
         guardResult = false
       }
-      
+
       expect(guardResult).toBe(false)
     })
 
     it('guard early return when form validation fails', () => {
       global.disabled = false
       vi.mocked(validateCurrentForm).mockReturnValue(false)
-      
+
       // Simulate guard logic
       let guardResult = undefined
       if (global.disabled) {
@@ -346,7 +342,7 @@ describe('router module - actual router instance', () => {
       } else if (!validateCurrentForm()) {
         guardResult = false
       }
-      
+
       expect(guardResult).toBe(false)
     })
 
@@ -365,7 +361,7 @@ describe('router module - actual router instance', () => {
         global.clearMessages()
         guardResult = true
       }
-      
+
       expect(guardResult).toBe(true)
       expect(global.clearMessages).toHaveBeenCalled()
     })
@@ -378,14 +374,14 @@ describe('router module - actual router instance', () => {
       let result = true
       if (global.disabled) result = false
       if (!validateCurrentForm()) result = false
-      
+
       expect(result).toBe(true)
     })
 
     it('guard first check: global.disabled', () => {
       // Test that disabled check happens first
       global.disabled = true
-      
+
       const shouldReturnEarly = global.disabled
       expect(shouldReturnEarly).toBe(true)
     })
@@ -393,7 +389,7 @@ describe('router module - actual router instance', () => {
     it('guard second check: validateCurrentForm', () => {
       // Test validateCurrentForm check
       vi.mocked(validateCurrentForm).mockReturnValue(false)
-      
+
       const shouldReturnEarly = !validateCurrentForm()
       expect(shouldReturnEarly).toBe(true)
     })
@@ -442,4 +438,3 @@ describe('router module - actual router instance', () => {
     })
   })
 })
-

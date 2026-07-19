@@ -242,7 +242,7 @@ describe('statusStore', () => {
         pid_time_since_cooling: 0,
         pid_time_since_heating: 0,
         pid_time_since_idle: 0,
-        temperature_device: [{ device: 'Sensor1', temp: 19.5, source: 'BLE', type: 'Temp' }]
+        temperature_device: [{ device: 'Sensor1', temp: 19.50, source: 'BLE', type: 'Temp' }]
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -252,7 +252,7 @@ describe('statusStore', () => {
 
       expect(store.temperature_device.length).toBe(1)
       expect(store.temperature_device[0].device).toBe('Sensor1')
-      expect(store.temperature_device[0].temp).toBe(19.5)
+      expect(store.temperature_device[0].temp).toBe('19.50')
     })
 
     it('handles API error gracefully', async () => {
@@ -308,8 +308,8 @@ describe('statusStore', () => {
       const store = useStatusStore()
       store.pid_beer_temp = 19.5
       store.pid_fridge_temp = 10.2
-      expect(store.pid_beer_temp).toBe(19.5)
-      expect(store.pid_fridge_temp).toBe(10.2)
+      expect(store.pid_beer_temp).toBe(19.50)
+      expect(store.pid_fridge_temp).toBe(10.20)
     })
 
     it('allows updating actuator states', () => {

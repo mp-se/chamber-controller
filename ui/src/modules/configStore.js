@@ -110,6 +110,7 @@ export const useConfigStore = defineStore('config', {
     target_temperature: 0,
     enable_cooling: false,
     enable_heating: false,
+    enable_fan: false,
     invert_pins: false,
     ble_push_enabled: true,
     ble_scan_enabled: true,
@@ -164,6 +165,7 @@ export const useConfigStore = defineStore('config', {
         this.target_temperature = json.target_temperature
         this.enable_cooling = json.enable_cooling
         this.enable_heating = json.enable_heating
+        this.enable_fan = json.enable_fan
         this.invert_pins = json.invert_pins
         this.ble_push_enabled = json.ble_push_enabled
         this.ble_scan_enabled = json.ble_scan_enabled

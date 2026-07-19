@@ -1,5 +1,5 @@
 <!--
-  GravityMon
+  Chamber Controller UI
   Copyright (c) 2021-2026 Magnus
 
   This program is free software: you can redistribute it and/or modify

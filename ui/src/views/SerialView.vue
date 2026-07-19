@@ -1,5 +1,5 @@
 <!--
-  GravityMon
+  Chamber Controller UI
   Copyright (c) 2021-2026 Magnus
 
   This program is free software: you can redistribute it and/or modify
@@ -90,10 +90,10 @@ const connected = computed(() => {
 })
 
 function connect() {
-  serial.value = 'Attempting to connect to websocket\n'
+  serial.value = t('serial.attempt_connect')
   const ws = http.createWebSocket('serialws', {
     onOpen() {
-      serial.value += 'Websocket established\n'
+      serial.value += t('serial.established')
     },
     onMessage(event) {
       var list = serial.value.split('\n')
@@ -106,7 +106,7 @@ function connect() {
       serial.value += event.data
     },
     onClose() {
-      serial.value += 'Socket closed\n'
+      serial.value += t('serial.closed')
       socket.value = null
     },
     onError(err) {

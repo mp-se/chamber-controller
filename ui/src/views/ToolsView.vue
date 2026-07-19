@@ -74,6 +74,10 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { global } from '@/modules/pinia'
+import VoltageFragment from '@/fragments/VoltageFragment.vue'
+import ListFilesFragment from '@/fragments/ListFilesFragment.vue'
+import AdvancedFilesFragment from '@/fragments/AdvancedFilesFragment.vue'
+import EnableCorsFragment from '@/fragments/EnableCorsFragment.vue'
 
 const { t } = useI18n()
 const hideAdvanced = ref(true)

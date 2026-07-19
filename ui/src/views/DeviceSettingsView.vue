@@ -15,15 +15,14 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
-
 <template>
   <div class="container">
     <p></p>
-    <p class="h2">Device - Settings</p>
+    <p class="h3">{{ t('device_settings.title') }}</p>
     <hr />
 
     <BsMessage v-if="config.mdns === ''" dismissable="true" message="" alert="warning">
-      You need to define a mdns name for the device
+      {{ t('device_settings.mdns_warning') }}
     </BsMessage>
 
     <form @submit.prevent="saveSettings" class="needs-validation" novalidate>
@@ -31,15 +30,12 @@
         <div class="col-md-12">
           <BsInputText
             v-model="config.mdns"
-            maxlength="63"
-            minlength="1"
-            label="MDNS"
-            help="Enter device name used on the network, the suffix .local will be added to this name"
-            :badge="badge.deviceMdnsBadge()"
-            width="8"
+            type="text"
+            :label="t('device_settings.mdns_label')"
+            :help="t('device_settings.mdns_help')"
+            required
             :disabled="global.disabled"
-          >
-          </BsInputText>
+          ></BsInputText>
         </div>
 
         <div class="col-md-12">
@@ -50,7 +46,7 @@
           <BsInputRadio
             v-model="config.temp_format"
             :options="tempOptions"
-            label="Temperature Format"
+            :label="t('device_settings.temp_format_label')"
             :disabled="global.disabled"
           ></BsInputRadio>
         </div>
@@ -59,34 +55,19 @@
           <BsInputRadio
             v-model="config.dark_mode"
             :options="uiOptions"
-            label="User Interface"
+            :label="t('device_settings.ui_label')"
             :disabled="global.disabled"
           ></BsInputRadio>
         </div>
 
-        <!-- 
-        <div class="col-md-6">
-          <BsInputNumber
-            v-model="config.restart_interval"
-            unit="minutes"
-            label="Restart interval in minutes"
-            min="30"
-            max="1440"
-            step="1"
-            width="5"
-            help="Interval when the device will restart to ensure stability (30-1440)"
-            :disabled="global.disabled"
-          ></BsInputNumber>
-        </div>-->
-
         <div class="col-md-4">
           <BsSelect
             v-model="config.restart_interval"
-            label="Restart interval"
-            help="Interval when the device will restart to ensure stability"
             :options="restartOptions"
+            :label="t('device_settings.restart_interval_label')"
+            :help="t('device_settings.restart_interval_help')"
             :disabled="global.disabled"
-          />
+          ></BsSelect>
         </div>
       </div>
 
@@ -94,7 +75,6 @@
         <div class="col-md-12">
           <hr />
         </div>
-
         <div class="col-md-12">
           <button
             type="submit"
@@ -107,11 +87,11 @@
               aria-hidden="true"
               v-show="global.disabled"
             ></span>
-            &nbsp;Save</button
+            &nbsp;{{ t('device_settings.save') }}</button
           >&nbsp;
 
           <button
-            @click="restartDevice"
+            @click.prevent="restartDevice"
             type="button"
             class="btn btn-secondary"
             :disabled="global.disabled"
@@ -122,11 +102,11 @@
               aria-hidden="true"
               v-show="global.disabled"
             ></span>
-            &nbsp;Restart device</button
+            &nbsp;{{ t('device_settings.restart') }}</button
           >&nbsp;
 
           <button
-            @click="factory"
+            @click.prevent="factory"
             type="button"
             class="btn btn-secondary"
             :disabled="global.disabled"
@@ -137,8 +117,8 @@
               aria-hidden="true"
               v-show="global.disabled"
             ></span>
-            &nbsp;Restore factory defaults
-          </button>
+            &nbsp;{{ t('device_settings.factory_defaults') }}</button
+          >&nbsp;
         </div>
       </div>
     </form>
@@ -146,32 +126,55 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { validateCurrentForm } from '@mp-se/espframework-ui-components'
+import { validateCurrentForm, logDebug } from '@mp-se/espframework-ui-components'
+import { useI18n } from 'vue-i18n'
+import { ref, onMounted } from 'vue'
 import { global, config } from '@/modules/pinia'
-import * as badge from '@/modules/badge'
-import { logError } from '@mp-se/espframework-ui-components'
+
+const { t } = useI18n()
 
 const tempOptions = ref([
-  { label: 'Celsius °C', value: 'C' },
-  { label: 'Fahrenheit °F', value: 'F' }
+  { label: t('device_settings.temp_celsius'), value: 'C' },
+  { label: t('device_settings.temp_fahrenheit'), value: 'F' }
 ])
 
 const uiOptions = ref([
-  { label: 'Day mode', value: false },
-  { label: 'Dark mode', value: true }
+  { label: t('device_settings.ui_day_mode'), value: false },
+  { label: t('device_settings.ui_dark_mode'), value: true }
 ])
 
 const restartOptions = ref([
-  { label: '-- disabled --', value: 0 },
-  { label: '30 minutes', value: 30 },
-  { label: '1 hour', value: 60 },
-  { label: '2 hours', value: 60 * 2 },
-  { label: '4 hours', value: 60 * 4 },
-  { label: '6 hours', value: 60 * 6 },
-  { label: '12 hours', value: 60 * 12 },
-  { label: '24 hours', value: 60 * 24 }
+  { label: t('device_settings.restart_disabled'), value: 0 },
+  { label: t('device_settings.restart_30m'), value: 30 },
+  { label: t('device_settings.restart_1h'), value: 60 },
+  { label: t('device_settings.restart_2h'), value: 120 },
+  { label: t('device_settings.restart_4h'), value: 240 },
+  { label: t('device_settings.restart_6h'), value: 360 },
+  { label: t('device_settings.restart_12h'), value: 720 },
+  { label: t('device_settings.restart_24h'), value: 1440 }
 ])
+
+onMounted(() => {
+  logDebug('DeviceSettingsView.onMounted()')
+})
+
+const saveSettings = async () => {
+  if (!validateCurrentForm()) return
+  try {
+    await config.saveAll()
+    global.messageSuccess = t('device_settings.save_success') || 'Settings saved'
+  } catch {
+    global.messageError = t('device_settings.err_save_failed')
+  }
+}
+
+const restartDevice = async () => {
+  try {
+    await config.restart()
+  } catch {
+    global.messageError = t('device_settings.err_restart_failed')
+  }
+}
 
 const factory = async () => {
   try {
@@ -190,20 +193,17 @@ const factory = async () => {
     const json = await response.json()
 
     if (json.success === true) {
-      global.messageSuccess = json.message + ' Reloading page in 2 seconds...'
+      global.messageSuccess = t('messages.FACTORY_RESET_COMPLETED') + ' Reloading page in 2 seconds...'
 
-      // Use setTimeout with proper cleanup
       const reloadTimeout = setTimeout(() => {
         try {
           location.reload(true)
         } catch (error) {
-          logError('DeviceSettingsView.factory.reload()', error)
-          // Fallback reload
+          logDebug('DeviceSettingsView.factory.reload() error: ' + error)
           window.location.reload()
         }
       }, 2000)
 
-      // Clean up timeout on page unload
       window.addEventListener(
         'beforeunload',
         () => {
@@ -215,30 +215,19 @@ const factory = async () => {
       global.messageError = json.message || 'Factory restore failed'
     }
   } catch (err) {
-    logError('DeviceSettingsView.factory()', err)
+    logDebug('DeviceSettingsView.factory() error: ' + err)
     global.messageError = 'Failed to perform factory restore: ' + (err.message || err)
   } finally {
     global.disabled = false
   }
 }
 
-const saveSettings = async () => {
-  try {
-    if (!validateCurrentForm()) return
-
-    await config.saveAll()
-  } catch (error) {
-    logError('DeviceSettingsView.saveSettings()', error)
-    global.messageError = 'Failed to save settings: ' + (error.message || error)
-  }
-}
-
-const restartDevice = async () => {
-  try {
-    await config.restart()
-  } catch (error) {
-    logError('DeviceSettingsView.restartDevice()', error)
-    global.messageError = 'Failed to restart device: ' + (error.message || error)
-  }
-}
+defineExpose({
+  tempOptions,
+  uiOptions,
+  restartOptions,
+  saveSettings,
+  restartDevice,
+  factory
+})
 </script>

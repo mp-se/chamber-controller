@@ -11,9 +11,7 @@ vi.mock('vue-router', () => ({
 // Mock router module to avoid initialization issues
 vi.mock('@/modules/router', () => ({
   items: {
-    value: [
-      { label: 'Home', to: '/', icon: 'home' }
-    ]
+    value: [{ label: 'Home', to: '/', icon: 'home' }]
   },
   default: {
     install: vi.fn()

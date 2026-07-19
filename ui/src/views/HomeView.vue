@@ -35,76 +35,77 @@
         </div>
 
         <template v-if="global.feature.ble_sensor">
-          <template v-for="t in status.temperature_device" :key="t.device">
+          <template v-for="device in status.temperature_device" :key="device.device">
             <div class="col-md-4">
               <BsCard
-                header="BLE Temperature Device"
+                :header="t('home.ble_device')"
                 color="secondary"
-                :title="t.device + ' (' + formatTime(t.update_time) + ')'"
+                :title="device.device + ' (' + formatTime(device.update_time) + ')'"
               >
                 <p class="text-center">
-                  Temperature: {{ formatTemp(t.temp) }}°{{ config.temp_format }}
+                  {{ t('home.temperature') }}: {{ formatTemp(device.temp) }}°{{ config.temp_format }}
                 </p>
 
-                <span class="badge bg-primary">{{ t.source }}</span
+                <span class="badge bg-primary">{{ device.source }}</span
                 >&nbsp;
-                <span class="badge bg-primary">{{ t.type }}</span>
+                <span class="badge bg-primary">{{ device.type }}</span>
               </BsCard>
             </div>
           </template>
         </template>
 
         <div class="col-md-4">
-          <BsCard header="PID" color="success" title="Controller">
+          <BsCard :header="t('home.pid')" color="success" :title="t('home.controller')">
             <p class="text-center">
-              Mode:
+              {{ t('home.mode_label') }}
               {{
                 status.pid_mode == 'b'
-                  ? 'Beer Constant'
+                  ? t('home.beer_constant')
                   : status.pid_mode == 'f'
-                    ? 'Fridge Constant'
-                    : 'Off'
+                    ? t('home.fridge_constant')
+                    : t('home.off')
               }}<br />
-              State: {{ status.pid_state_string }}<br />
+              {{ t('home.state_label') }}{{ status.pid_state_string }}<br />
             </p>
           </BsCard>
         </div>
 
         <div class="col-md-4">
-          <BsCard header="PID" color="success" title="Actuators">
+          <BsCard :header="t('home.pid')" color="success" :title="t('home.actuators')">
             <p class="text-center">
-              Cooling: {{ status.pid_cooling_actuator_active ? 'Active' : 'Inactive' }}<br />
-              Heating: {{ status.pid_heating_actuator_active ? 'Active' : 'Inactive' }}
+              {{ t('home.cooling_label') }}{{ status.pid_cooling_actuator_active ? t('home.active') : t('home.inactive') }}<br />
+              {{ t('home.heating_label') }}{{ status.pid_heating_actuator_active ? t('home.active') : t('home.inactive') }}<br />
+              {{ t('home.fan_label') }}{{ status.pid_fan_actuator_active ? t('home.active') : t('home.inactive') }}
             </p>
           </BsCard>
         </div>
 
         <div class="col-md-4">
-          <BsCard header="PID" color="success" title="Sensors">
+          <BsCard :header="t('home.pid')" color="success" :title="t('home.sensors')">
             <p class="text-center">
-              Fridge sensor: {{ status.fridge_sensor_id }}<br />
-              Beer sensor: {{ status.beer_sensor_id }}
+              {{ t('home.fridge_sensor_label') }}{{ status.fridge_sensor_id }}<br />
+              {{ t('home.beer_sensor_label') }}{{ status.beer_sensor_id }}
             </p>
           </BsCard>
         </div>
 
         <div class="col-md-4">
-          <BsCard header="PID" color="success" title="Sensors">
+          <BsCard :header="t('home.pid')" color="success" :title="t('home.sensors')">
             <p class="text-center">
-              Chamber: {{ formatTemp(status.pid_fridge_temp) }}°{{ config.temp_format }}<br />
-              Beer: {{ formatTemp(status.pid_beer_temp) }}°{{ config.temp_format }}
+              {{ t('home.chamber_label') }}{{ formatTemp(status.pid_fridge_temp) }}°{{ config.temp_format }}<br />
+              {{ t('home.beer_label') }}{{ formatTemp(status.pid_beer_temp) }}°{{ config.temp_format }}
             </p>
           </BsCard>
         </div>
 
         <div class="col-md-4">
-          <BsCard header="Measurement" color="info" title="Wifi">
+          <BsCard :header="t('home.measurement')" color="info" :title="t('home.wifi')">
             <p class="text-center">{{ status.rssi }} dBm - {{ status.wifi_ssid }}</p>
           </BsCard>
         </div>
 
         <div class="col-md-4">
-          <BsCard header="Device" color="info" title="IP Address">
+          <BsCard :header="t('home.device')" color="info" :title="t('home.ip_address')">
             <p class="text-center">
               {{ status.ip }}
             </p>
@@ -112,25 +113,28 @@
         </div>
 
         <div class="col-md-4">
-          <BsCard header="Device" color="info" title="Memory">
+          <BsCard :header="t('home.device')" color="info" :title="t('home.memory')">
             <p class="text-center">
-              Free: {{ status.free_heap }} kb, Total: {{ status.total_heap }} kb
+              {{ t('home.memory_text', { free: status.free_heap, total: status.total_heap }) }}
             </p>
           </BsCard>
         </div>
 
         <div class="col-md-4">
-          <BsCard header="Device" color="info" title="Software version">
+          <BsCard :header="t('home.device')" color="info" :title="t('home.software_version')">
             <p class="text-center">
-              Firmware: {{ global.app_ver }} ({{ global.app_build }}) UI: {{ global.uiVersion }} ({{
-                global.uiBuild
-              }})
+              {{ t('home.software_version_text', { 
+                  appVer: global.app_ver, 
+                  appBuild: global.app_build, 
+                  uiVersion: global.uiVersion, 
+                  uiBuild: global.uiBuild 
+                }) }}
             </p>
           </BsCard>
         </div>
 
         <div class="col-md-4">
-          <BsCard header="Device" color="info" title="Platform">
+          <BsCard :header="t('home.device')" color="info" :title="t('home.platform')">
             <p class="text-center">
               <span class="badge bg-secondary">{{ global.platform }}</span>
             </p>
@@ -138,16 +142,20 @@
         </div>
 
         <div class="col-md-4">
-          <BsCard header="Device" color="info" title="Device ID">
+          <BsCard :header="t('home.device')" color="info" :title="t('home.id')">
             <p class="text-center">{{ status.id }}</p>
           </BsCard>
         </div>
 
         <div class="col-md-4">
-          <BsCard header="Device" color="info" title="Uptime">
+          <BsCard :header="t('home.device')" color="info" :title="t('home.uptime')">
             <p class="text-center">
-              {{ status.uptime_days }} days {{ status.uptime_hours }} hours
-              {{ status.uptime_minutes }} minutes {{ status.uptime_seconds }} seconds
+              {{ t('home.uptime_text', { 
+                  days: status.uptime_days, 
+                  hours: status.uptime_hours, 
+                  minutes: status.uptime_minutes, 
+                  seconds: status.uptime_seconds 
+                }) }}
             </p>
           </BsCard>
         </div>
@@ -162,7 +170,9 @@ import { status, config, global } from '@/modules/pinia'
 import { tempToF } from '@mp-se/espframework-ui-components'
 import PidControllerFragment from '@/fragments/PidControllerFragment.vue'
 import PidTemperatureFragment from '@/fragments/PidTemperatureFragment.vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const polling = ref(null)
 const timer = ref(null)
 
@@ -213,3 +223,4 @@ onBeforeUnmount(() => {
 })
 </script>
 <style></style>
+

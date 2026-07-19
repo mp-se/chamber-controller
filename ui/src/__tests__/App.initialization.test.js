@@ -196,11 +196,9 @@ describe('App.vue initialization paths', () => {
       const wrapper = createWrapper()
       await flushPromises()
 
-      const spy = vi
-        .spyOn(document.documentElement, 'setAttribute')
-        .mockImplementationOnce(() => {
-          throw new Error('DOM manipulation error')
-        })
+      const spy = vi.spyOn(document.documentElement, 'setAttribute').mockImplementationOnce(() => {
+        throw new Error('DOM manipulation error')
+      })
 
       expect(() => {
         wrapper.vm.handleDarkModeUpdate(true)
@@ -213,14 +211,9 @@ describe('App.vue initialization paths', () => {
       const wrapper = createWrapper()
       await flushPromises()
 
-      const origSetAttribute = document.documentElement.setAttribute.bind(
-        document.documentElement
-      )
-      const spy = vi
-        .spyOn(document.documentElement, 'setAttribute')
-        .mockImplementationOnce(() => {
-          throw new Error('test DOM error')
-        })
+      const spy = vi.spyOn(document.documentElement, 'setAttribute').mockImplementationOnce(() => {
+        throw new Error('test DOM error')
+      })
 
       // The method should not throw even when setAttribute throws
       expect(() => {

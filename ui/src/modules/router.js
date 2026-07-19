@@ -203,7 +203,7 @@ const items = ref([
       {
         label: 'About',
         path: '/other/about'
-      }      
+      }
     ]
   }
 ])

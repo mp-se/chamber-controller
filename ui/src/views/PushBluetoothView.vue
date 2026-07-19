@@ -19,7 +19,7 @@
 <template>
   <div class="container">
     <p></p>
-    <p class="h3">Push - Bluetooth</p>
+    <p class="h3">{{ t('push_bluetooth.title') }}</p>
     <hr />
 
     <template v-if="global.feature.ble">
@@ -28,13 +28,13 @@
           <div class="col-md-12">
             <BsInputSwitch
               v-model="config.ble_push_enabled"
-              label="Enable temperature sending over bluetooth"
+              :label="t('push_bluetooth.enable_label')"
               :disabled="global.disabled"
             />
           </div>
           <div class="col-md-12">
             <p></p>
-            <p>Changing bluetooth settings might require a restart to function properly</p>
+            <p>{{ t('push_bluetooth.restart_info') }}</p>
           </div>
         </div>
         <div class="row gy-2">
@@ -53,7 +53,7 @@
                 aria-hidden="true"
                 v-show="global.disabled"
               ></span>
-              &nbsp;Save
+              &nbsp;{{ t('push_bluetooth.save') }}
             </button>
           </div>
         </div>
@@ -62,7 +62,7 @@
     <template v-else>
       <div class="row">
         <div class="col-md-12">
-          <p>Bluetooth is not available on this platform</p>
+          <p>{{ t('push_bluetooth.not_available') }}</p>
         </div>
       </div>
     </template>
@@ -70,8 +70,11 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { validateCurrentForm } from '@mp-se/espframework-ui-components'
 import { global, config } from '@/modules/pinia'
+
+const { t } = useI18n()
 
 const save = async () => {
   if (!validateCurrentForm()) return

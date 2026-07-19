@@ -24,9 +24,15 @@ vi.mock('@/modules/pinia', async () => {
   const actual = await vi.importActual('@/modules/pinia')
   return {
     default: actual.default,
-    get config() { return testConfig },
-    get global() { return testGlobal },
-    get status() { return testStatus }
+    get config() {
+      return testConfig
+    },
+    get global() {
+      return testGlobal
+    },
+    get status() {
+      return testStatus
+    }
   }
 })
 
@@ -67,8 +73,14 @@ describe('PidControllerFragment', () => {
         stubs: {
           BsCard: { template: '<div class="card"><slot /></div>', props: ['header'] },
           BsButton: { template: '<button><slot /></button>', props: ['type'] },
-          BsInputNumber: { template: '<input type="number" v-model="modelValue" />', props: ['modelValue', 'label', 'disabled'] },
-          BsInputRadio: { template: '<div><slot /></div>', props: ['modelValue', 'options', 'label', 'disabled'] },
+          BsInputNumber: {
+            template: '<input type="number" v-model="modelValue" />',
+            props: ['modelValue', 'label', 'disabled']
+          },
+          BsInputRadio: {
+            template: '<div><slot /></div>',
+            props: ['modelValue', 'options', 'label', 'disabled']
+          },
           ...stubs
         }
       }
@@ -155,29 +167,29 @@ describe('PidControllerFragment', () => {
 
   describe('saveSettings API call', () => {
     it('calls API with correct data on form submission', async () => {
-      const { sharedHttpClient } = await import('@mp-se/espframework-ui-components')
+      await import('@mp-se/espframework-ui-components')
       config.enable_cooling = true
       config.beer_sensor_id = 'sensor1'
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      
+
       wrapper.vm.newMode = 'b'
       wrapper.vm.newTemperature = 20
-      
+
       await wrapper.vm.saveSettings()
-      
+
       expect(wrapper.exists()).toBe(true)
     })
 
     it('handles successful API call', async () => {
       config.enable_cooling = true
       config.beer_sensor_id = 'sensor1'
-      
+
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      
+
       await wrapper.vm.saveSettings()
-      
+
       // Component should handle the response
       expect(wrapper.exists()).toBe(true)
     })
@@ -185,17 +197,17 @@ describe('PidControllerFragment', () => {
     it('handles API errors gracefully', async () => {
       config.enable_cooling = true
       config.beer_sensor_id = 'sensor1'
-      
+
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      
+
       // Even with errors, component should not throw
       try {
         await wrapper.vm.saveSettings()
-      } catch (e) {
+      } catch {
         // Expected to handle errors
       }
-      
+
       expect(wrapper.exists()).toBe(true)
     })
 
@@ -203,12 +215,12 @@ describe('PidControllerFragment', () => {
       const { validateCurrentForm } = await import('@mp-se/espframework-ui-components')
       config.enable_cooling = true
       config.beer_sensor_id = 'sensor1'
-      
+
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      
+
       await wrapper.vm.saveSettings()
-      
+
       // validateCurrentForm should have been called
       expect(validateCurrentForm).toHaveBeenCalled()
     })
@@ -217,12 +229,12 @@ describe('PidControllerFragment', () => {
       config.enable_cooling = true
       config.beer_sensor_id = 'sensor1'
       global.messageError = 'Previous error'
-      
+
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      
+
       await wrapper.vm.saveSettings()
-      
+
       // Component should attempt to clear messages
       expect(wrapper.exists()).toBe(true)
     })
@@ -256,20 +268,20 @@ describe('PidControllerFragment', () => {
       config.enable_cooling = true
       config.beer_sensor_id = 'sensor1'
       global.disabled = true
-      
+
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      
+
       expect(global.disabled).toBe(true)
     })
 
     it('disables button when only Off mode available', async () => {
       config.enable_cooling = false
       config.enable_heating = false
-      
+
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      
+
       // Should only have Off mode, so button should be disabled
       expect(wrapper.vm.modeOptions.length).toBe(1)
     })
@@ -278,10 +290,10 @@ describe('PidControllerFragment', () => {
       config.enable_cooling = true
       config.beer_sensor_id = 'sensor1'
       global.disabled = false
-      
+
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      
+
       expect(global.disabled).toBe(false)
     })
   })
@@ -313,7 +325,7 @@ describe('PidControllerFragment', () => {
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
       expect(wrapper.vm.modeOptions.length).toBeGreaterThan(1)
-      expect(wrapper.vm.modeOptions.some(o => o.value === 'b')).toBe(true)
+      expect(wrapper.vm.modeOptions.some((o) => o.value === 'b')).toBe(true)
     })
 
     it('adds Chamber constant option when fridge sensor configured', async () => {
@@ -322,7 +334,7 @@ describe('PidControllerFragment', () => {
       config.fridge_sensor_id = 'fridge-sensor'
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      expect(wrapper.vm.modeOptions.some(o => o.value === 'f')).toBe(true)
+      expect(wrapper.vm.modeOptions.some((o) => o.value === 'f')).toBe(true)
     })
 
     it('adds both options when both sensors are configured', async () => {
@@ -331,8 +343,8 @@ describe('PidControllerFragment', () => {
       config.fridge_sensor_id = 'fridge-sensor'
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      expect(wrapper.vm.modeOptions.some(o => o.value === 'b')).toBe(true)
-      expect(wrapper.vm.modeOptions.some(o => o.value === 'f')).toBe(true)
+      expect(wrapper.vm.modeOptions.some((o) => o.value === 'b')).toBe(true)
+      expect(wrapper.vm.modeOptions.some((o) => o.value === 'f')).toBe(true)
     })
 
     it('sets error when cooling enabled but no sensors configured', async () => {
@@ -392,7 +404,10 @@ describe('PidControllerFragment', () => {
               template: '<input type="radio" @change="$emit(\'update:modelValue\', \'b\')" />',
               props: ['modelValue', 'label', 'options', 'disabled']
             },
-            BsInputNumber: { template: '<input type="number" />', props: ['modelValue', 'label', 'min', 'max', 'step', 'unit', 'width', 'disabled'] }
+            BsInputNumber: {
+              template: '<input type="number" />',
+              props: ['modelValue', 'label', 'min', 'max', 'step', 'unit', 'width', 'disabled']
+            }
           }
         }
       })
@@ -407,9 +422,13 @@ describe('PidControllerFragment', () => {
         global: {
           plugins: [pinia],
           stubs: {
-            BsInputRadio: { template: '<div />', props: ['modelValue', 'label', 'options', 'disabled'] },
+            BsInputRadio: {
+              template: '<div />',
+              props: ['modelValue', 'label', 'options', 'disabled']
+            },
             BsInputNumber: {
-              template: '<input type="number" :value="modelValue" @input="$emit(\'update:modelValue\', Number($event.target.value))" />',
+              template:
+                '<input type="number" :value="modelValue" @input="$emit(\'update:modelValue\', Number($event.target.value))" />',
               props: ['modelValue', 'label', 'min', 'max', 'step', 'unit', 'width', 'disabled']
             }
           }

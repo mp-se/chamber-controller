@@ -1,7 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
-import piniaInstance, { global, config, status, saveConfigState, getConfigChanges } from '@/modules/pinia'
+import piniaInstance, {
+  global,
+  config,
+  status,
+  saveConfigState,
+  getConfigChanges
+} from '@/modules/pinia'
 
 describe('pinia module', () => {
   beforeEach(() => {

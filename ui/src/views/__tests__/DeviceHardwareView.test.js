@@ -25,9 +25,15 @@ vi.mock('@/modules/pinia', async () => {
   const actual = await vi.importActual('@/modules/pinia')
   return {
     default: actual.default,
-    get config() { return testConfig },
-    get global() { return testGlobal },
-    get status() { return testStatus }
+    get config() {
+      return testConfig
+    },
+    get global() {
+      return testGlobal
+    },
+    get status() {
+      return testStatus
+    }
   }
 })
 
@@ -174,7 +180,7 @@ describe('DeviceHardwareView', () => {
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
       const notDetectedOptions = wrapper.vm.sensorOptions.filter(
-        o => o.label.includes('missing_sensor') && o.label.includes('not detected')
+        (o) => o.label.includes('missing_sensor') && o.label.includes('not detected')
       )
       expect(notDetectedOptions.length).toBeGreaterThan(0)
     })
@@ -192,7 +198,7 @@ describe('DeviceHardwareView', () => {
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
       const notDetectedOptions = wrapper.vm.sensorOptions.filter(
-        o => o.label.includes('missing_fridge') && o.label.includes('not detected')
+        (o) => o.label.includes('missing_fridge') && o.label.includes('not detected')
       )
       expect(notDetectedOptions.length).toBeGreaterThan(0)
     })
@@ -210,7 +216,7 @@ describe('DeviceHardwareView', () => {
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
       const notDetectedOptions = wrapper.vm.sensorOptions.filter(
-        o => o.label.includes('sensor1') && o.label.includes('not detected')
+        (o) => o.label.includes('sensor1') && o.label.includes('not detected')
       )
       expect(notDetectedOptions.length).toBe(0)
     })
@@ -218,7 +224,7 @@ describe('DeviceHardwareView', () => {
     it('enables controls after sensor scan completes', async () => {
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
-      await new Promise(r => setTimeout(r, 10))
+      await new Promise((r) => setTimeout(r, 10))
       expect(global.disabled).toBe(false)
     })
   })
@@ -242,7 +248,7 @@ describe('DeviceHardwareView', () => {
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
       // Give async operations time to complete
-      await new Promise(r => setTimeout(r, 10))
+      await new Promise((r) => setTimeout(r, 10))
       expect(wrapper.vm.bleSensorOptions.length).toBeGreaterThanOrEqual(2)
     })
 
@@ -259,9 +265,7 @@ describe('DeviceHardwareView', () => {
     it('processes BLE sensor data from status', async () => {
       global.feature.ble_sensor = true
       status.load = vi.fn(async () => {
-        status.temperature_device = [
-          { device: 'BLE_001', type: 'Tilt' }
-        ]
+        status.temperature_device = [{ device: 'BLE_001', type: 'Tilt' }]
       })
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
@@ -274,16 +278,14 @@ describe('DeviceHardwareView', () => {
       config.beer_ble_sensor_id = 'missing_ble'
       global.feature.ble_sensor = true
       status.load = vi.fn(async () => {
-        status.temperature_device = [
-          { device: 'BLE_001', type: 'Tilt' }
-        ]
+        status.temperature_device = [{ device: 'BLE_001', type: 'Tilt' }]
       })
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
       // Give time for async operations
-      await new Promise(r => setTimeout(r, 50))
+      await new Promise((r) => setTimeout(r, 50))
       const notDetectedOptions = wrapper.vm.bleSensorOptions.filter(
-        o => o.value === 'missing_ble'
+        (o) => o.value === 'missing_ble'
       )
       // Should have at least the not-detected entry
       expect(notDetectedOptions.length).toBeGreaterThanOrEqual(1)
@@ -293,14 +295,12 @@ describe('DeviceHardwareView', () => {
       config.beer_ble_sensor_id = 'BLE_001'
       global.feature.ble_sensor = true
       status.load = vi.fn(async () => {
-        status.temperature_device = [
-          { device: 'BLE_001', type: 'Tilt' }
-        ]
+        status.temperature_device = [{ device: 'BLE_001', type: 'Tilt' }]
       })
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
       const notDetectedOptions = wrapper.vm.bleSensorOptions.filter(
-        o => o.value === 'BLE_001' && o.label.includes('not detected')
+        (o) => o.value === 'BLE_001' && o.label.includes('not detected')
       )
       expect(notDetectedOptions.length).toBe(0)
     })
@@ -370,7 +370,7 @@ describe('DeviceHardwareView', () => {
       const wrapper = createWrapper()
       // Wait for onMounted to complete
       await wrapper.vm.$nextTick()
-      await new Promise(r => setTimeout(r, 50))
+      await new Promise((r) => setTimeout(r, 50))
       // After onMounted completes, disabled should be false
       expect(global.disabled).toBe(false)
     })
@@ -553,11 +553,11 @@ describe('DeviceHardwareView', () => {
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
       config.saveAll = vi.fn().mockResolvedValue(true)
-      
+
       const form = wrapper.find('form')
       await form.trigger('submit')
       await wrapper.vm.$nextTick()
-      
+
       expect(config.saveAll).toHaveBeenCalled()
     })
 
@@ -571,23 +571,23 @@ describe('DeviceHardwareView', () => {
     it('saveSettings executes with async/await in form submission', async () => {
       const wrapper = createWrapper()
       config.saveAll = vi.fn(async () => true)
-      
+
       await wrapper.vm.saveSettings()
-      
+
       expect(config.saveAll).toHaveBeenCalled()
     })
 
     it('form saves data when submitted with valid input', async () => {
       config.fridge_sensor_id = 'fridge'
       config.beer_sensor_id = 'beer'
-      
+
       const wrapper = createWrapper()
       config.saveAll = vi.fn().mockResolvedValue(true)
-      
+
       const form = wrapper.find('form')
       await form.trigger('submit')
       await wrapper.vm.$nextTick()
-      
+
       expect(config.saveAll).toHaveBeenCalled()
     })
 
@@ -598,10 +598,10 @@ describe('DeviceHardwareView', () => {
           sensors: ['s1', 's2', 's3']
         }
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 50))
-      
+      await new Promise((r) => setTimeout(r, 50))
+
       expect(wrapper.vm.sensorOptions.length).toBeGreaterThanOrEqual(1)
     })
   })
@@ -616,12 +616,12 @@ describe('DeviceHardwareView', () => {
     it('saveSettings awaits config.saveAll completion', async () => {
       const wrapper = createWrapper()
       let saveWasCalled = false
-      
+
       config.saveAll = vi.fn(async () => {
         saveWasCalled = true
         return true
       })
-      
+
       await wrapper.vm.saveSettings()
       expect(saveWasCalled).toBe(true)
     })
@@ -632,15 +632,15 @@ describe('DeviceHardwareView', () => {
         data: { sensors: ['s1'] }
       }))
       config.runSensorScan = scanSpy
-      
+
       const statusLoadSpy = vi.fn(async () => {
         status.temperature_device = []
       })
       status.load = statusLoadSpy
-      
+
       createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
+      await new Promise((r) => setTimeout(r, 100))
+
       expect(scanSpy).toHaveBeenCalled()
       expect(statusLoadSpy).toHaveBeenCalled()
     })
@@ -652,10 +652,10 @@ describe('DeviceHardwareView', () => {
           sensors: ['sensor_A', 'sensor_B']
         }
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
+      await new Promise((r) => setTimeout(r, 100))
+
       expect(wrapper.vm.sensorOptions.length).toBeGreaterThan(1)
     })
 
@@ -665,19 +665,19 @@ describe('DeviceHardwareView', () => {
         { device: 'ble2', type: 'BLE' }
       ]
       status.load = vi.fn(async () => true)
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
+      await new Promise((r) => setTimeout(r, 100))
+
       expect(wrapper.vm.bleSensorOptions.length).toBeGreaterThan(1)
     })
 
     it('validateCurrentForm is called before save', async () => {
       const { validateCurrentForm } = await import('@mp-se/espframework-ui-components')
       const wrapper = createWrapper()
-      
+
       await wrapper.vm.saveSettings()
-      
+
       expect(validateCurrentForm).toHaveBeenCalled()
     })
   })
@@ -690,10 +690,10 @@ describe('DeviceHardwareView', () => {
           sensors: ['id1', 'id2']
         }
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
+      await new Promise((r) => setTimeout(r, 100))
+
       expect(wrapper.vm.sensorOptions.length).toBeGreaterThan(1)
     })
 
@@ -705,23 +705,23 @@ describe('DeviceHardwareView', () => {
           sensors: ['other_sensor']
         }
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
-      expect(wrapper.vm.sensorOptions.some(s => s.label.includes('not detected'))).toBe(true)
+      await new Promise((r) => setTimeout(r, 100))
+
+      expect(wrapper.vm.sensorOptions.some((s) => s.label.includes('not detected'))).toBe(true)
     })
 
     it('disables controls during mount lifecycle', async () => {
       expect(global.disabled).toBe(false)
-      
-      const wrapper = createWrapper()
-      
+
+      createWrapper()
+
       // During mount, disabled is set to true
       expect(global.disabled).toBe(true)
-      
-      await new Promise(r => setTimeout(r, 150))
-      
+
+      await new Promise((r) => setTimeout(r, 150))
+
       // After mount completes, disabled is set back to false
       expect(global.disabled).toBe(false)
     })
@@ -731,10 +731,10 @@ describe('DeviceHardwareView', () => {
         success: true,
         data: { sensors: [] }
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
+      await new Promise((r) => setTimeout(r, 100))
+
       expect(wrapper.vm.sensorOptions.length).toBeGreaterThan(0)
     })
 
@@ -747,14 +747,14 @@ describe('DeviceHardwareView', () => {
           sensors: ['sensor1', 'sensor2', 'sensor3']
         }
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
+      await new Promise((r) => setTimeout(r, 100))
+
       // Should have initial entry + 3 sensors
       expect(wrapper.vm.sensorOptions.length).toBe(4)
       // Should NOT add not-detected labels for detected sensors
-      expect(wrapper.vm.sensorOptions.some(s => s.label.includes('not detected'))).toBe(false)
+      expect(wrapper.vm.sensorOptions.some((s) => s.label.includes('not detected'))).toBe(false)
     })
 
     it('only adds not-detected label for beer sensor when missing', async () => {
@@ -766,11 +766,13 @@ describe('DeviceHardwareView', () => {
           sensors: ['sensor2', 'sensor3']
         }
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
-      const notDetectedLabels = wrapper.vm.sensorOptions.filter(s => s.label.includes('not detected'))
+      await new Promise((r) => setTimeout(r, 100))
+
+      const notDetectedLabels = wrapper.vm.sensorOptions.filter((s) =>
+        s.label.includes('not detected')
+      )
       expect(notDetectedLabels.length).toBe(1)
       expect(notDetectedLabels[0].label).toContain('missing_beer')
     })
@@ -784,11 +786,13 @@ describe('DeviceHardwareView', () => {
           sensors: ['sensor1', 'sensor3']
         }
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
-      const notDetectedLabels = wrapper.vm.sensorOptions.filter(s => s.label.includes('not detected'))
+      await new Promise((r) => setTimeout(r, 100))
+
+      const notDetectedLabels = wrapper.vm.sensorOptions.filter((s) =>
+        s.label.includes('not detected')
+      )
       expect(notDetectedLabels.length).toBe(1)
       expect(notDetectedLabels[0].label).toContain('missing_fridge')
     })
@@ -802,11 +806,13 @@ describe('DeviceHardwareView', () => {
           sensors: ['sensor1', 'sensor2']
         }
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
-      const notDetectedLabels = wrapper.vm.sensorOptions.filter(s => s.label.includes('not detected'))
+      await new Promise((r) => setTimeout(r, 100))
+
+      const notDetectedLabels = wrapper.vm.sensorOptions.filter((s) =>
+        s.label.includes('not detected')
+      )
       expect(notDetectedLabels.length).toBe(2)
     })
 
@@ -819,12 +825,14 @@ describe('DeviceHardwareView', () => {
           sensors: ['sensor1']
         }
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
-      const notDetectedLabels = wrapper.vm.sensorOptions.filter(s => s.label.includes('not detected'))
-      expect(notDetectedLabels.some(s => s.label.includes('sensor2'))).toBe(true)
+      await new Promise((r) => setTimeout(r, 100))
+
+      const notDetectedLabels = wrapper.vm.sensorOptions.filter((s) =>
+        s.label.includes('not detected')
+      )
+      expect(notDetectedLabels.some((s) => s.label.includes('sensor2'))).toBe(true)
     })
 
     it('handles BLE sensor not in status results', async () => {
@@ -837,12 +845,12 @@ describe('DeviceHardwareView', () => {
       status.load = vi.fn(async () => {
         // Already set in beforeEach
       })
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
-      const notDetectedBLE = wrapper.vm.bleSensorOptions.find(s => 
-        s.label.includes('not detected') && s.label.includes('missing_ble_sensor')
+      await new Promise((r) => setTimeout(r, 100))
+
+      const notDetectedBLE = wrapper.vm.bleSensorOptions.find(
+        (s) => s.label.includes('not detected') && s.label.includes('missing_ble_sensor')
       )
       expect(notDetectedBLE).toBeDefined()
     })
@@ -857,11 +865,13 @@ describe('DeviceHardwareView', () => {
       status.load = vi.fn(async () => {
         // Already set above
       })
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
-      const notDetectedBLE = wrapper.vm.bleSensorOptions.filter(s => s.label.includes('not detected'))
+      await new Promise((r) => setTimeout(r, 100))
+
+      const notDetectedBLE = wrapper.vm.bleSensorOptions.filter((s) =>
+        s.label.includes('not detected')
+      )
       expect(notDetectedBLE.length).toBe(0)
     })
 
@@ -871,10 +881,10 @@ describe('DeviceHardwareView', () => {
       status.load = vi.fn(async () => {
         status.temperature_device = []
       })
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
+      await new Promise((r) => setTimeout(r, 100))
+
       // Should only have the "not selected" default option
       expect(wrapper.vm.bleSensorOptions.length).toBe(1)
       expect(wrapper.vm.bleSensorOptions[0].label).toBe('- not selected -')
@@ -889,18 +899,22 @@ describe('DeviceHardwareView', () => {
       status.load = vi.fn(async () => {
         // Already set above
       })
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
-      expect(wrapper.vm.bleSensorOptions).toContainEqual(expect.objectContaining({
-        label: 'sensor_A (TH)',
-        value: 'sensor_A'
-      }))
-      expect(wrapper.vm.bleSensorOptions).toContainEqual(expect.objectContaining({
-        label: 'sensor_B (PRESSURE)',
-        value: 'sensor_B'
-      }))
+      await new Promise((r) => setTimeout(r, 100))
+
+      expect(wrapper.vm.bleSensorOptions).toContainEqual(
+        expect.objectContaining({
+          label: 'sensor_A (TH)',
+          value: 'sensor_A'
+        })
+      )
+      expect(wrapper.vm.bleSensorOptions).toContainEqual(
+        expect.objectContaining({
+          label: 'sensor_B (PRESSURE)',
+          value: 'sensor_B'
+        })
+      )
     })
 
     it('handles form submission when all sensors are configured', async () => {
@@ -910,23 +924,23 @@ describe('DeviceHardwareView', () => {
       config.saveAll = vi.fn(async () => {})
 
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
+      await new Promise((r) => setTimeout(r, 100))
+
       await wrapper.vm.saveSettings()
-      
+
       expect(config.saveAll).toHaveBeenCalled()
     })
 
     it('validation fails on form submission', async () => {
       const { validateCurrentForm } = await import('@mp-se/espframework-ui-components')
       vi.mocked(validateCurrentForm).mockReturnValueOnce(false)
-      
+
       config.saveAll = vi.fn()
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 50))
-      
+      await new Promise((r) => setTimeout(r, 50))
+
       await wrapper.vm.saveSettings()
-      
+
       expect(config.saveAll).not.toHaveBeenCalled()
     })
 
@@ -935,10 +949,10 @@ describe('DeviceHardwareView', () => {
         success: false,
         error: 'Scan failed'
       }))
-      
+
       const wrapper = createWrapper()
-      await new Promise(r => setTimeout(r, 100))
-      
+      await new Promise((r) => setTimeout(r, 100))
+
       // Should still have default option
       expect(wrapper.vm.sensorOptions.length).toBeGreaterThan(0)
     })

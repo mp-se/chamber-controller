@@ -19,11 +19,8 @@
 <template>
   <div class="container">
     <p></p>
-    <p class="h2">Device - PID Controller Data</p>
-    <p>
-      This page shows the internal data structures of the BrewPi Controller. Can be used for
-      troubleshooting.
-    </p>
+    <p class="h2">{{ t('device_pid_view.title') }}</p>
+    <p>{{ t('device_pid_view.intro') }}</p>
     <hr />
     <PidDataFragment source="cc"></PidDataFragment>
     <hr />
@@ -37,4 +34,7 @@
 
 <script setup>
 import PidDataFragment from '@/fragments/PidDataFragment.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 </script>

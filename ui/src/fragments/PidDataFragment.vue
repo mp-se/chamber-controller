@@ -31,7 +31,7 @@
           aria-hidden="true"
           v-show="global.disabled"
         ></span>
-        &nbsp;Reload
+        &nbsp;{{ t('pid.reload') }}
       </button>
     </div>
   </div>
@@ -41,16 +41,19 @@
 import { ref, onMounted, computed } from 'vue'
 import { global } from '@/modules/pinia'
 import { logError, logDebug, sharedHttpClient as http } from '@mp-se/espframework-ui-components'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const data = ref('')
 const source = defineModel('source')
 
 const dataSource = computed(() => {
-  if (source.value == 'cc') return 'Control Constants'
-  if (source.value == 'cv') return 'Control Variables'
-  if (source.value == 'mt') return 'Min Times'
-  if (source.value == 'cs') return 'Control Settings'
-  return 'Unknown'
+  if (source.value == 'cc') return t('pid.control_constants')
+  if (source.value == 'cv') return t('pid.control_variables')
+  if (source.value == 'mt') return t('pid.min_times')
+  if (source.value == 'cs') return t('pid.control_settings')
+  return t('pid.unknown')
 })
 
 const dataFormatted = computed(() => {
@@ -60,7 +63,7 @@ const dataFormatted = computed(() => {
   } catch (e) {
     logError('PidDataFragment::dataFormatted()', e)
   }
-  return 'Fetching data...'
+  return t('pid.fetching')
 })
 
 onMounted(() => {
@@ -78,7 +81,7 @@ const load = async () => {
     global.disabled = false
   } catch (err) {
     logError('DevicePidsView:load()', err)
-    global.messageError = 'Failed to do load data from /api/' + source.value
+    global.messageError = t('pid.err_load', { source: '/api/pid/' + source.value })
     global.disabled = false
   }
 }

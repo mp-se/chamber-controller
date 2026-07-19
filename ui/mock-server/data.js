@@ -72,6 +72,9 @@ export var configData = {
   target_temperature: 10.4,
   enable_cooling: true,
   enable_heating: true,
+  enable_fan: true,
+
+  // ble related params
   ble_push_enabled: true,
   ble_scan_enabled: true,
   ble_sensor_valid_time: 15
@@ -92,6 +95,10 @@ export var statusData = {
   uptime_hours: 3,
   uptime_days: 4,
 
+  remote_control_active: false,
+  fridge_sensor_id: '1',
+  beer_sensor_id: '2',
+
   // Pid related params
   pid_mode: 'f',
   pid_state: 2,
@@ -101,8 +108,9 @@ export var statusData = {
   pid_beer_target_temp: 9.4,
   pid_fridge_target_temp: 9.5,
   pid_temp_format: 'c',
-  pid_cooling_actuator: true,
-  pid_heating_actuator: false,
+  pid_cooling_actuator_active: true,
+  pid_heating_actuator_active: false,
+  pid_fan_actuator_active: true,
   pid_wait_time: 8,
   pid_time_since_cooling: 1212,
   pid_time_since_heating: 1100,

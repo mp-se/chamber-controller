@@ -2,7 +2,18 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import PushInfluxdbView from '../PushInfluxdbView.vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { global, config } from '@/modules/pinia'
+import { useGlobalStore } from '@/modules/globalStore'
+import { useConfigStore } from '@/modules/configStore'
+
+// Mock the pinia module
+vi.mock('@/modules/pinia', () => ({
+  get global() {
+    return useGlobalStore()
+  },
+  get config() {
+    return useConfigStore()
+  }
+}))
 
 // Mock validation
 vi.mock('@mp-se/espframework-ui-components', () => ({
@@ -13,15 +24,22 @@ vi.mock('@mp-se/espframework-ui-components', () => ({
 }))
 
 describe('PushInfluxdbView', () => {
-  beforeEach(() => {
+  let global, config
+  beforeEach(async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
+
+    const stores = await import('@/modules/pinia')
+    global = stores.global
+    config = stores.config
 
     config.influxdb2_target = ''
     config.influxdb2_bucket = ''
     config.influxdb2_org = ''
     config.influxdb2_token = ''
+    config.saveAll = vi.fn().mockResolvedValue(true)
     global.disabled = false
+    global.clearMessages = vi.fn()
     global.configChanged = false
 
     vi.clearAllMocks()
@@ -195,11 +213,11 @@ describe('PushInfluxdbView', () => {
 
       const form = wrapper.find('form')
       expect(form.exists()).toBe(true)
-      
+
       config.saveAll = vi.fn().mockResolvedValue(true)
       await form.trigger('submit')
       await wrapper.vm.$nextTick()
-      
+
       expect(config.saveAll).toHaveBeenCalled()
     })
 
@@ -215,12 +233,12 @@ describe('PushInfluxdbView', () => {
 
       config.saveAll = vi.fn().mockResolvedValue(true)
       const form = wrapper.find('form')
-      
+
       const event = new Event('submit', { bubbles: true, cancelable: true })
-      const preventSpyMock = vi.spyOn(event, 'preventDefault')
-      
+      vi.spyOn(event, 'preventDefault')
+
       await form.trigger('submit')
-      
+
       expect(form.exists()).toBe(true)
     })
 
@@ -237,11 +255,11 @@ describe('PushInfluxdbView', () => {
       const savePromise = Promise.resolve(true)
       config.saveAll = vi.fn().mockReturnValue(savePromise)
       const form = wrapper.find('form')
-      
+
       await form.trigger('submit')
       await savePromise
       await wrapper.vm.$nextTick()
-      
+
       expect(config.saveAll).toHaveBeenCalled()
     })
 
@@ -257,11 +275,10 @@ describe('PushInfluxdbView', () => {
 
       config.saveAll = vi.fn().mockResolvedValue(true)
       const form = wrapper.find('form')
-      const formElement = form.element
-      
+
       await form.trigger('submit')
       await wrapper.vm.$nextTick()
-      
+
       expect(config.saveAll).toHaveBeenCalledTimes(1)
     })
 
@@ -275,21 +292,17 @@ describe('PushInfluxdbView', () => {
         }
       })
 
-      const originalSaveAll = config.saveAll
-      let saveWasCalled = false
-      
       config.ble_push_enabled = true
-      
+
       config.saveAll = vi.fn(async () => {
-        saveWasCalled = true
         return true
       })
 
       const form = wrapper.find('form')
       await form.trigger('submit')
       await wrapper.vm.$nextTick()
-      
-      expect(saveWasCalled || config.saveAll.mock.calls.length > 0).toBe(true)
+
+      expect(config.saveAll.mock.calls.length > 0).toBe(true)
     })
   })
 

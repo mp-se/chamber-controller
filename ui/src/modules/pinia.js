@@ -20,7 +20,11 @@
 import { createPinia } from 'pinia'
 import { useGlobalStore } from '@/modules/globalStore'
 import { useStatusStore } from '@/modules/statusStore'
-import { useConfigStore, saveConfigState as _saveConfigState, getConfigChanges as _getConfigChanges } from '@/modules/configStore'
+import {
+  useConfigStore,
+  saveConfigState as _saveConfigState,
+  getConfigChanges as _getConfigChanges
+} from '@/modules/configStore'
 import { logDebug } from '@mp-se/espframework-ui-components'
 
 const piniaInstance = createPinia()

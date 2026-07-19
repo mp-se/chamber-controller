@@ -1,5 +1,5 @@
 <!--
-  GravityMon
+  Chamber Controller UI
   Copyright (c) 2021-2026 Magnus
 
   This program is free software: you can redistribute it and/or modify
@@ -31,12 +31,14 @@
             {{ t('firmware.select_info') }}
             <span class="badge bg-secondary">{{ global.platform }}</span>
             <template v-if="global.app_ver && global.app_build"
-              >{{ t('firmware.version_label') }}<span class="badge bg-secondary">{{ global.app_ver }}</span> ({{
+              >{{ t('firmware.version_label')
+              }}<span class="badge bg-secondary">{{ global.app_ver }}</span> ({{
                 global.app_build
               }})
             </template>
             <template v-if="global.hardware"
-              >{{ t('firmware.hardware_label') }}<span class="badge bg-secondary">{{ global.hardware }}</span></template
+              >{{ t('firmware.hardware_label')
+              }}<span class="badge bg-secondary">{{ global.hardware }}</span></template
             ><template v-if="global.firmware_file"
               >{{ t('firmware.filename_label') }}
               <span class="badge bg-secondary">{{ global.firmware_file }}</span></template
@@ -66,9 +68,7 @@
             value="upload"
             data-bs-toggle="tooltip"
             :title="
-              !hasFileSelected
-                ? t('firmware.select_first_title')
-                : t('firmware.update_title')
+              !hasFileSelected ? t('firmware.select_first_title') : t('firmware.update_title')
             "
             :disabled="global.disabled || !hasFileSelected"
           >

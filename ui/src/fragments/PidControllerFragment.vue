@@ -17,8 +17,8 @@
 -->
 
 <template>
-  <div class="card h-100"  v-if="status.remote_control_active === false">
-    <div class="card-header bg-success-subtle">Controller</div>
+  <div class="card h-100" v-if="status.remote_control_active === false">
+    <div class="card-header bg-success-subtle">{{ t('pid.controller_title') }}</div>
     <div class="card-body">
       <form @submit.prevent="saveSettings" class="needs-validation" novalidate>
         <div class="row">
@@ -26,7 +26,7 @@
             <div class="row text-start">
               <BsInputRadio
                 v-model="newMode"
-                label="Change mode"
+                :label="t('pid.change_mode')"
                 :options="modeOptions"
                 :disabled="global.disabled"
               />
@@ -34,7 +34,7 @@
             <div class="row text-start">
               <BsInputNumber
                 v-model="newTemperature"
-                label="Target temperature"
+                :label="t('pid.target_temp')"
                 min="0"
                 max="30"
                 step="0.1"
@@ -52,7 +52,7 @@
                 style="height: 100px; width: 100px"
                 :disabled="global.disabled || modeOptions.length == 1"
               >
-                Set
+                {{ t('pid.set') }}
               </button>
             </div>
           </div>
@@ -61,34 +61,41 @@
     </div>
   </div>
 
-  <div class="card h-100"  v-else>
-    <div class="card-header bg-success-subtle">Controller</div>
+  <div class="card h-100" v-else>
+    <div class="card-header bg-success-subtle">{{ t('pid.controller_title') }}</div>
     <div class="card-body">
-      <p class="text-center">
-        Remote control is active, local control is disabled.
-      </p>
-          <button
-            @click="disableRemoteControl"
-            type="button"
-            class="btn btn-primary"
-            :disabled="global.disabled"
-          >
-            Disable remote control
-          </button>
+      <p class="text-center">{{ t('pid.remote_active') }}</p>
+      <button
+        @click="disableRemoteControl"
+        type="button"
+        class="btn btn-primary"
+        :disabled="global.disabled"
+      >
+        {{ t('pid.disable_remote') }}
+      </button>
     </div>
-  </div>  
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { logDebug, logError, logInfo, validateCurrentForm, sharedHttpClient as http } from '@mp-se/espframework-ui-components'
+import {
+  logDebug,
+  logError,
+  logInfo,
+  validateCurrentForm,
+  sharedHttpClient as http
+} from '@mp-se/espframework-ui-components'
 import { global, config, status } from '@/modules/pinia'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const newMode = ref('o')
 const newTemperature = ref(config.target_temperature)
 
-const modeOptions = ref([{ label: 'Off', value: 'o' }])
+const modeOptions = ref([{ label: t('pid.off'), value: 'o' }])
 
 const { pid_mode } = storeToRefs(status)
 
@@ -101,15 +108,15 @@ onMounted(() => {
   if (config.enable_cooling || config.enable_heating) {
     if (config.beer_sensor_id.length || config.fridge_sensor_id.length) {
       if (config.beer_sensor_id.length)
-        modeOptions.value.push({ label: 'Beer constant', value: 'b' })
+        modeOptions.value.push({ label: t('home.beer_constant'), value: 'b' })
 
       if (config.fridge_sensor_id.length)
-        modeOptions.value.push({ label: 'Chamber constant', value: 'f' })
+        modeOptions.value.push({ label: t('home.fridge_constant'), value: 'f' })
     } else {
-      global.messageError = 'No sensors are configured, control is not possible'
+      global.messageError = t('pid.err_no_sensors')
     }
   } else {
-    global.messageError = 'Neither cooling or heating is enabled, control is not possible'
+    global.messageError = t('pid.err_no_capabilities')
   }
 })
 
@@ -118,7 +125,7 @@ const disableRemoteControl = async () => {
   global.disabled = true
 
   try {
-  const data = { new_mode: 'r' }
+    const data = { new_mode: 'r' }
     await http.postJson('api/remote', data)
     global.disabled = false
     logInfo('PidControllerFragment.disableRemoteControl()', 'Sending /api/remote completed')
@@ -148,10 +155,10 @@ const saveSettings = async () => {
     await http.postJson('api/mode', data)
 
     logInfo('PidControllerFragment.saveSettings()', 'Sending /api/mode completed')
-    global.messageSuccess = 'PID controller settings updated successfully'
+    global.messageSuccess = t('pid.save_success')
   } catch (err) {
     logError('PidControllerFragment.saveSettings()', err)
-    global.messageError = 'Failed to update PID controller: ' + (err.message || err)
+    global.messageError = t('pid.err_save_failed', { error: err.message || err })
   } finally {
     global.disabled = false
   }

@@ -80,8 +80,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { global, config, status, saveConfigState } from '@/modules/pinia'
-import { logDebug } from '@mp-se/espframework-ui-components'
+import { global, config, status } from '@/modules/pinia'
 
 const { t } = useI18n()
 const measuredVoltage = ref(0)
@@ -94,22 +93,22 @@ const calculateFactor = () => {
 
   if (isNaN(mv)) {
     global.messageError = t('fragment_voltage.err_invalid')
+    global.disabled = false
     return
   }
 
   config.voltage_factor = parseFloat(mv / (status.battery / config.voltage_factor)).toFixed(2)
-  ;(async () => {
-    const success = await config.sendConfig()
-    logDebug('VoltageFragment.calculateFactor()', success)
-    saveConfigState()
-    global.disabled = true
+  config.sendConfig()
 
-    setTimeout(async () => {
-      const s2 = await status.load()
-      logDebug('VoltageFragment.calculateFactor()', s2, status.battery)
-      global.messageInfo = t('fragment_voltage.info_new_factor')
-      global.disabled = false
-    }, 1000)
-  })()
+  setTimeout(async () => {
+    await status.load()
+    global.messageInfo = 'Updated'
+    global.disabled = false
+  }, 1000)
 }
+
+defineExpose({
+  calculateFactor,
+  measuredVoltage
+})
 </script>

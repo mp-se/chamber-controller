@@ -191,11 +191,11 @@ describe('PushBluetoothView', () => {
 
       const form = wrapper.find('form')
       expect(form.exists()).toBe(true)
-      
+
       config.saveAll = vi.fn().mockResolvedValue(true)
       await form.trigger('submit')
       await wrapper.vm.$nextTick()
-      
+
       expect(config.saveAll).toHaveBeenCalled()
     })
 
@@ -211,9 +211,9 @@ describe('PushBluetoothView', () => {
 
       config.saveAll = vi.fn().mockResolvedValue(true)
       const form = wrapper.find('form')
-      
+
       await form.trigger('submit')
-      
+
       expect(form.exists()).toBe(true)
     })
 
@@ -230,11 +230,11 @@ describe('PushBluetoothView', () => {
       const savePromise = Promise.resolve(true)
       config.saveAll = vi.fn().mockReturnValue(savePromise)
       const form = wrapper.find('form')
-      
+
       await form.trigger('submit')
       await savePromise
       await wrapper.vm.$nextTick()
-      
+
       expect(config.saveAll).toHaveBeenCalled()
     })
 
@@ -250,10 +250,10 @@ describe('PushBluetoothView', () => {
 
       config.saveAll = vi.fn().mockResolvedValue(true)
       const form = wrapper.find('form')
-      
+
       await form.trigger('submit')
       await wrapper.vm.$nextTick()
-      
+
       expect(config.saveAll).toHaveBeenCalledTimes(1)
     })
 
@@ -268,11 +268,11 @@ describe('PushBluetoothView', () => {
       })
 
       config.saveAll = vi.fn().mockResolvedValue(true)
-      
+
       const form = wrapper.find('form')
       await form.trigger('submit')
       await wrapper.vm.$nextTick()
-      
+
       expect(config.saveAll.mock.calls.length > 0).toBe(true)
     })
   })
