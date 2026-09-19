@@ -27,19 +27,24 @@ jobs:
           cd ..
           ./copy_ui.sh
 
-      - name: Setup PlatformIO
-        uses: n-vr/setup-platformio-action@v1.0.1    
-  
-      - name: PlatformIO Run
-        uses: karniv00l/platformio-run-action@v1
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          environments: "chamber-controller-32pro,chamber-controller-s2,chamber-controller-s3"
-          #project-dir: "./some_dir"
-          #project-conf: "./some_dir/custom.ini"
-          jobs: 6
-          silent: false
-          verbose: true
-          disable-auto-clean: false
+          python-version: '3.12'
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install platformio intelhex
+
+      - name: PlatformIO Run
+        run: |
+          pio run \
+            --environment chamber-controller-32pro \
+            --environment chamber-controller-s2 \
+            --environment chamber-controller-s3 \
+            --jobs 6 \
+            --verbose
 
       - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version. https://github.com/marketplace/actions/add-commit
         if: ${{ github.event_name != 'pull_request' }}
@@ -50,4 +55,3 @@ jobs:
           default_author: github_actor
           message: 'GitHub Action Build'
           pathspec_error_handling: ignore
-
