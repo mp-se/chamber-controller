@@ -32,7 +32,7 @@ class PidConfig : public BaseConfig {
   float _targetTemperature = 5;
   float _fridgeSensorOffset = 0.0;
   float _beerSensorOffset = 0.0;
-  int _restartInterval = 60 * 4;  // in minutes
+  int _restartInterval = 60 * 24;  // in minutes
   bool _enableCooling = false;
   bool _enableHeating = false;
   bool _enableFan = false;
