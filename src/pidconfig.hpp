@@ -51,6 +51,10 @@ class PidConfig : public BaseConfig {
   char _remotePreviousMode = ControllerMode::off;
   float _remotePreviousTargetTemp = 5.0;
 
+  // Params for brewgraph integration
+  String _brewgraphToken = "";
+  String _brewgraphUrl = "";
+
  public:
   PidConfig(String baseMDNS, String fileName);
 
@@ -198,6 +202,19 @@ class PidConfig : public BaseConfig {
     _remotePreviousTargetTemp = f;
     _saveNeeded = true;
   }
+
+  const char* getBrewgraphToken() const { return _brewgraphToken.c_str(); }
+  void setBrewgraphToken(String s) {
+    _brewgraphToken = s;
+    _saveNeeded = true;
+  }
+
+  const char* getBrewgraphUrl() const { return _brewgraphUrl.c_str(); }
+  void setBrewgraphUrl(String s) {
+    _brewgraphUrl = s;
+    _saveNeeded = true;
+  }
+  bool isBrewgraphEnabled() const { return _brewgraphUrl.length() != 0; }
 
   void createJson(JsonObject& doc) const override;
   void parseJson(JsonObject& doc) override;

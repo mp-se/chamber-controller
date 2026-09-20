@@ -58,6 +58,8 @@ void PidConfig::createJson(JsonObject& doc) const {
   doc[PARAM_REMOTE_PREVIOUS_MODE] = String(getRemotePreviousMode());
   doc[PARAM_REMOTE_PREVIOUS_TARGET_TEMP] =
       serialized(String(getRemotePreviousTargetTemp(), DECIMALS_TEMP));
+  doc[PARAM_BREWGRAPH_TOKEN] = getBrewgraphToken();
+  doc[PARAM_BREWGRAPH_URL] = getBrewgraphUrl();
 }
 
 void PidConfig::parseJson(JsonObject& doc) {
@@ -118,6 +120,10 @@ void PidConfig::parseJson(JsonObject& doc) {
   if (!doc[PARAM_REMOTE_PREVIOUS_TARGET_TEMP].isNull())
     setRemotePreviousTargetTemp(
         doc[PARAM_REMOTE_PREVIOUS_TARGET_TEMP].as<float>());
+  if (!doc[PARAM_BREWGRAPH_TOKEN].isNull())
+    setBrewgraphToken(doc[PARAM_BREWGRAPH_TOKEN]);
+  if (!doc[PARAM_BREWGRAPH_URL].isNull())
+    setBrewgraphUrl(doc[PARAM_BREWGRAPH_URL]);
 }
 
 // EOF

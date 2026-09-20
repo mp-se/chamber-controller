@@ -55,6 +55,9 @@ constexpr auto PARAM_REMOTE_PREVIOUS_MODE = "remote_previous_mode";
 constexpr auto PARAM_REMOTE_PREVIOUS_TARGET_TEMP =
     "remote_previous_target_temp";
 
+constexpr auto PARAM_BREWGRAPH_TOKEN = "brewgraph_token";
+constexpr auto PARAM_BREWGRAPH_URL = "brewgraph_url";
+
 #define DECIMALS_TEMP 2
 
 #endif  // SRC_MAIN_HPP_
