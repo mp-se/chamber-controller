@@ -56,6 +56,9 @@ export default defineConfig({
     cssCodeSplit: false,
     sourcemap: false,
     target: 'es2015',
+    // Vite 8 minifies CSS with Lightning CSS, which would down-level for the es2015 JS target
+    // and add ~24 kB of fallbacks. Bootstrap 5 targets modern browsers, so skip that.
+    cssTarget: false,
     chunkSizeWarningLimit: 1000, // Disable chunk size warning (default is 500kB)
     terserOptions: {
       compress: {
@@ -79,7 +82,7 @@ export default defineConfig({
         comments: false
       }
     },
-    rollupOptions: {
+    rolldownOptions: {
       treeshake: true, // Use default tree-shaking instead of aggressive preset
       external: [
         'json-parse-even-better-errors'
@@ -96,11 +99,10 @@ export default defineConfig({
         warn(warning)
       },
       output: {
-        inlineDynamicImports: true,
+        codeSplitting: false, // Single bundle (replaces inlineDynamicImports)
         entryFileNames: `assets/[name].js`,
         chunkFileNames: `assets/[name].js`,
-        assetFileNames: `assets/[name].[ext]`,
-        manualChunks: undefined
+        assetFileNames: `assets/[name].[ext]`
       }
     }
   },

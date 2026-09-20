@@ -114,7 +114,9 @@ export const useConfigStore = defineStore('config', {
     invert_pins: false,
     ble_push_enabled: true,
     ble_scan_enabled: true,
-    ble_sensor_valid_time: 0
+    ble_sensor_valid_time: 0,
+    brewgraph_token: '',
+    brewgraph_url: ''
     // Add any additional config fields from pressuremon-ui if needed
   }),
   actions: {
@@ -170,6 +172,8 @@ export const useConfigStore = defineStore('config', {
         this.ble_push_enabled = json.ble_push_enabled
         this.ble_scan_enabled = json.ble_scan_enabled
         this.ble_sensor_valid_time = json.ble_sensor_valid_time
+        this.brewgraph_token = json.brewgraph_token
+        this.brewgraph_url = json.brewgraph_url
         logInfo('configStore.load()', 'Fetching /api/config completed')
         await saveConfigState(this)
         return true

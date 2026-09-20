@@ -357,6 +357,14 @@
     "token_help": "Authentication token for accessing data bucket",
     "save": "Save"
   },
+  "brewgraph": {
+    "title": "BrewGraph integration",
+    "url_label": "Server URL",
+    "url_help": "Full URL of the chamber ingest endpoint, for example http://192.168.1.10/api/ingest/chamber. Leave empty to disable the integration.",
+    "token_label": "Device token",
+    "token_help": "Token for this device from BrewGraph. If empty, the device identifies itself with its chip ID, which is intended for trusted local networks.",
+    "save": "Save"
+  },
   "about": {
     "title": "About - Chamber Controller"
   },

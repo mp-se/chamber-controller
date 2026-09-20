@@ -105,6 +105,17 @@ describe('configStore', () => {
       expect(config).toHaveProperty('ble_push_enabled')
       expect(config).toHaveProperty('ble_scan_enabled')
       expect(config).toHaveProperty('ble_sensor_valid_time')
+
+      // BrewGraph fields
+      expect(config).toHaveProperty('brewgraph_token')
+      expect(config).toHaveProperty('brewgraph_url')
+    })
+
+    it('defaults the BrewGraph fields to empty strings', () => {
+      const config = useConfigStore()
+
+      expect(config.brewgraph_token).toBe('')
+      expect(config.brewgraph_url).toBe('')
     })
   })
 
@@ -201,7 +212,9 @@ describe('configStore', () => {
         invert_pins: false,
         ble_push_enabled: true,
         ble_scan_enabled: true,
-        ble_sensor_valid_time: 300
+        ble_sensor_valid_time: 300,
+        brewgraph_token: 'mytoken',
+        brewgraph_url: 'http://brewgraph.local/api/ingest/chamber'
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -215,6 +228,8 @@ describe('configStore', () => {
       expect(config.mdns).toBe('mybrewer')
       expect(config.dark_mode).toBe(true)
       expect(config.fridge_sensor_offset).toBe(0.5)
+      expect(config.brewgraph_token).toBe('mytoken')
+      expect(config.brewgraph_url).toBe('http://brewgraph.local/api/ingest/chamber')
     })
 
     it('handles load errors gracefully', async () => {
@@ -307,7 +322,9 @@ describe('configStore', () => {
         invert_pins: false,
         ble_push_enabled: true,
         ble_scan_enabled: true,
-        ble_sensor_valid_time: 300
+        ble_sensor_valid_time: 300,
+        brewgraph_token: 'mytoken',
+        brewgraph_url: 'http://brewgraph.local/api/ingest/chamber'
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -602,7 +619,9 @@ describe('configStore', () => {
         invert_pins: false,
         ble_push_enabled: true,
         ble_scan_enabled: true,
-        ble_sensor_valid_time: 300
+        ble_sensor_valid_time: 300,
+        brewgraph_token: 'mytoken',
+        brewgraph_url: 'http://brewgraph.local/api/ingest/chamber'
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -1003,6 +1022,39 @@ describe('configStore', () => {
       expect(config.ble_push_enabled).toBe(true)
       expect(config.ble_scan_enabled).toBe(false)
       expect(config.ble_sensor_valid_time).toBe(600)
+    })
+  })
+
+  describe('BrewGraph configuration', () => {
+    it('stores token and URL', () => {
+      const config = useConfigStore()
+
+      config.brewgraph_token = 'abc123'
+      config.brewgraph_url = 'https://brewgraph.example.com/api/ingest/chamber'
+
+      expect(config.brewgraph_token).toBe('abc123')
+      expect(config.brewgraph_url).toBe('https://brewgraph.example.com/api/ingest/chamber')
+    })
+
+    it('sends only the changed BrewGraph fields', async () => {
+      const { sharedHttpClient: http } = await import('@mp-se/espframework-ui-components')
+
+      http.getJson.mockResolvedValue({
+        brewgraph_token: 'old',
+        brewgraph_url: 'http://brewgraph.local/api/ingest/chamber'
+      })
+      http.postJson.mockResolvedValue({ success: true })
+
+      const config = useConfigStore()
+      await config.load()
+
+      config.brewgraph_url = 'https://brewgraph.example.com/api/ingest/chamber'
+      const result = await config.sendConfig()
+
+      expect(result).toBe(true)
+      expect(http.postJson).toHaveBeenCalledWith('api/config', {
+        brewgraph_url: 'https://brewgraph.example.com/api/ingest/chamber'
+      })
     })
   })
 })

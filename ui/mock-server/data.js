@@ -77,7 +77,11 @@ export var configData = {
   // ble related params
   ble_push_enabled: true,
   ble_scan_enabled: true,
-  ble_sensor_valid_time: 15
+  ble_sensor_valid_time: 15,
+
+  // brewgraph integration
+  brewgraph_token: 'mybrewgraphtoken',
+  brewgraph_url: 'http://localhost/api/ingest/chamber'
 }
 
 export var statusData = {

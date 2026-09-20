@@ -11,7 +11,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-import router from '../router'
+import router, { items } from '../router'
 import { global } from '@/modules/pinia'
 
 describe('router module - actual router instance', () => {
@@ -90,6 +90,12 @@ describe('router module - actual router instance', () => {
       expect(route.path).toBe('/push/bluetooth')
     })
 
+    it('BrewGraph route has correct path', () => {
+      const route = router.getRoutes().find((r) => r.name === 'push-brewgraph')
+      expect(route).toBeDefined()
+      expect(route.path).toBe('/push/brewgraph')
+    })
+
     it('support route has correct path', () => {
       const route = router.getRoutes().find((r) => r.name === 'support')
       expect(route).toBeDefined()
@@ -145,7 +151,26 @@ describe('router module - actual router instance', () => {
 
     it('has push routes', () => {
       const pushRoutes = router.getRoutes().filter((r) => r.path?.startsWith('/push'))
-      expect(pushRoutes.length).toBe(2)
+      expect(pushRoutes.length).toBe(3)
+    })
+
+    it('lists BrewGraph under the Integrations menu', () => {
+      const group = items.value.find((i) => i.label === 'Integrations')
+      expect(group).toBeDefined()
+      expect(group.subs.map((s) => s.label)).toContain('BrewGraph')
+      expect(items.value.find((i) => i.label === 'Push targets')).toBeUndefined()
+    })
+
+    it('keeps every submenu path under the first path segment of its group', () => {
+      // The menu bar library highlights a group by the first path segment of the current
+      // route. App.vue does not pass currentRoute today, so this only guards the convention.
+      items.value
+        .filter((i) => i.subs)
+        .forEach((group) => {
+          group.subs.forEach((sub) => {
+            expect(sub.path.split('/')[1]).toBe(group.path.split('/')[1])
+          })
+        })
     })
 
     it('has other routes', () => {

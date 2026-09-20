@@ -30,6 +30,7 @@ import DeviceWifiView from '@/views/DeviceWifiView.vue'
 import DeviceWifi2View from '@/views/DeviceWifi2View.vue'
 import PushInfluxdbView from '@/views/PushInfluxdbView.vue'
 import PushBluetoothView from '@/views/PushBluetoothView.vue'
+import BrewgraphView from '@/views/BrewgraphView.vue'
 import FirmwareView from '@/views/FirmwareView.vue'
 import SupportView from '@/views/SupportView.vue'
 import SerialView from '@/views/SerialView.vue'
@@ -82,6 +83,11 @@ const routes = [
     path: '/push/bluetooth',
     name: 'push-bluetooth',
     component: PushBluetoothView
+  },
+  {
+    path: '/push/brewgraph',
+    name: 'push-brewgraph',
+    component: BrewgraphView
   },
   {
     path: '/other/support',
@@ -162,7 +168,7 @@ const items = ref([
     ]
   },
   {
-    label: 'Push targets',
+    label: 'Integrations',
     icon: 'IconCloudUpArrow',
     path: '/push',
     badge: badge.pushBadge,
@@ -176,6 +182,10 @@ const items = ref([
         label: 'Influxdb v2',
         badge: badge.pushInfluxdb2Badge,
         path: '/push/influxdb'
+      },
+      {
+        label: 'BrewGraph',
+        path: '/push/brewgraph'
       }
     ]
   },
