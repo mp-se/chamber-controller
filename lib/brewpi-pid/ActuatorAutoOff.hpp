@@ -39,18 +39,18 @@ class AutoOffActuator : public Actuator {
                 active ? "true" : "false");
     _active = active;
     _target->setActive(_active);
-    if (_active) _lastActiveTime = ticks.seconds();
+    if (_active) _lastActiveTime = ticks.millis();
   }
 
   bool isActive() const { return _active; }
 
   void update() {
     Log.verbose(F("BREW: Updating AutoOffActuator target=%p." CR), _target);
-    if (ticks.timeSince(_lastActiveTime) >= _timeout) setActive(false);
+    if (ticks.secondsSince(_lastActiveTime) >= _timeout) setActive(false);
   }
 
  private:
-  uint16_t _lastActiveTime;
+  ticks_millis_t _lastActiveTime = 0;
   uint16_t _timeout;
   Actuator* _target;
   bool _active;

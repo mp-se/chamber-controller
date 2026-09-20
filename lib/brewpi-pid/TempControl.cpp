@@ -81,10 +81,12 @@ void TempControl::init(MinTimesSettingsChoice choice) {
   reset();
 
   // Do not allow heating/cooling directly after reset.
-  // Could damage the compressor For test purposes, set these to -3600 to
-  // eliminate waiting after reset
-  _lastHeatTime = 0;
-  _lastCoolTime = 0;
+  // Could damage the compressor. For test purposes, set these to
+  // ticks.millis() - 3600000 to eliminate waiting after reset.
+  // init() is also called when the sensors or settings are reconfigured while
+  // running, so this has to be relative to now and not to boot.
+  _lastHeatTime = ticks.millis();
+  _lastCoolTime = ticks.millis();
 }
 
 void TempControl::reset() {
@@ -259,19 +261,19 @@ void TempControl::updateState() {
     stayIdle = true;
   }
 
-  uint16_t sinceIdle = timeSinceIdle();
-  uint16_t sinceCooling = timeSinceCooling();
-  uint16_t sinceHeating = timeSinceHeating();
+  ticks_seconds_t sinceIdle = timeSinceIdle();
+  ticks_seconds_t sinceCooling = timeSinceCooling();
+  ticks_seconds_t sinceHeating = timeSinceHeating();
   temperature fridgeFast = _fridgeSensor->readFastFiltered();
   temperature beerFast = _beerSensor->readFastFiltered();
-  ticks_seconds_t secs = ticks.seconds();
+  ticks_millis_t now = ticks.millis();
   switch (_state) {
     case ControllerState::IDLE:
     case ControllerState::STATE_OFF:
     case ControllerState::WAITING_TO_COOL:
     case ControllerState::WAITING_TO_HEAT:
     case ControllerState::WAITING_FOR_PEAK_DETECT: {
-      _lastIdleTime = secs;
+      _lastIdleTime = now;
       // set waitTime to zero. It will be set to the maximum required waitTime
       // below when wait is in effect.
       if (stayIdle) {
@@ -340,7 +342,7 @@ void TempControl::updateState() {
     case ControllerState::COOLING:
     case ControllerState::COOLING_MIN_TIME: {
       _doNegPeakDetect = true;
-      _lastCoolTime = secs;
+      _lastCoolTime = now;
       updateEstimatedPeak(_cc.maxCoolTimeForEstimate, _cs.coolEstimator,
                           sinceIdle);
       _state =
@@ -367,7 +369,7 @@ void TempControl::updateState() {
     case ControllerState::HEATING:
     case ControllerState::HEATING_MIN_TIME: {
       _doPosPeakDetect = true;
-      _lastHeatTime = secs;
+      _lastHeatTime = now;
       updateEstimatedPeak(_cc.maxHeatTimeForEstimate, _cs.heatEstimator,
                           sinceIdle);
       _state =
@@ -395,9 +397,9 @@ void TempControl::updateState() {
 }
 
 void TempControl::updateEstimatedPeak(uint16_t timeLimit, temperature estimator,
-                                      uint16_t sinceIdle) {
-  uint16_t activeTime =
-      min(timeLimit, sinceIdle);  // heat or cool time in seconds
+                                      ticks_seconds_t sinceIdle) {
+  uint16_t activeTime = min(static_cast<ticks_seconds_t>(timeLimit),
+                            sinceIdle);  // heat or cool time in seconds
   temperature estimatedOvershoot =
       ((long_temperature)estimator * activeTime) /
       3600;  // overshoot estimator is in overshoot per hour
@@ -574,15 +576,17 @@ void TempControl::decreaseEstimator(temperature* estimator, temperature error) {
   storeSettings();
 }
 
-uint16_t TempControl::timeSinceCooling() {
-  return ticks.timeSince(_lastCoolTime);
+ticks_seconds_t TempControl::timeSinceCooling() {
+  return ticks.secondsSince(_lastCoolTime);
 }
 
-uint16_t TempControl::timeSinceHeating() {
-  return ticks.timeSince(_lastHeatTime);
+ticks_seconds_t TempControl::timeSinceHeating() {
+  return ticks.secondsSince(_lastHeatTime);
 }
 
-uint16_t TempControl::timeSinceIdle() { return ticks.timeSince(_lastIdleTime); }
+ticks_seconds_t TempControl::timeSinceIdle() {
+  return ticks.secondsSince(_lastIdleTime);
+}
 
 void TempControl::loadDefaultSettings() {
   Log.verbose(F("BREW: Loading default settings for TempControl" CR));

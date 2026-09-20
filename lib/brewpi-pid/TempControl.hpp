@@ -150,9 +150,9 @@ class TempControl {
   }
 
   uint16_t getWaitTime() { return _waitTime; }
-  uint16_t timeSinceCooling();
-  uint16_t timeSinceHeating();
-  uint16_t timeSinceIdle();
+  ticks_seconds_t timeSinceCooling();
+  ticks_seconds_t timeSinceHeating();
+  ticks_seconds_t timeSinceIdle();
 
   bool stateIsCooling();
   bool stateIsHeating();
@@ -230,7 +230,7 @@ class TempControl {
 
   void resetWaitTime() { _waitTime = 0; }
 
-  void updateWaitTime(uint16_t newTimeLimit, uint16_t newTimeSince) {
+  void updateWaitTime(uint16_t newTimeLimit, ticks_seconds_t newTimeSince) {
     if (newTimeSince < newTimeLimit) {
       uint16_t newWaitTime = newTimeLimit - newTimeSince;
       if (newWaitTime > _waitTime) {
@@ -245,16 +245,16 @@ class TempControl {
   void decreaseEstimator(temperature* estimator, temperature error);
 
   void updateEstimatedPeak(uint16_t estimate, temperature estimator,
-                           uint16_t sinceIdle);
+                           ticks_seconds_t sinceIdle);
 
   void updateSensor(TempSensor* sensor);
 
   temperature _storedBeerSetting;
 
-  // Timers
-  uint16_t _lastIdleTime;  //!< Last time the controller was idle
-  uint16_t _lastHeatTime;  //!< Last time that the controller was heating
-  uint16_t _lastCoolTime;  //!< Last time that the controller was cooling
+  // Timers, the timestamps are millis() values (see HardwareTicks::secondsSince)
+  ticks_millis_t _lastIdleTime;  //!< Last time the controller was idle
+  ticks_millis_t _lastHeatTime;  //!< Last time that the controller was heating
+  ticks_millis_t _lastCoolTime;  //!< Last time that the controller was cooling
   uint16_t _waitTime;
 
   // State variables
