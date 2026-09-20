@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
     
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
 
@@ -28,13 +28,14 @@ jobs:
           ./copy_ui.sh
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
       - name: Install PlatformIO
         run: |
           python -m pip install --upgrade pip
+          # intelhex is required by PlatformIO but missing from its dependencies
           python -m pip install platformio intelhex
 
       - name: PlatformIO Run
@@ -46,7 +47,8 @@ jobs:
             --jobs 6 \
             --verbose
 
-      - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version. https://github.com/marketplace/actions/add-commit
+      # Pull requests only verify that the build works, nothing is committed
+      - uses: EndBug/add-and-commit@v11 # You can change this to use a specific version. https://github.com/marketplace/actions/add-commit
         if: ${{ github.event_name != 'pull_request' }}
         with:
           add: 'bin html'
