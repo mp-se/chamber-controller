@@ -52,20 +52,24 @@
 import { computed } from 'vue'
 import { status, config } from '@/modules/pinia'
 import { formatTime } from '@mp-se/espframework-ui-components'
+import { displayTemp } from '@/modules/temperature'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
+// The device reports Celsius, convert to the configured temp format for display
+const formatTemp = (celsius) => displayTemp(celsius, config.temp_format) + '°' + config.temp_format
+
 const beerTemp = computed(() => {
   // if (config.beer_sensor_id == '') return '--' + '°' + config.temp_format
   if (!status.pid_beer_temp_connected) return '--' + '°' + config.temp_format
-  return status.pid_beer_temp + '°' + config.temp_format
+  return formatTemp(status.pid_beer_temp)
 })
 
 const fridgeTemp = computed(() => {
   // if (config.fridge_sensor_id == '') return '--' + '°' + config.temp_format
   if (!status.pid_fridge_temp_connected) return '--' + '°' + config.temp_format
-  return status.pid_fridge_temp + '°' + config.temp_format
+  return formatTemp(status.pid_fridge_temp)
 })
 
 const state = computed(() => {
@@ -109,11 +113,9 @@ const state = computed(() => {
 
 const mode = computed(() => {
   if (status.pid_mode == 'f')
-    return t('pid.chamber_constant', {
-      temp: status.pid_fridge_target_temp + '°' + config.temp_format
-    })
+    return t('pid.chamber_constant', { temp: formatTemp(status.pid_fridge_target_temp) })
   if (status.pid_mode == 'b')
-    return t('pid.beer_constant', { temp: status.pid_beer_target_temp + '°' + config.temp_format })
+    return t('pid.beer_constant', { temp: formatTemp(status.pid_beer_target_temp) })
 
   return t('pid.off')
 })

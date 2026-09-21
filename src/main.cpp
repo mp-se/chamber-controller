@@ -206,19 +206,21 @@ void runLoop() {
     switch (tempControl.getMode()) {
       case ControllerMode::beerConstant:
         snprintf(mode, sizeof(mode), "Beer -> %.1F°%c",
-                 tempControl.getBeerTemperatureSetting(),
+                 toDisplayTemp(tempControl.getBeerTemperatureSetting(),
+                               myConfig.getTempFormat()),
                  myConfig.getTempFormat());
         break;
       case ControllerMode::fridgeConstant:
         snprintf(mode, sizeof(mode), "Chamber -> %.1F°%c",
-                 tempControl.getFridgeTemperatureSetting(),
+                 toDisplayTemp(tempControl.getFridgeTemperatureSetting(),
+                               myConfig.getTempFormat()),
                  myConfig.getTempFormat());
         break;
     }
 
     switch (tempControl.getState()) {
       case ControllerState::IDLE: {
-        uint16_t t =
+        ticks_seconds_t t =
             tempControl.timeSinceCooling() < tempControl.timeSinceHeating()
                 ? tempControl.timeSinceCooling()
                 : tempControl.timeSinceHeating();
@@ -468,13 +470,22 @@ void configureTempControl() {
     return;
   }
 
+  if (myConfig.isBleBeerSensorWithoutChamberSensor()) {
+    Log.error(
+        F("Main: A BLE beer sensor needs a chamber sensor to fall back on, "
+          "unable to configure Temp Controller." CR));
+    return;
+  }
+
   // Create the temperature sensors
   if (myConfig.isFridgeSensorEnabled()) {
     Log.info(F("Main: Configuring fridge sensor %s." CR),
              myConfig.getFridgeSensorId());
 
     DeviceAddress daFridge;
-    parseBytes(daFridge, myConfig.getFridgeSensorId(), sizeof(daFridge));
+    if (!parseBytes(daFridge, myConfig.getFridgeSensorId(), sizeof(daFridge)))
+      Log.error(F("Main: Invalid fridge sensor id %s." CR),
+                myConfig.getFridgeSensorId());
 
     if (oneWireFridge) {
       delete oneWireFridge;
@@ -518,7 +529,9 @@ void configureTempControl() {
                myConfig.getBeerSensorId());
 
       DeviceAddress daBeer;
-      parseBytes(daBeer, myConfig.getBeerSensorId(), sizeof(daBeer));
+      if (!parseBytes(daBeer, myConfig.getBeerSensorId(), sizeof(daBeer)))
+        Log.error(F("Main: Invalid beer sensor id %s." CR),
+                  myConfig.getBeerSensorId());
 
       if (oneWireBeer) {
         delete oneWireBeer;

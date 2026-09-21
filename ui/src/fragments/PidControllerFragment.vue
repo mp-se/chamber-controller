@@ -35,8 +35,8 @@
               <BsInputNumber
                 v-model="newTemperature"
                 :label="t('pid.target_temp')"
-                min="0"
-                max="30"
+                :min="tempMin"
+                :max="tempMax"
                 step="0.1"
                 :unit="'°' + config.temp_format"
                 width="6"
@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import {
   logDebug,
   logError,
@@ -87,13 +87,18 @@ import {
   sharedHttpClient as http
 } from '@mp-se/espframework-ui-components'
 import { global, config, status } from '@/modules/pinia'
+import { displayTemp, deviceTemp } from '@/modules/temperature'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
 const newMode = ref('o')
-const newTemperature = ref(config.target_temperature)
+
+// The device works in Celsius (target 0 - 30), the user sees and enters the configured temp format
+const newTemperature = ref(displayTemp(config.target_temperature, config.temp_format))
+const tempMin = computed(() => displayTemp(0, config.temp_format))
+const tempMax = computed(() => displayTemp(30, config.temp_format))
 
 const modeOptions = ref([{ label: t('pid.off'), value: 'o' }])
 
@@ -146,7 +151,7 @@ const saveSettings = async () => {
 
     const data = {
       new_mode: newMode.value,
-      new_temperature: newTemperature.value
+      new_temperature: deviceTemp(newTemperature.value, config.temp_format)
     }
 
     logDebug('PidControllerFragment.saveSettings()', data)

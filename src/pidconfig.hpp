@@ -79,6 +79,16 @@ class PidConfig : public BaseConfig {
   }
   bool isBeerBleSensorEnabled() const { return _beerBleSensorId.length() != 0; }
 
+  // A BLE beer sensor is not always heard. While it is silent the controller
+  // keeps the chamber at its setting with the chamber sensor, so a BLE beer
+  // sensor is only accepted together with a chamber sensor.
+  bool isBeerBleSensorUsed() const {
+    return isBeerBleSensorEnabled() && isBleScanEnabled();
+  }
+  bool isBleBeerSensorWithoutChamberSensor() const {
+    return isBeerBleSensorUsed() && !isFridgeSensorEnabled();
+  }
+
   float getFridgeSensorOffset() const { return _fridgeSensorOffset; }
   void setFridgeSensorOffset(float t) {
     _fridgeSensorOffset = t;

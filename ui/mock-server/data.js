@@ -81,7 +81,7 @@ export var configData = {
 
   // brewgraph integration
   brewgraph_token: 'mybrewgraphtoken',
-  brewgraph_url: 'http://localhost/api/ingest/chamber'
+  brewgraph_url: 'http://localhost/ingest/chamber'
 }
 
 export var statusData = {
@@ -111,7 +111,7 @@ export var statusData = {
   pid_fridge_temp: 10.1,
   pid_beer_target_temp: 9.4,
   pid_fridge_target_temp: 9.5,
-  pid_temp_format: 'c',
+  pid_temp_format: 'C',
   pid_cooling_actuator_active: true,
   pid_heating_actuator_active: false,
   pid_fan_actuator_active: true,

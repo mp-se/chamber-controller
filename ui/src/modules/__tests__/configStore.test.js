@@ -214,7 +214,7 @@ describe('configStore', () => {
         ble_scan_enabled: true,
         ble_sensor_valid_time: 300,
         brewgraph_token: 'mytoken',
-        brewgraph_url: 'http://brewgraph.local/api/ingest/chamber'
+        brewgraph_url: 'http://brewgraph.local/ingest/chamber'
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -229,7 +229,7 @@ describe('configStore', () => {
       expect(config.dark_mode).toBe(true)
       expect(config.fridge_sensor_offset).toBe(0.5)
       expect(config.brewgraph_token).toBe('mytoken')
-      expect(config.brewgraph_url).toBe('http://brewgraph.local/api/ingest/chamber')
+      expect(config.brewgraph_url).toBe('http://brewgraph.local/ingest/chamber')
     })
 
     it('handles load errors gracefully', async () => {
@@ -324,7 +324,7 @@ describe('configStore', () => {
         ble_scan_enabled: true,
         ble_sensor_valid_time: 300,
         brewgraph_token: 'mytoken',
-        brewgraph_url: 'http://brewgraph.local/api/ingest/chamber'
+        brewgraph_url: 'http://brewgraph.local/ingest/chamber'
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -621,7 +621,7 @@ describe('configStore', () => {
         ble_scan_enabled: true,
         ble_sensor_valid_time: 300,
         brewgraph_token: 'mytoken',
-        brewgraph_url: 'http://brewgraph.local/api/ingest/chamber'
+        brewgraph_url: 'http://brewgraph.local/ingest/chamber'
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -1030,10 +1030,10 @@ describe('configStore', () => {
       const config = useConfigStore()
 
       config.brewgraph_token = 'abc123'
-      config.brewgraph_url = 'https://brewgraph.example.com/api/ingest/chamber'
+      config.brewgraph_url = 'https://brewgraph.example.com/ingest/chamber'
 
       expect(config.brewgraph_token).toBe('abc123')
-      expect(config.brewgraph_url).toBe('https://brewgraph.example.com/api/ingest/chamber')
+      expect(config.brewgraph_url).toBe('https://brewgraph.example.com/ingest/chamber')
     })
 
     it('sends only the changed BrewGraph fields', async () => {
@@ -1041,19 +1041,19 @@ describe('configStore', () => {
 
       http.getJson.mockResolvedValue({
         brewgraph_token: 'old',
-        brewgraph_url: 'http://brewgraph.local/api/ingest/chamber'
+        brewgraph_url: 'http://brewgraph.local/ingest/chamber'
       })
       http.postJson.mockResolvedValue({ success: true })
 
       const config = useConfigStore()
       await config.load()
 
-      config.brewgraph_url = 'https://brewgraph.example.com/api/ingest/chamber'
+      config.brewgraph_url = 'https://brewgraph.example.com/ingest/chamber'
       const result = await config.sendConfig()
 
       expect(result).toBe(true)
       expect(http.postJson).toHaveBeenCalledWith('api/config', {
-        brewgraph_url: 'https://brewgraph.example.com/api/ingest/chamber'
+        brewgraph_url: 'https://brewgraph.example.com/ingest/chamber'
       })
     })
   })

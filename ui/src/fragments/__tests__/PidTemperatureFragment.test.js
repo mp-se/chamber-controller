@@ -72,6 +72,55 @@ describe('PidTemperatureFragment', () => {
     })
   })
 
+  describe('temperature format (the device reports Celsius)', () => {
+    it('shows Celsius values unchanged', async () => {
+      status.pid_beer_temp_connected = true
+      status.pid_beer_temp = 19.5
+      status.pid_fridge_temp_connected = true
+      status.pid_fridge_temp = 4.25
+      config.temp_format = 'C'
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('19.5°C')
+      expect(wrapper.text()).toContain('4.25°C')
+    })
+
+    it('converts beer and chamber temperatures to Fahrenheit', async () => {
+      status.pid_beer_temp_connected = true
+      status.pid_beer_temp = 20
+      status.pid_fridge_temp_connected = true
+      status.pid_fridge_temp = 4
+      config.temp_format = 'F'
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('68°F')
+      expect(wrapper.text()).toContain('39.2°F')
+      expect(wrapper.text()).not.toContain('20°F')
+    })
+
+    it('converts the target temperature in the mode text', async () => {
+      status.pid_mode = 'b'
+      status.pid_beer_target_temp = 18
+      config.temp_format = 'F'
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('64.4°F')
+
+      status.pid_mode = 'f'
+      status.pid_fridge_target_temp = 5
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('41°F')
+    })
+
+    it('shows dashes with the unit when a sensor is not connected', async () => {
+      status.pid_beer_temp_connected = false
+      config.temp_format = 'F'
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('--°F')
+    })
+  })
+
   describe('fridgeTemp computed', () => {
     it('returns dashes when fridge temp sensor not connected', async () => {
       status.pid_fridge_temp_connected = false

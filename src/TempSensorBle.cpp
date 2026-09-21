@@ -60,23 +60,23 @@ temperature BleTempSensor::read() {
       if (entry->getUpdateAge() < (myConfig.getBleSensorValidTime() * 60)) {
         switch (entry->getType()) {
           case MeasurementType::Gravitymon:
-            return doubleToTemp(entry->getGravityData()->getTempC());
+            return entry->getGravityData()->getTempC();
             break;
 
           case MeasurementType::Tilt:
           case MeasurementType::TiltPro:
-            return doubleToTemp(entry->getTiltData()->getTempC());
+            return entry->getTiltData()->getTempC();
             break;
 
           case MeasurementType::Rapt:
-            return doubleToTemp(entry->getRaptData()->getTempC());
+            return entry->getRaptData()->getTempC();
             break;
         }
       }
     }
   }
 
-  return INVALID_TEMP;
+  return TEMP_SENSOR_DISCONNECTED;
 }
 
 #endif  // ENABLE_BLE && ENABLE_BLE_SENSOR

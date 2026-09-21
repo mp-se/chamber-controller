@@ -19,6 +19,8 @@
 #ifndef SRC_DISPLAY_HPP_
 #define SRC_DISPLAY_HPP_
 
+#include <utils.hpp>
+
 #if defined(ENABLE_TFT)
 #include <TFT_eSPI.h>
 #else
@@ -33,6 +35,12 @@
 #endif
 
 enum FontSize { FONT_9 = 9, FONT_12 = 12, FONT_18 = 18, FONT_24 = 24 };
+
+// The controller works in Celsius. Use this where a temperature is shown to the
+// user, it converts to the temp format ('C' or 'F').
+inline float toDisplayTemp(float celsius, char tempFormat) {
+  return tempFormat == 'F' ? convertCtoF(celsius) : celsius;
+}
 
 class Display {
  public:

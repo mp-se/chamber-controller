@@ -144,13 +144,16 @@ void Display::updateTemperatures(const char* mode, const char* state,
   // Update the new UI using chamber_controller API
   chamber_controller_set_mode(mode);
   chamber_controller_set_state(state);
-  chamber_controller_set_beer_temp(beerTemp, myConfig.getTempFormat());
-  chamber_controller_set_chamber_temp(chamberTemp, myConfig.getTempFormat());
+  // The controller works in Celsius, convert for display only
+  chamber_controller_set_beer_temp(toDisplayTemp(beerTemp, tempFormat),
+                                   tempFormat);
+  chamber_controller_set_chamber_temp(toDisplayTemp(chamberTemp, tempFormat),
+                                      tempFormat);
   chamber_controller_set_status(statusBar);
 
   // Update target temp
-  chamber_controller_set_target_temp(_targetTemperature,
-                                     myConfig.getTempFormat());
+  chamber_controller_set_target_temp(
+      toDisplayTemp(_targetTemperature, tempFormat), tempFormat);
 
   // Update theme if changed
   chamber_controller_set_theme(darkmode);

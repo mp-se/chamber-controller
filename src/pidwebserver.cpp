@@ -266,8 +266,8 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest* request) {
         String(tempControl.getBeerTemperatureSetting(), DECIMALS_TEMP));
     obj[PARAM_PID_FRIDGE_TARGET_TEMP] = serialized(
         String(tempControl.getFridgeTemperatureSetting(), DECIMALS_TEMP));
-    obj[PARAM_PID_TEMP_FORMAT] =
-        String(tempControl.getControlConstants().tempFormat);
+    // The controller only works in Celsius, the UI converts when displaying
+    obj[PARAM_PID_TEMP_FORMAT] = "C";
     obj[PARAM_PID_COOLING_ACTUATOR_ACTIVE] =
         tempControl.getCoolingActuator()
             ? tempControl.getCoolingActuator()->isActive()
@@ -361,8 +361,7 @@ void PidWebServer::webHandleTemps(AsyncWebServerRequest* request) {
     obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
     obj[PARAM_PID_FRIDGE_TARGET_TEMP] =
         tempControl.getFridgeTemperatureSetting();
-    obj[PARAM_PID_TEMP_FORMAT] =
-        String(tempControl.getControlConstants().tempFormat);
+    obj[PARAM_PID_TEMP_FORMAT] = "C";
   }
 
   response->setLength();
@@ -393,9 +392,12 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest* request,
 
   switch (newMode) {
     case ControllerMode::beerConstant:
-      if ((myConfig.isBeerSensorEnabled() ||
-           myConfig.isBeerBleSensorEnabled()) &&
-          (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
+      if (myConfig.isBleBeerSensorWithoutChamberSensor()) {
+        success = false;
+        message = "A BLE beer sensor needs a chamber sensor";
+      } else if ((myConfig.isBeerSensorEnabled() ||
+                  myConfig.isBeerBleSensorEnabled()) &&
+                 (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
         setNewControllerMode(ControllerMode::beerConstant, newTemp);
         success = true;
         message = "Mode updated to Beer Constant";
@@ -552,9 +554,12 @@ void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest* request,
 
   switch (newMode) {
     case ControllerMode::beerConstant:
-      if ((myConfig.isBeerSensorEnabled() ||
-           myConfig.isBeerBleSensorEnabled()) &&
-          (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
+      if (myConfig.isBleBeerSensorWithoutChamberSensor()) {
+        success = false;
+        message = "A BLE beer sensor needs a chamber sensor";
+      } else if ((myConfig.isBeerSensorEnabled() ||
+                  myConfig.isBeerBleSensorEnabled()) &&
+                 (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
         setNewControllerMode(ControllerMode::beerConstant, newTemp);
         success = true;
         message = "Set mode to Beer Constant";

@@ -152,6 +152,7 @@
     "ble_scan": "BLE scan",
     "ble_scan_help": "Enable scanning for BLE temperature sensors",
     "ble_beer_sensor_label": "BLE Beer Sensor",
+    "ble_needs_chamber_sensor": "A BLE beer sensor needs a chamber sensor. While the BLE sensor is out of range the controller keeps the chamber at its setting with the chamber sensor until the BLE sensor is back. Select a chamber sensor, or remove the BLE beer sensor, to be able to save.",
     "ble_valid_time": "BLE valid time",
     "ble_valid_time_help": "Time in seconds that a BLE reading is considered valid",
     "save": "Save",
@@ -360,7 +361,7 @@
   "brewgraph": {
     "title": "BrewGraph integration",
     "url_label": "Server URL",
-    "url_help": "Full URL of the chamber ingest endpoint, for example http://192.168.1.10/api/ingest/chamber. Leave empty to disable the integration.",
+    "url_help": "Full URL of the chamber ingest endpoint, for example http://192.168.1.10/ingest/chamber. Leave empty to disable the integration.",
     "token_label": "Device token",
     "token_help": "Token for this device from BrewGraph. If empty, the device identifies itself with its chip ID, which is intended for trusted local networks.",
     "save": "Save"

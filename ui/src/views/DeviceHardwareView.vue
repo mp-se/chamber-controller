@@ -21,6 +21,10 @@
     <p class="h2">{{ t('device_hardware.title') }}</p>
     <hr />
 
+    <BsMessage v-if="bleNeedsChamberSensor" message="" alert="warning">
+      {{ t('device_hardware.ble_needs_chamber_sensor') }}
+    </BsMessage>
+
     <form @submit.prevent="saveSettings" class="needs-validation" novalidate>
       <div class="row">
         <!-- Sensor Configuration -->
@@ -149,7 +153,7 @@
           <button
             type="submit"
             class="btn btn-primary w-2"
-            :disabled="global.disabled || !global.configChanged"
+            :disabled="global.disabled || !global.configChanged || bleNeedsChamberSensor"
           >
             <span
               class="spinner-border spinner-border-sm"
@@ -166,7 +170,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { validateCurrentForm, logDebug, logError } from '@mp-se/espframework-ui-components'
 import { global, status, config } from '@/modules/pinia'
@@ -247,7 +251,14 @@ const loadBleSensors = () => {
   }
 }
 
+// A BLE beer sensor is not always heard. The controller then keeps the chamber at its setting with the
+// chamber sensor until the beer sensor is back, so it needs one.
+const bleNeedsChamberSensor = computed(
+  () => !!config.beer_ble_sensor_id && !!config.ble_scan_enabled && !config.fridge_sensor_id
+)
+
 const saveSettings = async () => {
+  if (bleNeedsChamberSensor.value) return
   if (!validateCurrentForm()) return
   await config.saveAll()
 }
@@ -258,6 +269,7 @@ defineExpose({
   bleValidOptions,
   runSensorScan,
   loadBleSensors,
+  bleNeedsChamberSensor,
   saveSettings
 })
 </script>

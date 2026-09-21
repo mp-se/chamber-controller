@@ -23,7 +23,7 @@ vi.mock('@mp-se/espframework-ui-components', () => ({
   logError: vi.fn()
 }))
 
-const LOCAL_URL = 'http://192.168.1.10/api/ingest/chamber'
+const LOCAL_URL = 'http://192.168.1.10/ingest/chamber'
 
 const mountView = () =>
   mount(BrewgraphView, {

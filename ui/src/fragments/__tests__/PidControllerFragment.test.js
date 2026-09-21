@@ -441,6 +441,60 @@ describe('PidControllerFragment', () => {
     })
   })
 
+  describe('temperature format (the device works in Celsius)', () => {
+    const setup = async (format, targetCelsius) => {
+      config.enable_cooling = true
+      config.beer_sensor_id = 'sensor1'
+      config.temp_format = format
+      config.target_temperature = targetCelsius
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      return wrapper
+    }
+
+    it('shows the target and the range in Celsius', async () => {
+      const wrapper = await setup('C', 20.5)
+      expect(wrapper.vm.newTemperature).toBe(20.5)
+      expect(wrapper.vm.tempMin).toBe(0)
+      expect(wrapper.vm.tempMax).toBe(30)
+    })
+
+    it('shows the target and the range in Fahrenheit', async () => {
+      const wrapper = await setup('F', 20)
+      expect(wrapper.vm.newTemperature).toBe(68)
+      expect(wrapper.vm.tempMin).toBe(32)
+      expect(wrapper.vm.tempMax).toBe(86)
+    })
+
+    it('sends a Celsius target unchanged', async () => {
+      const { sharedHttpClient } = await import('@mp-se/espframework-ui-components')
+      const wrapper = await setup('C', 20)
+      wrapper.vm.newMode = 'b'
+      wrapper.vm.newTemperature = 18.5
+
+      await wrapper.vm.saveSettings()
+
+      expect(sharedHttpClient.postJson).toHaveBeenCalledWith('api/mode', {
+        new_mode: 'b',
+        new_temperature: 18.5
+      })
+    })
+
+    it('converts a Fahrenheit target to Celsius before sending it', async () => {
+      const { sharedHttpClient } = await import('@mp-se/espframework-ui-components')
+      const wrapper = await setup('F', 20)
+      wrapper.vm.newMode = 'b'
+      wrapper.vm.newTemperature = 64.4
+
+      await wrapper.vm.saveSettings()
+
+      expect(sharedHttpClient.postJson).toHaveBeenCalledWith('api/mode', {
+        new_mode: 'b',
+        new_temperature: 18
+      })
+    })
+  })
+
   describe('watch pid_mode', () => {
     it('watch callback fires when pid_mode changes', async () => {
       const wrapper = createWrapper()

@@ -306,6 +306,66 @@ describe('DeviceHardwareView', () => {
     })
   })
 
+  describe('BLE beer sensor needs a chamber sensor', () => {
+    it('warns and blocks saving with a BLE beer sensor and no chamber sensor', async () => {
+      config.beer_ble_sensor_id = 'BLE_001'
+      config.ble_scan_enabled = true
+      config.fridge_sensor_id = ''
+      global.feature.ble_sensor = true
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      // the view keeps the form disabled until the sensor scan is done
+      await new Promise((r) => setTimeout(r, 50))
+      expect(wrapper.vm.bleNeedsChamberSensor).toBe(true)
+      expect(wrapper.find('bs-message-stub').exists()).toBe(true)
+      expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
+
+      await wrapper.vm.saveSettings()
+      expect(config.saveAll).not.toHaveBeenCalled()
+    })
+
+    it('saves with a BLE beer sensor and a chamber sensor', async () => {
+      config.beer_ble_sensor_id = 'BLE_001'
+      config.ble_scan_enabled = true
+      config.fridge_sensor_id = 'sensor1'
+      global.feature.ble_sensor = true
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      // the view keeps the form disabled until the sensor scan is done
+      await new Promise((r) => setTimeout(r, 50))
+      expect(wrapper.vm.bleNeedsChamberSensor).toBe(false)
+      expect(wrapper.find('bs-message-stub').exists()).toBe(false)
+      expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
+
+      await wrapper.vm.saveSettings()
+      expect(config.saveAll).toHaveBeenCalled()
+    })
+
+    it('saves a beer sensor without chamber sensor when no BLE sensor is used', async () => {
+      config.beer_sensor_id = 'sensor2'
+      config.beer_ble_sensor_id = ''
+      config.fridge_sensor_id = ''
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      // the view keeps the form disabled until the sensor scan is done
+      await new Promise((r) => setTimeout(r, 50))
+      expect(wrapper.vm.bleNeedsChamberSensor).toBe(false)
+      await wrapper.vm.saveSettings()
+      expect(config.saveAll).toHaveBeenCalled()
+    })
+
+    it('does not require a chamber sensor while BLE scanning is off', async () => {
+      config.beer_ble_sensor_id = 'BLE_001'
+      config.ble_scan_enabled = false
+      config.fridge_sensor_id = ''
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      // the view keeps the form disabled until the sensor scan is done
+      await new Promise((r) => setTimeout(r, 50))
+      expect(wrapper.vm.bleNeedsChamberSensor).toBe(false)
+    })
+  })
+
   describe('form submission and saveSettings', () => {
     it('has save button', () => {
       const wrapper = createWrapper()
