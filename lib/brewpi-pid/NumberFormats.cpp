@@ -18,17 +18,42 @@
  * along with BrewPi.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+
 #include <NumberFormats.hpp>
 
-// Parse string into 8-bit bytes
-void parseBytes(uint8_t *data, const char *s, uint8_t len) {
-  char c;
-  while ((c = *s++)) {
-    uint8_t d = (c >= 'A' ? c - 'A' + 10 : c - '0') << 4;
-    c = *s++;
-    d |= (c >= 'A' ? c - 'A' + 10 : c - '0');
-    *data++ = d;
+static int hexDigit(char c) {
+  if (c >= '0' && c <= '9') return c - '0';
+  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+  return -1;
+}
+
+// Parse a hex string (upper or lower case) into exactly len 8-bit bytes. The
+// string comes from the configuration, so it can have any length or content:
+// never write more than len bytes, and if the string is not exactly 2 * len
+// hex digits clear the whole buffer (all zeros is not a valid device address).
+bool parseBytes(uint8_t *data, const char *s, uint8_t len) {
+  memset(data, 0, len);
+  if (s == NULL) return false;
+
+  for (uint8_t i = 0; i < len; i++) {
+    int high = hexDigit(s[2 * i]);
+    // Only look at the next character if the string did not end
+    int low = high < 0 ? -1 : hexDigit(s[2 * i + 1]);
+
+    if (high < 0 || low < 0) {
+      memset(data, 0, len);
+      return false;
+    }
+    data[i] = (high << 4) | low;
   }
+
+  if (s[2 * len] != '\0') {  // trailing characters
+    memset(data, 0, len);
+    return false;
+  }
+  return true;
 }
 
 // Render 8-bit data as hex

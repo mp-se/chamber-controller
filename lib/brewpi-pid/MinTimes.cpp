@@ -44,7 +44,7 @@ MinTimes::MinTimes() {
 }
 
 void MinTimes::setDefaults(MinTimesSettingsChoice choise) {
-  Log.verbose(F("BREW: Using default MinTimes, %d." CR), settingsChoice);
+  Log.verbose(F("BREW: Using default MinTimes, %d." CR), choise);
   settingsChoice = choise;
 
   if (settingsChoice == MIN_TIMES_DEFAULT ||
@@ -93,7 +93,7 @@ bool MinTimes::save() {
 #if defined(BREWPI_ENABLE_SAVE)
   JsonDocument doc;
 
-  JsonObject obj = doc.as<JsonObject>();
+  JsonObject obj = doc.to<JsonObject>();  // as<>() on an empty document is null
   toJsonReadable(obj);
 
   JsonFileSystemHelper file(FILENAME_CUSTOM_MIN_TIMES);

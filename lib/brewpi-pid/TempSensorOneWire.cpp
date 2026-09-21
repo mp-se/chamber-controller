@@ -51,11 +51,10 @@ bool OneWireTempSensor::init() {
       requestConversion()) {
     Log.verbose(F("BREW: Waiting for OneWire sensor to respond." CR));
     waitForConversion();
-    temperature temp = readAndConstrainTemp();
-    Log.verbose(F("BREW: Reading temp %F from sensor at %s." CR),
-                tempToDouble(temp, Config::TempFormat::tempDecimals),
+    temperature temp = readTemp();
+    Log.verbose(F("BREW: Reading temp %F from sensor at %s." CR), temp,
                 addressString);
-    success = temp != TEMP_SENSOR_DISCONNECTED && requestConversion();
+    success = !isnan(temp) && requestConversion();
   }
   setConnected(success);
   Log.verbose(F("BREW: OneWire sensor initialized correctly." CR));
@@ -81,27 +80,20 @@ void OneWireTempSensor::setConnected(bool connected) {
 temperature OneWireTempSensor::read() {
   if (!_connected) return TEMP_SENSOR_DISCONNECTED;
 
-  temperature temp = readAndConstrainTemp();
+  temperature temp = readTemp();
   requestConversion();
   return temp;
 }
 
-temperature OneWireTempSensor::readAndConstrainTemp() {
-  temperature temp = getTempRaw(*_sensor, _sensorAddress);
+temperature OneWireTempSensor::readTemp() {
+  int16_t raw = getTempRaw(*_sensor, _sensorAddress);  // in 1/16 degree
 
-  if (temp == DEVICE_DISCONNECTED_RAW) {
+  if (raw == DEVICE_DISCONNECTED_RAW) {
     setConnected(false);
     return TEMP_SENSOR_DISCONNECTED;
   }
 
-  const uint8_t shift = TEMP_FIXED_POINT_BITS -
-                        _sensorPrecision;  // difference in precision between
-                                           // DS18B20 format and temperature adt
-  temp = constrainTemp(temp + _calibrationOffset + (C_OFFSET >> shift),
-                       (static_cast<int>(MIN_TEMP)) >> shift,
-                       (static_cast<int>(MAX_TEMP)) >> shift)
-         << shift;
-  return temp;
+  return raw / 16.0 + _calibrationOffset;
 }
 
 // EOF

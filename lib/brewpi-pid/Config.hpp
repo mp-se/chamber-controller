@@ -51,10 +51,6 @@ constexpr auto tempDecimals = 1;
 constexpr auto fixedPointDecimals = 3;
 // Decimal places for a temperature difference
 constexpr auto tempDiffDecimals = 3;
-// Length to use for conversion buffers
-constexpr auto bufferLen = 12;
-// Maximum length of a temp string
-constexpr auto maxLength = 9;
 };  // namespace TempFormat
 
 namespace DeviceConfigManager {

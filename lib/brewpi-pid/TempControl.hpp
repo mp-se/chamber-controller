@@ -158,30 +158,30 @@ class TempControl {
   bool stateIsHeating();
   bool modeIsBeer() { return (_cs.mode == ControllerMode::beerConstant); }
 
-  // Public function to ensure we map temperatures between human readable and
-  // internal temperature formats
+  // Public functions for the outside: Celsius rounded to the number of decimals
+  // used for display, 0 when there is no value (no sensor, no target)
   double getBeerTemperature() {
-    return tempToDouble(getBeerTemp(), Config::TempFormat::tempDecimals);
+    return roundTo(getBeerTemp(), Config::TempFormat::tempDecimals);
   }
   double getBeerTemperatureSetting() {
-    return tempToDouble(getBeerSetting(), Config::TempFormat::tempDecimals);
+    return roundTo(getBeerSetting(), Config::TempFormat::tempDecimals);
   }
   double getFridgeTemperature() {
-    return tempToDouble(getFridgeTemp(), Config::TempFormat::tempDecimals);
+    return roundTo(getFridgeTemp(), Config::TempFormat::tempDecimals);
   }
   double getFridgeTemperatureSetting() {
-    return tempToDouble(getFridgeSetting(), Config::TempFormat::tempDecimals);
+    return roundTo(getFridgeSetting(), Config::TempFormat::tempDecimals);
   }
   void setBeerTargetTemperature(double newTemp) {
     Log.info(F("BREW: Setting new beer target temperature to %F" CR), newTemp);
 
-    setBeerTemp(doubleToTemp(newTemp));
+    setBeerTemp(newTemp);
   }
   void setFridgeTargetTemperature(double newTemp) {
     Log.info(F("BREW: Setting new fridge target temperature to %F" CR),
              newTemp);
 
-    setFridgeTemp(doubleToTemp(newTemp));
+    setFridgeTemp(newTemp);
   }
 
   // Public function to gain insights into the internal data
@@ -209,12 +209,20 @@ class TempControl {
   temperature getFridgeSetting();
   void setFridgeTemp(temperature newTemp);
 
+  // The control logic needs a beer and a fridge temperature. With a single probe that probe is both, so
+  // the device works with either probe on its own. The getters above and the display keep showing only
+  // the probes that exist.
+  TempSensor* beerControl() { return isDefaultBeerSensor() ? _fridgeSensor : _beerSensor; }
+  TempSensor* fridgeControl() { return isDefaultFridgeSensor() ? _beerSensor : _fridgeSensor; }
+
   // Sensors and Actuators
   TempSensor* _beerSensor;    //!< Temp sensor monitoring beer
   TempSensor* _fridgeSensor;  //!< Temp sensor monitoring fridge
   Actuator* _heater;          //!< Actuator used to call for heat
   Actuator* _cooler;          //!< Actuator used to call for cool
   Actuator* _fan;             //!< Actuator used to run the fan
+  bool _beerLost = false;     //!< Beer mode, but the beer sensor gives no data
+  bool _pidValid = false;     //!< The PID has run, its integral term is meaningful
 
   // Control parameters
   ControlConstants _cc;
@@ -249,7 +257,7 @@ class TempControl {
 
   void updateSensor(TempSensor* sensor);
 
-  temperature _storedBeerSetting;
+  temperature _storedBeerSetting = NAN;
 
   // Timers, the timestamps are millis() values (see HardwareTicks::secondsSince)
   ticks_millis_t _lastIdleTime;  //!< Last time the controller was idle

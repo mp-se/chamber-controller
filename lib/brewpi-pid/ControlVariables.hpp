@@ -29,39 +29,35 @@ class ControlVariables {
  public:
   ControlVariables() {}
 
-  temperature beerDiff;
-  long_temperature diffIntegral;  // also uses 9 fraction bits, but more integer
-                                  // bits to prevent overflow
-  temperature beerSlope;
-  temperature p;
-  temperature i;
-  temperature d;
-  temperature estimatedPeak;
-  temperature negPeakEstimate;  // last estimate
-  temperature posPeakEstimate;
-  temperature negPeak;  // last detected peak
-  temperature posPeak;
+  temperature beerDiff = 0;
+  temperature diffIntegral = 0;
+  temperature beerSlope = 0;
+  temperature p = 0;
+  temperature i = 0;
+  temperature d = 0;
+  temperature estimatedPeak = 0;
+  temperature negPeakEstimate = 0;  // last estimate
+  temperature posPeakEstimate = 0;
+  temperature negPeak = 0;  // last detected peak
+  temperature posPeak = 0;
 
   void toJsonReadable(JsonObject& doc) const {
-    doc["beer_diff"] =
-        tempDiffToDouble(beerDiff, Config::TempFormat::tempDiffDecimals);
+    doc["beer_diff"] = roundTo(beerDiff, Config::TempFormat::tempDiffDecimals);
     doc["diff_integral"] =
-        tempDiffToDouble(diffIntegral, Config::TempFormat::tempDiffDecimals);
-    doc["beer_slope"] =
-        tempDiffToDouble(beerSlope, Config::TempFormat::tempDiffDecimals);
+        roundTo(diffIntegral, Config::TempFormat::tempDiffDecimals);
+    doc["beer_slope"] = roundTo(beerSlope, Config::TempFormat::tempDiffDecimals);
 
-    doc["p"] = fixedPointToDouble(p, Config::TempFormat::fixedPointDecimals);
-    doc["i"] = fixedPointToDouble(i, Config::TempFormat::fixedPointDecimals);
-    doc["d"] = fixedPointToDouble(d, Config::TempFormat::fixedPointDecimals);
+    doc["p"] = roundTo(p, Config::TempFormat::fixedPointDecimals);
+    doc["i"] = roundTo(i, Config::TempFormat::fixedPointDecimals);
+    doc["d"] = roundTo(d, Config::TempFormat::fixedPointDecimals);
 
-    doc["est_peak"] =
-        tempToDouble(estimatedPeak, Config::TempFormat::tempDecimals);
+    doc["est_peak"] = roundTo(estimatedPeak, Config::TempFormat::tempDecimals);
     doc["neg_peak_est"] =
-        tempToDouble(negPeakEstimate, Config::TempFormat::tempDecimals);
+        roundTo(negPeakEstimate, Config::TempFormat::tempDecimals);
     doc["pos_peak_est"] =
-        tempToDouble(posPeakEstimate, Config::TempFormat::tempDecimals);
-    doc["neg_peak"] = tempToDouble(negPeak, Config::TempFormat::tempDecimals);
-    doc["pos_peak"] = tempToDouble(posPeak, Config::TempFormat::tempDecimals);
+        roundTo(posPeakEstimate, Config::TempFormat::tempDecimals);
+    doc["neg_peak"] = roundTo(negPeak, Config::TempFormat::tempDecimals);
+    doc["pos_peak"] = roundTo(posPeak, Config::TempFormat::tempDecimals);
   }
 };
 

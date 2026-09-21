@@ -31,14 +31,8 @@ void TempSensor::init() {
       (failedReadCount < 0 || failedReadCount > 60)) {
     temperature temp = _sensor->read();
 
-    if (temp != TEMP_SENSOR_DISCONNECTED) {
-      Log.verbose(F("BREW: Initializing TempSensor filters with %d." CR), temp);
-
-      fastFilter.init(temp);
-      slowFilter.init(temp);
-      slopeFilter.init(0);
-      prevOutputForSlope = slowFilter.readOutputDoublePrecision();
-      failedReadCount = 0;
+    if (!isnan(temp)) {
+      initFilters(temp);
     } else {
       Log.warning(
           F("BREW: Initializing TempSensor failed, no temperature." CR));
@@ -46,18 +40,36 @@ void TempSensor::init() {
   }
 }
 
+void TempSensor::initFilters(temperature temp) {
+  Log.verbose(F("BREW: Initializing TempSensor filters with %F." CR), temp);
+
+  fastFilter.init(temp);
+  slowFilter.init(temp);
+  slopeFilter.init(0);
+  prevOutputForSlope = slowFilter.readOutput();
+  failedReadCount = 0;
+}
+
 void TempSensor::update() {
   Log.verbose(F("BREW: Updating TempSensor." CR));
 
-  temperature temp;
-  if (!_sensor || (temp = _sensor->read()) == TEMP_SENSOR_DISCONNECTED) {
+  temperature temp = _sensor ? _sensor->read() : TEMP_SENSOR_DISCONNECTED;
+  if (isnan(temp)) {
     if (failedReadCount >= 0) failedReadCount++;
     failedReadCount = min(failedReadCount, int8_t(127));  // limit
     return;
   }
 
-  Log.verbose(F("BREW: Updating TempSensor filters with temp %F." CR),
-              tempToDouble(temp, Config::TempFormat::tempDecimals));
+  // The filters hold no data before the first valid reading (init() can find
+  // no reading, for example a BLE sensor that has not been heard yet) and only
+  // old data after a long disconnect. Start them from this reading in both
+  // cases, then count consecutive failed reads only.
+  if (failedReadCount < 0 || failedReadCount > 60) {
+    initFilters(temp);
+  }
+  failedReadCount = 0;
+
+  Log.verbose(F("BREW: Updating TempSensor filters with temp %F." CR), temp);
 
   fastFilter.add(temp);
   slowFilter.add(temp);
@@ -69,20 +81,12 @@ void TempSensor::update() {
   // an influence for the startup inaccuracy.
   if (updateCounter == 4) {
     // only happens once after startup.
-    prevOutputForSlope = slowFilter.readOutputDoublePrecision();
+    prevOutputForSlope = slowFilter.readOutput();
   }
   if (updateCounter == 0) {
-    temperature_precise slowFilterOutput =
-        slowFilter.readOutputDoublePrecision();
-    temperature_precise diff = slowFilterOutput - prevOutputForSlope;
-    temperature diff_upper = diff >> 16;
-    if (diff_upper > 27) {  // limit to prevent overflow INT_MAX/1200 = 27.14
-      diff = (27l << 16);
-    } else if (diff_upper < -27) {
-      diff = (-27l << 16);
-    }
-    slopeFilter.addDoublePrecision(
-        1200 * diff);  // Multiply by 1200 (1h/4s), shift to single precision
+    temperature slowFilterOutput = slowFilter.readOutput();
+    temperature diff = slowFilterOutput - prevOutputForSlope;
+    slopeFilter.add(1200 * diff);  // Multiply by 1200 (1h/4s)
     prevOutputForSlope = slowFilterOutput;
     updateCounter = 3;
   }
@@ -102,8 +106,7 @@ temperature TempSensor::readSlowFiltered() {
 
 temperature TempSensor::readSlope() {
   // return slope per hour.
-  temperature_precise doublePrecision = slopeFilter.readOutputDoublePrecision();
-  return doublePrecision >> 16;  // shift to single precision
+  return slopeFilter.readOutput();
 }
 
 temperature TempSensor::detectPosPeak() { return slowFilter.detectPosPeak(); }
