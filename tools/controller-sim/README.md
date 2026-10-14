@@ -28,6 +28,7 @@ the library, used to check that the tests catch a broken library).
 | `sensor_test` | Filters start at the first valid reading, a short disconnect keeps the history, more than 60 failed reads in a row restart the filters. Memory is poisoned before init. |
 | `format_test` | `parseBytes` (sensor addresses) rejects odd length, too long, trailing characters, non hex, null; `roundTo` rounding. |
 | `ticks_test` | `secondsSince` and `wait.seconds` across 16 bit second counter limits (65536 s), 25 h uptime and the `millis()` rollover. |
+| `chamberreport_test` | The BrewGraph poll without HTTP: request body, reading the reply, deciding what to apply (needs the real ArduinoJson from `.pio/libdeps`). |
 | closed loop vs `expected/metrics.txt` | 26 scenarios (24 h of simulated time each, 6 h for the fridge ones) on a simple thermal model: switch counts, duty cycles, time to reach the target, mean deviation, estimator values, time per state. 442 metrics. |
 | actuator rules | `nh_` = no heater, `nc_` = no cooler: the controller never enters a heating (nh_) or cooling (nc_) state. This is what a device with that actuator disabled in the config does: `set...Actuator` is not called, the controller keeps its default actuator and `TempControl::updateState` skips those states. |
 | control | Every configuration that can reach its target does (target reached, mean deviation within the limits in `scripts/check_control.py`). |

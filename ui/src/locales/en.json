@@ -316,8 +316,7 @@
     "change_mode": "Change mode",
     "target_temp": "Target temperature",
     "set": "Set",
-    "remote_active": "Remote control is active, local control is disabled.",
-    "disable_remote": "Disable remote control",
+    "remote_active": "BrewGraph control is active. Disable BrewGraph in its settings to return to local control.",
     "off": "Off",
     "reload": "Reload",
     "unknown": "Unknown status",
@@ -364,6 +363,11 @@
     "url_help": "Full URL of the chamber ingest endpoint, for example http://192.168.1.10/ingest/chamber. Leave empty to disable the integration.",
     "token_label": "Device token",
     "token_help": "Token for this device from BrewGraph. If empty, the device identifies itself with its chip ID, which is intended for trusted local networks.",
+    "interval_label": "Report interval",
+    "interval_help": "How often the device reports its temperatures to BrewGraph and gets its setpoint back. A new setpoint reaches the device at the next report. The server accepts at most one request per 5 minutes.",
+    "interval_minutes": "{n} minutes",
+    "remote_control_label": "Allow BrewGraph to control the chamber",
+    "remote_control_help": "Off by default. When off, the device still reports temperatures but ignores BrewGraph setpoints. Turning it off restores local control immediately.",
     "save": "Save"
   },
   "about": {

@@ -41,7 +41,6 @@ class PidWebServer : public BaseWebServer {
   void webHandleConfigWrite(AsyncWebServerRequest* request, JsonVariant& json);
 
   void webHandleMode(AsyncWebServerRequest* request, JsonVariant& json);
-  void webHandleRemoteMode(AsyncWebServerRequest* request, JsonVariant& json);
   void webHandleListSensor(AsyncWebServerRequest* request);
   void webHandleListSensorStatus(AsyncWebServerRequest* request);
 

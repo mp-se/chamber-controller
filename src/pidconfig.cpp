@@ -60,6 +60,9 @@ void PidConfig::createJson(JsonObject& doc) const {
       serialized(String(getRemotePreviousTargetTemp(), DECIMALS_TEMP));
   doc[PARAM_BREWGRAPH_TOKEN] = getBrewgraphToken();
   doc[PARAM_BREWGRAPH_URL] = getBrewgraphUrl();
+  doc[PARAM_BREWGRAPH_INTERVAL] = getBrewgraphInterval();
+  doc[PARAM_BREWGRAPH_REMOTE_CONTROL_ENABLED] =
+      isBrewgraphRemoteControlEnabled();
 }
 
 void PidConfig::parseJson(JsonObject& doc) {
@@ -124,6 +127,11 @@ void PidConfig::parseJson(JsonObject& doc) {
     setBrewgraphToken(doc[PARAM_BREWGRAPH_TOKEN]);
   if (!doc[PARAM_BREWGRAPH_URL].isNull())
     setBrewgraphUrl(doc[PARAM_BREWGRAPH_URL]);
+  if (!doc[PARAM_BREWGRAPH_INTERVAL].isNull())
+    setBrewgraphInterval(doc[PARAM_BREWGRAPH_INTERVAL].as<int>());
+  if (!doc[PARAM_BREWGRAPH_REMOTE_CONTROL_ENABLED].isNull())
+    setBrewgraphRemoteControlEnabled(
+        doc[PARAM_BREWGRAPH_REMOTE_CONTROL_ENABLED].as<bool>());
 }
 
 // EOF

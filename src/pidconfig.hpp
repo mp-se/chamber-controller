@@ -45,7 +45,7 @@ class PidConfig : public BaseConfig {
   int _bleScanTime = 3;
   int _bleSensorValidTime = 15;
 
-  // Params for remote control via brewlogger
+  // Saved local settings while BrewGraph has temporary control
   bool _remoteControlActive = false;
   String _remotePreviousBleSensorId = "";
   char _remotePreviousMode = ControllerMode::off;
@@ -54,6 +54,8 @@ class PidConfig : public BaseConfig {
   // Params for brewgraph integration
   String _brewgraphToken = "";
   String _brewgraphUrl = "";
+  int _brewgraphInterval = 15;  // minutes between reports
+  bool _brewgraphRemoteControlEnabled = false;
 
  public:
   PidConfig(String baseMDNS, String fileName);
@@ -225,6 +227,20 @@ class PidConfig : public BaseConfig {
     _saveNeeded = true;
   }
   bool isBrewgraphEnabled() const { return _brewgraphUrl.length() != 0; }
+
+  int getBrewgraphInterval() const { return _brewgraphInterval; }
+  void setBrewgraphInterval(int i) {
+    _brewgraphInterval = i;
+    _saveNeeded = true;
+  }
+
+  bool isBrewgraphRemoteControlEnabled() const {
+    return _brewgraphRemoteControlEnabled;
+  }
+  void setBrewgraphRemoteControlEnabled(bool enabled) {
+    _brewgraphRemoteControlEnabled = enabled;
+    _saveNeeded = true;
+  }
 
   void createJson(JsonObject& doc) const override;
   void parseJson(JsonObject& doc) override;

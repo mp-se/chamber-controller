@@ -65,14 +65,6 @@
     <div class="card-header bg-success-subtle">{{ t('pid.controller_title') }}</div>
     <div class="card-body">
       <p class="text-center">{{ t('pid.remote_active') }}</p>
-      <button
-        @click="disableRemoteControl"
-        type="button"
-        class="btn btn-primary"
-        :disabled="global.disabled"
-      >
-        {{ t('pid.disable_remote') }}
-      </button>
     </div>
   </div>
 </template>
@@ -124,23 +116,6 @@ onMounted(() => {
     global.messageError = t('pid.err_no_capabilities')
   }
 })
-
-const disableRemoteControl = async () => {
-  global.clearMessages()
-  global.disabled = true
-
-  try {
-    const data = { new_mode: 'r' }
-    await http.postJson('api/remote', data)
-    global.disabled = false
-    logInfo('PidControllerFragment.disableRemoteControl()', 'Sending /api/remote completed')
-    return true
-  } catch (err) {
-    logError('PidControllerFragment.disableRemoteControl()', err)
-    global.disabled = false
-    return false
-  }
-}
 
 const saveSettings = async () => {
   try {

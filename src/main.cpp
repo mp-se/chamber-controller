@@ -36,6 +36,7 @@
 #include <pidconfig.hpp>
 #include <pidpush.hpp>
 #include <pidwebserver.hpp>
+#include <remotecontrol.hpp>
 #include <serialws.hpp>
 #include <uptime.hpp>
 #include <wificonnection.hpp>
@@ -70,6 +71,20 @@ RunMode runMode = RunMode::pidMode;
 LoopTimer tempControlLoop(1000);
 LoopTimer validateLoop(10000);
 LoopTimer pushLoop(30000);
+
+// One request reports the temperatures and returns the setpoint. First poll
+// shortly after boot, then every brewgraph_interval minutes (5, 10, 15 or 20 in
+// the UI), also after a failed poll.
+constexpr uint32_t BREWGRAPH_FIRST_POLL_MS = 20 * 1000;
+LoopTimer brewgraphLoop(BREWGRAPH_FIRST_POLL_MS);
+bool brewgraphPolled = false;
+
+// The BrewGraph server accepts one request per 5 minutes per device, so never
+// faster than that, whatever is stored.
+uint32_t brewgraphIntervalMs() {
+  return static_cast<uint32_t>(constrain(myConfig.getBrewgraphInterval(), 5, 20)) *
+         60 * 1000;
+}
 
 void setup() {
   delay(2000);
@@ -130,6 +145,14 @@ void setup() {
       myDisplay.createUI();
       myDisplay.setTargetTemperature(myConfig.getTargetTemperature());
       myDisplay.setMode(myConfig.getControllerMode());
+
+      // Older configurations may have saved remote control as active. Remote
+      // control is now opt-in, so return to the saved local state on boot.
+      if (!myConfig.isBrewgraphRemoteControlEnabled() &&
+          myConfig.getRemoteControlActive()) {
+        Log.notice(F("Main: BrewGraph control is disabled, restoring local control." CR));
+        applyRemoteCommand('r', NAN, "");
+      }
       break;
 
     case RunMode::wifiSetupMode:
@@ -140,6 +163,43 @@ void setup() {
   bleSender.init();
 #endif
   Log.notice(F("Main: Setup is completed." CR));
+}
+
+// Temperatures of the sensors that give data, NAN for the others
+void readSensors(float& beer, float& fridge) {
+  beer = NAN;
+  fridge = NAN;
+
+  if (!tempControl.isDefaultBeerSensor() && tempControl.getBeerSensor() &&
+      tempControl.getBeerSensor()->isConnected()) {
+    beer = tempControl.getBeerTemperature();
+  }
+
+  if (!tempControl.isDefaultFridgeSensor() && tempControl.getFridgeSensor() &&
+      tempControl.getFridgeSensor()->isConnected()) {
+    fridge = tempControl.getFridgeTemperature();
+  }
+}
+
+// Report to BrewGraph and apply the mode and target it answers with
+void pollBrewgraph() {
+  if (!myWifi.isConnected()) return;
+
+  ChamberReport report;
+  readSensors(report.beer, report.fridge);
+  report.token = myConfig.getBrewgraphToken();
+  report.id = myConfig.getID();
+  report.mode = tempControl.getMode();
+  report.target = (report.mode == ControllerMode::beerConstant ||
+                   report.mode == ControllerMode::fridgeConstant)
+                      ? myConfig.getTargetTemperature()
+                      : NAN;
+  report.rssi = WiFi.RSSI();
+
+  Log.info(F("Main: Polling BrewGraph." CR));
+
+  ChamberReply reply;
+  if (myPush.pollChamber(report, reply)) applyChamberReply(reply);
 }
 
 void runLoop() {
@@ -189,17 +249,8 @@ void runLoop() {
       myDisplay.updateButtons(beerConnected, fridgeConnected);
     }
 
-    float beer = NAN, fridge = NAN;
-
-    if (!tempControl.isDefaultBeerSensor() && tempControl.getBeerSensor() &&
-        tempControl.getBeerSensor()->isConnected()) {
-      beer = tempControl.getBeerTemperature();
-    }
-
-    if (!tempControl.isDefaultFridgeSensor() && tempControl.getFridgeSensor() &&
-        tempControl.getFridgeSensor()->isConnected()) {
-      fridge = tempControl.getFridgeTemperature();
-    }
+    float beer, fridge;
+    readSensors(beer, fridge);
 
     char state[40] = "", mode[40] = "Off", statusBar[80] = "";
 
@@ -365,6 +416,18 @@ void runLoop() {
       myPush.sendInfluxDb2(s);
     }
   }
+
+  if (myConfig.isBrewgraphEnabled()) {
+    // A changed setting applies to the running timer
+    if (brewgraphPolled) brewgraphLoop.setInterval(brewgraphIntervalMs());
+
+    if (brewgraphLoop.hasExpired()) {
+      brewgraphPolled = true;
+      brewgraphLoop.setInterval(brewgraphIntervalMs());
+      brewgraphLoop.reset();
+      pollBrewgraph();
+    }
+  }
 }
 
 void setNewControllerMode(char mode, float temp) {
@@ -373,6 +436,10 @@ void setNewControllerMode(char mode, float temp) {
   myConfig.setControllerMode(mode);
   myConfig.setTargetTemperature(temp);
   myConfig.saveFile();
+
+  // The touch display keeps its own copy, keep it in step with the controller
+  myDisplay.setMode(mode);
+  myDisplay.setTargetTemperature(temp);
 
   tempControl.setMode(mode);
   if (mode == ControllerMode::beerConstant)

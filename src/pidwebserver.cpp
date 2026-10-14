@@ -29,6 +29,7 @@
 #include <pidconfig.hpp>
 #include <pidpush.hpp>
 #include <pidwebserver.hpp>
+#include <remotecontrol.hpp>
 #include <uptime.hpp>
 #include <utils.hpp>
 
@@ -70,11 +71,8 @@ constexpr auto PARAM_PID_WAIT_TIME = "pid_wait_time";
 constexpr auto PARAM_PID_TIME_SINCE_COOLING = "pid_time_since_cooling";
 constexpr auto PARAM_PID_TIME_SINCE_HEATING = "pid_time_since_heating";
 constexpr auto PARAM_PID_TIME_SINCE_IDLE = "pid_time_since_idle";
-constexpr auto PARAM_BLE_SENSOR = "ble_sensor";
-
 constexpr auto PARAM_NEW_MODE = "new_mode";
 constexpr auto PARAM_NEW_TEMPERATURE = "new_temperature";
-constexpr auto PARAM_NEW_BLE_SENSOR = "new_ble_sensor";
 
 constexpr auto PARAM_SENSORS = "sensors";
 
@@ -125,11 +123,6 @@ void PidWebServer::setupWebHandlers() {
   handler = new AsyncCallbackJsonWebHandler(
       "/api/mode", [this](AsyncWebServerRequest* request, JsonVariant& json) {
         this->webHandleMode(request, json);
-      });
-  _server->addHandler(handler);
-  handler = new AsyncCallbackJsonWebHandler(
-      "/api/remote", [this](AsyncWebServerRequest* request, JsonVariant& json) {
-        this->webHandleRemoteMode(request, json);
       });
   _server->addHandler(handler);
   _server->on("/api/sensor/status", HTTP_GET,
@@ -205,8 +198,21 @@ void PidWebServer::webHandleConfigWrite(AsyncWebServerRequest* request,
 
   Log.notice(F("WEB : webServer callback for /api/config(write)." CR));
   JsonObject obj = json.as<JsonObject>();
+  const bool brewgraphWasEnabled = myConfig.isBrewgraphEnabled();
+  const bool brewgraphRemoteControlWasEnabled =
+      myConfig.isBrewgraphRemoteControlEnabled();
   _webConfig->parseJson(obj);
   _webConfig->saveFile();
+
+  // Disabling the integration or its control permission must immediately
+  // return the chamber to the settings saved before BrewGraph took over.
+  if (((brewgraphWasEnabled && !myConfig.isBrewgraphEnabled()) ||
+       (brewgraphRemoteControlWasEnabled &&
+        !myConfig.isBrewgraphRemoteControlEnabled())) &&
+      myConfig.getRemoteControlActive()) {
+    Log.notice(F("WEB : BrewGraph control disabled, restoring local control." CR));
+    applyRemoteCommand('r', NAN, "");
+  }
 
   // If the hardware setup is changed we need to reinit the temperature
   // controller.
@@ -437,169 +443,6 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest* request,
   obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
   obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
   obj[PARAM_MESSAGE] = message;
-  response->setLength();
-  request->send(response);
-}
-
-void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest* request,
-                                       JsonVariant& json) {
-  if (!isAuthenticated(request) || runMode != RunMode::pidMode) {
-    return;
-  }
-
-  Log.notice(F("WEB : webServer callback for /api/remote." CR));
-
-  /*
-   * This endpoint is for brewlogger to remotely set the controller mode and
-   * block manual control. Via this endpoint its also possible to set and use
-   * gravitymon device as temperature sensor.
-   *
-   * Mode options; F - Fridge constant, B - Beer constant, O - Off, R - Restore
-   * previous
-   *
-   * { "new_mode": "B", "new_temperature": 20.0, "new_ble_sensor": "ABC123" }
-   */
-
-  JsonObject obj = json.as<JsonObject>();
-  bool success = false;
-  String message;
-  String newBleSensorId = "";
-  float newTemp = NAN;
-
-  if (obj[PARAM_NEW_MODE].isNull() ||
-      obj[PARAM_NEW_MODE].as<String>().length() != 1) {
-    request->send(400);
-    return;
-  }
-
-  if (!obj[PARAM_NEW_TEMPERATURE].isNull()) {
-    newTemp = obj[PARAM_NEW_TEMPERATURE].as<float>();
-  }
-
-  char newMode = tolower(obj[PARAM_NEW_MODE].as<String>().charAt(0));
-
-  if (!obj[PARAM_NEW_BLE_SENSOR].isNull() && myConfig.isBleScanEnabled()) {
-    newBleSensorId = obj[PARAM_NEW_BLE_SENSOR].as<String>();
-  }
-
-  if (myConfig.getRemoteControlActive()) {
-    if (newMode == 'r') {  // If mode is = R then we restore the saved setttings
-                           // and leave remote mode
-
-      Log.notice(
-          F("WEB : Restoring previous settings and leaving remote mode." CR));
-
-      // Use saved settings
-      newMode = myConfig.getRemotePreviousMode();
-      newTemp = myConfig.getRemotePreviousTargetTemp();
-      if (myConfig.isBleScanEnabled()) {
-        // Only restore ble sensor if beer ble sensor is enabled, otherwise
-        // ignore since it might cause issues if user has disabled beer ble
-        // sensor after activating remote mode
-        newBleSensorId = myConfig.getRemotePreviousBleSensorId();
-      }
-      // Inactivate remote mode
-      myConfig.setRemotePreviousMode(ControllerMode::off);
-      myConfig.setRemotePreviousTargetTemp(10.0);
-      myConfig.setRemotePreviousBleSensorId("");
-      myConfig.setRemoteControlActive(false);
-      myConfig.saveFile();
-    }
-
-    // Continue with main loop to set the new mode and temp
-
-  } else {
-    if (newMode == 'r') {  // If mode is = R then ignore, not valid since we are
-                           // not in remote mode
-      request->send(400);
-      return;
-    }
-
-    if (obj[PARAM_NEW_TEMPERATURE].isNull()) {
-      request->send(400);
-      return;
-    }
-
-    // If remote control is not enabled we store the settings so we can restore
-    // them later.
-    if (!myConfig.getRemoteControlActive()) {
-      myConfig.setRemotePreviousMode(myConfig.getControllerMode());
-      myConfig.setRemotePreviousTargetTemp(myConfig.getTargetTemperature());
-      if (myConfig.isBleScanEnabled() && newBleSensorId.length() > 0) {
-        myConfig.setRemotePreviousBleSensorId(myConfig.getBeerBleSensorId());
-      }
-    }
-
-    // Activate remote mode
-    myConfig.setRemoteControlActive(true);
-
-    if (myConfig.isBleScanEnabled() &&
-        newBleSensorId.length() >
-            0) {  // Only restore ble sensor if beer ble sensor is enabled,
-                  // otherwise ignore since it might cause issues if user has
-                  // disabled beer ble sensor after activating remote mode
-      myConfig.setBeerBleSensorId(newBleSensorId);
-    }
-
-    myConfig.saveFile();
-  }
-
-  Log.notice(F("WEB : Target mode %c, temp %F, sensor %s." CR), newMode,
-             newTemp, newBleSensorId.c_str());
-
-  if (isnan(newTemp)) {
-    request->send(400);
-    return;
-  }
-
-  switch (newMode) {
-    case ControllerMode::beerConstant:
-      if (myConfig.isBleBeerSensorWithoutChamberSensor()) {
-        success = false;
-        message = "A BLE beer sensor needs a chamber sensor";
-      } else if ((myConfig.isBeerSensorEnabled() ||
-                  myConfig.isBeerBleSensorEnabled()) &&
-                 (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
-        setNewControllerMode(ControllerMode::beerConstant, newTemp);
-        success = true;
-        message = "Set mode to Beer Constant";
-      } else {
-        success = false;
-        message = "Lack beer sensor or cooling/heating actuator";
-      }
-      break;
-
-    case ControllerMode::fridgeConstant:
-      if (myConfig.isFridgeSensorEnabled() &&
-          (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
-        setNewControllerMode(ControllerMode::fridgeConstant, newTemp);
-        success = true;
-        message = "Set mode to Fridge Constant";
-      } else {
-        success = false;
-        message = "Lack chamber sensor or cooling/heating actuator";
-      }
-      break;
-
-    case ControllerMode::off:
-      setNewControllerMode(ControllerMode::off, newTemp);
-      success = true;
-      message = "Turning off controller";
-      break;
-
-    default:
-      request->send(400);
-      break;
-  }
-
-  AsyncJsonResponse* response = new AsyncJsonResponse(false);
-  obj = response->getRoot().as<JsonObject>();
-  obj[PARAM_SUCCESS] = success;
-  obj[PARAM_PID_MODE] = String(tempControl.getMode());
-  obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
-  obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
-  obj[PARAM_MESSAGE] = message;
-  obj[PARAM_BLE_SENSOR] = myConfig.getBeerBleSensorId();
   response->setLength();
   request->send(response);
 }

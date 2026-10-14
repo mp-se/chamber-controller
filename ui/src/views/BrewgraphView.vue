@@ -44,6 +44,23 @@
             :disabled="global.disabled"
           />
         </div>
+        <div class="col-md-6">
+          <BsSelect
+            v-model="config.brewgraph_interval"
+            :options="intervalOptions"
+            :label="t('brewgraph.interval_label')"
+            :help="t('brewgraph.interval_help')"
+            :disabled="global.disabled"
+          />
+        </div>
+        <div class="col-md-12">
+          <BsInputSwitch
+            v-model="config.brewgraph_remote_control_enabled"
+            :label="t('brewgraph.remote_control_label')"
+            :help="t('brewgraph.remote_control_help')"
+            :disabled="global.disabled"
+          />
+        </div>
       </div>
       <div class="row gy-2">
         <div class="col-md-12">
@@ -76,6 +93,12 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
+// The server accepts one request per 5 minutes, these are the choices
+const intervalOptions = [5, 10, 15, 20].map((n) => ({
+  label: t('brewgraph.interval_minutes', { n }),
+  value: n
+}))
+
 const save = async () => {
   if (!validateCurrentForm()) return
 
@@ -83,6 +106,7 @@ const save = async () => {
 }
 
 defineExpose({
+  intervalOptions,
   save
 })
 </script>

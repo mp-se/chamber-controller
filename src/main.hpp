@@ -57,6 +57,9 @@ constexpr auto PARAM_REMOTE_PREVIOUS_TARGET_TEMP =
 
 constexpr auto PARAM_BREWGRAPH_TOKEN = "brewgraph_token";
 constexpr auto PARAM_BREWGRAPH_URL = "brewgraph_url";
+constexpr auto PARAM_BREWGRAPH_INTERVAL = "brewgraph_interval";  // minutes
+constexpr auto PARAM_BREWGRAPH_REMOTE_CONTROL_ENABLED =
+    "brewgraph_remote_control_enabled";
 
 #define DECIMALS_TEMP 2
 

@@ -109,6 +109,8 @@ describe('configStore', () => {
       // BrewGraph fields
       expect(config).toHaveProperty('brewgraph_token')
       expect(config).toHaveProperty('brewgraph_url')
+      expect(config).toHaveProperty('brewgraph_interval')
+      expect(config).toHaveProperty('brewgraph_remote_control_enabled')
     })
 
     it('defaults the BrewGraph fields to empty strings', () => {
@@ -116,6 +118,13 @@ describe('configStore', () => {
 
       expect(config.brewgraph_token).toBe('')
       expect(config.brewgraph_url).toBe('')
+      expect(config.brewgraph_remote_control_enabled).toBe(false)
+    })
+
+    it('defaults the BrewGraph report interval to 15 minutes', () => {
+      const config = useConfigStore()
+
+      expect(config.brewgraph_interval).toBe(15)
     })
   })
 
@@ -214,7 +223,9 @@ describe('configStore', () => {
         ble_scan_enabled: true,
         ble_sensor_valid_time: 300,
         brewgraph_token: 'mytoken',
-        brewgraph_url: 'http://brewgraph.local/ingest/chamber'
+        brewgraph_url: 'http://brewgraph.local/ingest/chamber',
+        brewgraph_interval: 10,
+        brewgraph_remote_control_enabled: true
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -230,6 +241,8 @@ describe('configStore', () => {
       expect(config.fridge_sensor_offset).toBe(0.5)
       expect(config.brewgraph_token).toBe('mytoken')
       expect(config.brewgraph_url).toBe('http://brewgraph.local/ingest/chamber')
+      expect(config.brewgraph_interval).toBe(10)
+      expect(config.brewgraph_remote_control_enabled).toBe(true)
     })
 
     it('handles load errors gracefully', async () => {
@@ -324,7 +337,8 @@ describe('configStore', () => {
         ble_scan_enabled: true,
         ble_sensor_valid_time: 300,
         brewgraph_token: 'mytoken',
-        brewgraph_url: 'http://brewgraph.local/ingest/chamber'
+        brewgraph_url: 'http://brewgraph.local/ingest/chamber',
+        brewgraph_interval: 10
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -621,7 +635,8 @@ describe('configStore', () => {
         ble_scan_enabled: true,
         ble_sensor_valid_time: 300,
         brewgraph_token: 'mytoken',
-        brewgraph_url: 'http://brewgraph.local/ingest/chamber'
+        brewgraph_url: 'http://brewgraph.local/ingest/chamber',
+        brewgraph_interval: 10
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -1026,6 +1041,22 @@ describe('configStore', () => {
   })
 
   describe('BrewGraph configuration', () => {
+    it('sends only the report interval when it is changed', async () => {
+      const { sharedHttpClient: http } = await import('@mp-se/espframework-ui-components')
+
+      http.getJson.mockResolvedValue({ brewgraph_interval: 15 })
+      http.postJson.mockResolvedValue({ success: true })
+
+      const config = useConfigStore()
+      await config.load()
+
+      config.brewgraph_interval = 5
+      const result = await config.sendConfig()
+
+      expect(result).toBe(true)
+      expect(http.postJson).toHaveBeenCalledWith('api/config', { brewgraph_interval: 5 })
+    })
+
     it('stores token and URL', () => {
       const config = useConfigStore()
 

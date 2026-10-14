@@ -17,9 +17,39 @@
  *
  */
 #include <espframework.hpp>
+#include <log.hpp>
 #include <pidconfig.hpp>
 #include <pidpush.hpp>
 
 PidPush::PidPush(PidConfig* config) : BasePush(config) { _pidConfig = config; }
+
+bool PidPush::pollChamber(const ChamberReport& report, ChamberReply& reply) {
+  JsonDocument doc;
+  if (!buildChamberPayload(report, doc)) {
+    Log.info(F("PUSH: BrewGraph, no temperature to report." CR));
+    return false;
+  }
+
+  // The body holds the device token, it is not logged
+  String body;
+  serializeJson(doc, body);
+
+  String response =
+      sendHttpPost(body, _pidConfig->getBrewgraphUrl(),
+                   "Content-Type: application/json", "");
+
+  if (!wasLastSuccessful()) {
+    Log.warning(F("PUSH: BrewGraph poll failed, response code %d." CR),
+                getLastResponseCode());
+    return false;
+  }
+
+  if (!parseChamberReply(response.c_str(), reply)) {
+    Log.warning(F("PUSH: BrewGraph reply not understood." CR));
+    return false;
+  }
+
+  return true;
+}
 
 // EOF

@@ -55,6 +55,18 @@ unit() { # <name> <library sources...>: builds src/<name>.cpp against the workin
   $CXX $CXXFLAGS -DTEMP_IS_DOUBLE -I"$LIB" "$HERE/src/$name.cpp" "$@" -o "$BUILD/$name" && "$BUILD/$name"
 }
 
+# The BrewGraph poll (src/chamberreport.cpp) is tested with the real ArduinoJson, not the stub
+chamberreport_test() {
+  local aj="${ARDUINOJSON:-$REPO/.pio/libdeps/chamber-controller-32pro/ArduinoJson/src}"
+  echo "--- chamberreport_test"
+  if [ ! -f "$aj/ArduinoJson.h" ]; then
+    echo "  ArduinoJson not found in $aj: build the firmware once with pio, or set ARDUINOJSON"
+    return 1
+  fi
+  $CXX -std=c++17 -O1 -Wall -Wextra -I"$aj" -I"$REPO/src" "$HERE/src/chamberreport_test.cpp" "$REPO/src/chamberreport.cpp" -o "$BUILD/chamberreport_test" &&
+    "$BUILD/chamberreport_test"
+}
+
 cmd_test() {
   mkdir -p "$BUILD"
   local failed=0
@@ -67,6 +79,7 @@ cmd_test() {
   unit sensor_test "$LIB/TempSensor.cpp" "$LIB/TemperatureFormats.cpp" || failed=1
   unit format_test "$LIB/NumberFormats.cpp" "$LIB/TemperatureFormats.cpp" || failed=1
   unit ticks_test "$LIB/Ticks.cpp" || failed=1
+  chamberreport_test || failed=1
 
   echo "--- closed loop simulation against expected/metrics.txt"
   build_sim "$LIB" "$BUILD/sim" &&

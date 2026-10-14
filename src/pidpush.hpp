@@ -20,6 +20,7 @@
 #define SRC_PIDPUSH_HPP_
 
 #include <basepush.hpp>
+#include <chamberreport.hpp>
 #include <pidconfig.hpp>
 
 class PidPush : public BasePush {
@@ -28,6 +29,11 @@ class PidPush : public BasePush {
 
  public:
   explicit PidPush(PidConfig* config);
+
+  // POST the report to brewgraph_url (used as it is) and read the reply.
+  // Returns false if there is nothing to report, the request failed or the
+  // reply is not understood.
+  bool pollChamber(const ChamberReport& report, ChamberReply& reply);
 };
 
 #endif  // SRC_PIDPUSH_HPP_

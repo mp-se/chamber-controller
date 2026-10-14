@@ -81,7 +81,9 @@ export var configData = {
 
   // brewgraph integration
   brewgraph_token: 'mybrewgraphtoken',
-  brewgraph_url: 'http://localhost/ingest/chamber'
+  brewgraph_url: 'http://localhost/ingest/chamber',
+  brewgraph_interval: 15,
+  brewgraph_remote_control_enabled: false
 }
 
 export var statusData = {

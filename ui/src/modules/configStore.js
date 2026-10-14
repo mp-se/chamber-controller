@@ -116,7 +116,9 @@ export const useConfigStore = defineStore('config', {
     ble_scan_enabled: true,
     ble_sensor_valid_time: 0,
     brewgraph_token: '',
-    brewgraph_url: ''
+    brewgraph_url: '',
+    brewgraph_interval: 15,
+    brewgraph_remote_control_enabled: false
     // Add any additional config fields from pressuremon-ui if needed
   }),
   actions: {
@@ -174,6 +176,8 @@ export const useConfigStore = defineStore('config', {
         this.ble_sensor_valid_time = json.ble_sensor_valid_time
         this.brewgraph_token = json.brewgraph_token
         this.brewgraph_url = json.brewgraph_url
+        this.brewgraph_interval = json.brewgraph_interval
+        this.brewgraph_remote_control_enabled = json.brewgraph_remote_control_enabled
         logInfo('configStore.load()', 'Fetching /api/config completed')
         await saveConfigState(this)
         return true

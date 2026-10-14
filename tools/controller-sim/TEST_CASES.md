@@ -51,6 +51,34 @@ current baseline (`expected/metrics.txt`), not hand written.
 | T5 | `millis()` rollover: 9095 ms across it, and a timestamp 1 ms before it | 9, 1 |
 | T6 | `wait.seconds(2)` and `wait.seconds(70)` | `delay(2000)` and `delay(70000)` |
 
+### 1.5 BrewGraph poll (`chamberreport_test.cpp`)
+
+The part of the poll that has no HTTP and no globals (`src/chamberreport.cpp`), built against the real
+ArduinoJson from `.pio/libdeps` (run the firmware build once with `pio`, or set `ARDUINOJSON`). Limits for the
+decision are 1 ... 30 C, like the controller.
+
+| ID | Case | Pass |
+| --- | --- | --- |
+| C1 | Request with both temperatures, mode b | `token`, `beer_temperature`, `fridge_temperature`, `temp_units` C, `current_mode` B, `current_target`, `rssi` |
+| C2 | No token configured | `id` (chip id) is sent instead, no `token` |
+| C3 | Beer sensor silent (fridge only), or beer only | the missing temperature is left out |
+| C4 | No temperature at all | not built (the server would answer 422) |
+| C5 | Mode b, f, o, and test mode t | `current_mode` B, F, O; t is left out |
+| C6 | No target | `current_target` left out |
+| C7 | 19.3 C | written as `19.3`, not `19.299999...` |
+| C8 | Reply B / F with a target; lower case mode | mode B / F, target read; `b` accepted |
+| C9 | Reply of an idle device: `{"target_temperature":null,"temp_units":"C","mode":"R"}` | mode R, target NAN |
+| C10 | Target sent as a string | reply accepted, target NAN |
+| C11 | Mode `O`, `BF`, missing, not a string | rejected |
+| C12 | `{}` (the framework's answer to a failed request), HTML from a proxy, empty, null | rejected |
+| C13 | Reply R, device not under remote control | nothing (the steady state: no config write) |
+| C14 | Reply R while under remote control | restore |
+| C15 | Reply B or F, not under remote control (also with the same values as the local setting) | apply, the device takes control |
+| C16 | Reply equal to the device state under remote control (within 0.05 C) | nothing |
+| C17 | 0.1 C different target, or a different mode with the same target, or the device has no target | apply |
+| C18 | Target NAN, 0.5 (< 1), 31 (> 30) | ignored |
+| C19 | Target exactly 1 and 30 | apply |
+
 ## 2. Closed loop scenarios
 
 The controller (`TempControl`, `TempSensor`, PID, state machine) runs against a thermal model, one step per
@@ -149,6 +177,10 @@ To see that the checks can fail, the library was broken on a copy and `run.sh te
 | heating states allowed without a heating actuator | R1, R2 | exit 1 |
 | a missing probe no longer replaced by the other one | R3 | exit 1 |
 | controller idles when the beer probe is silent | R1, R3 | exit 1 |
+| `decideChamberAction`: limit check removed | C18 | exit 1 |
+| `decideChamberAction`: R restores when not under remote control | C13 | exit 1 |
+| `parseChamberReply`: accepts mode O | C11 | exit 1 |
+| `buildChamberPayload`: sends the token as `id` | C1 | exit 1 |
 
 ## 6. Not covered by the simulator
 
@@ -157,6 +189,9 @@ To see that the checks can fail, the library was broken on a copy and `run.sh te
   configuration, not that the tuning fits a given chamber.
 - Two probes where one fails for good (only the beer probe outage and the 12 minute fridge probe loss are run).
 - Beer probe and fridge probe outage at the same time (the controller idles, by design).
+- The HTTP part of the poll (`PidPush::pollChamber`), the 15 minute timer, and `applyRemoteCommand`/`applyChamberReply`
+  (they use the config, the controller and the web server, not the host). `/api/remote` was refactored to use the
+  same function and is not run either; both need the test device.
 - The rule that a BLE beer sensor needs a chamber sensor (`configureTempControl`, the two mode handlers in
   `pidwebserver.cpp`): it is only built, not run. The UI side is covered by four tests in
   `ui/src/views/__tests__/DeviceHardwareView.test.js`.

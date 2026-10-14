@@ -107,6 +107,16 @@ describe('PidControllerFragment', () => {
       const wrapper = createWrapper()
       expect(wrapper.find('form').exists()).toBe(true)
     })
+
+    it('shows the BrewGraph message without a legacy remote-control action', async () => {
+      status.remote_control_active = true
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.text()).toContain('BrewGraph control is active')
+      expect(wrapper.find('button').exists()).toBe(false)
+      expect(wrapper.vm.disableRemoteControl).toBeUndefined()
+    })
   })
 
   describe('onMounted configuration checks', () => {
