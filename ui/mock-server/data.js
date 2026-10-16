@@ -102,6 +102,13 @@ export var statusData = {
   uptime_days: 4,
 
   remote_control_active: false,
+  brewgraph: {
+    push_used: true,
+    push_age: 42000,
+    push_status: true,
+    push_code: 200,
+    push_response: ''
+  },
   fridge_sensor_id: '1',
   beer_sensor_id: '2',
 

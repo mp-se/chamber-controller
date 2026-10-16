@@ -32,6 +32,7 @@
 #include <remotecontrol.hpp>
 #include <uptime.hpp>
 #include <utils.hpp>
+#include <looptimer.hpp>
 
 // These are parameters that the example ui app uses. Part of the status
 // response.
@@ -50,6 +51,15 @@ constexpr auto PARAM_UPTIME_DAYS = "uptime_days";
 constexpr auto PARAM_FIRMWARE_FILE = "firmware_file";
 constexpr auto PARAM_FEATURE_BLE_SUPPORTED = "ble";
 constexpr auto PARAM_FEATURE_BLE_SENSOR = "ble_sensor";
+
+// Integration status fields. Kept compatible with Kegmon's /api/status
+// contract so integration cards can share the same UI model.
+constexpr auto PARAM_BREWGRAPH = "brewgraph";
+constexpr auto PARAM_PUSH_USED = "push_used";
+constexpr auto PARAM_PUSH_AGE = "push_age";
+constexpr auto PARAM_PUSH_STATUS = "push_status";
+constexpr auto PARAM_PUSH_CODE = "push_code";
+constexpr auto PARAM_PUSH_RESPONSE = "push_response";
 
 // Pid related params
 constexpr auto PARAM_PID_MODE = "pid_mode";
@@ -251,6 +261,19 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest* request) {
   obj[PARAM_UPTIME_MINUTES] = myUptime.getMinutes();
   obj[PARAM_UPTIME_HOURS] = myUptime.getHours();
   obj[PARAM_UPTIME_DAYS] = myUptime.getDays();
+
+  if (myConfig.isBrewgraphEnabled()) {
+    JsonObject brewgraph = obj[PARAM_BREWGRAPH].to<JsonObject>();
+    const IntegrationStatus& integration = _push->getBrewgraphStatus();
+    brewgraph[PARAM_PUSH_USED] = integration.hasRun();
+    brewgraph[PARAM_PUSH_AGE] =
+        integration.hasRun()
+            ? LoopTimer::elapsedMillis(integration.getLastTimestamp())
+            : 0;
+    brewgraph[PARAM_PUSH_STATUS] = integration.getLastStatus();
+    brewgraph[PARAM_PUSH_CODE] = integration.getLastError();
+    brewgraph[PARAM_PUSH_RESPONSE] = integration.getLastResponse();
+  }
 
   // Pid controller
   if (runMode == RunMode::pidMode) {

@@ -21,11 +21,13 @@
 
 #include <basepush.hpp>
 #include <chamberreport.hpp>
+#include <integrationstatus.hpp>
 #include <pidconfig.hpp>
 
 class PidPush : public BasePush {
  private:
   PidConfig* _pidConfig;
+  IntegrationStatus _brewgraphStatus;
 
  public:
   explicit PidPush(PidConfig* config);
@@ -34,6 +36,10 @@ class PidPush : public BasePush {
   // Returns false if there is nothing to report, the request failed or the
   // reply is not understood.
   bool pollChamber(const ChamberReport& report, ChamberReply& reply);
+
+  const IntegrationStatus& getBrewgraphStatus() const {
+    return _brewgraphStatus;
+  }
 };
 
 #endif  // SRC_PIDPUSH_HPP_

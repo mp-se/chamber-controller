@@ -105,7 +105,14 @@ describe('statusStore', () => {
         pid_time_since_cooling: 0,
         pid_time_since_heating: 120,
         pid_time_since_idle: 60,
-        temperature_device: []
+        temperature_device: [],
+        brewgraph: {
+          push_used: true,
+          push_age: 42000,
+          push_status: true,
+          push_code: 200,
+          push_response: ''
+        }
       }
 
       http.getJson.mockResolvedValue(mockData)
@@ -115,6 +122,7 @@ describe('statusStore', () => {
 
       expect(result).toBe(true)
       expect(http.getJson).toHaveBeenCalledWith('api/status')
+      expect(store.brewgraph.push_status).toBe(true)
     })
 
     it('updates store with API response data', async () => {

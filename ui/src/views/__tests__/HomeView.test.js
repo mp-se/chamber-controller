@@ -43,6 +43,32 @@ describe('HomeView', () => {
       // The view should exist, actual rendering depends on store state
       expect(wrapper.vm).toBeDefined()
     })
+
+    it('renders the BrewGraph integration card when configured', async () => {
+      config.brewgraph_url = 'https://brewgraph.example/ingest/chamber'
+      status.brewgraph = {
+        push_used: true,
+        push_age: 42000,
+        push_status: true,
+        push_code: 200,
+        push_response: ''
+      }
+      const wrapper = mount(HomeView, {
+        global: {
+          plugins: [pinia],
+          stubs: {
+            ...commonStubs,
+            PidTemperatureFragment: true,
+            PidControllerFragment: true,
+            IntegrationStatusCard: { template: '<div class="integration-card" />' },
+            BsCard: true
+          }
+        }
+      })
+
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('.integration-card').exists()).toBe(true)
+    })
   })
 
   describe('Template Structure', () => {

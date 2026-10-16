@@ -37,6 +37,7 @@ bool PidPush::pollChamber(const ChamberReport& report, ChamberReply& reply) {
   String response =
       sendHttpPost(body, _pidConfig->getBrewgraphUrl(),
                    "Content-Type: application/json", "");
+  _brewgraphStatus.update(*this, response);
 
   if (!wasLastSuccessful()) {
     Log.warning(F("PUSH: BrewGraph poll failed, response code %d." CR),

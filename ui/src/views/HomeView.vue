@@ -34,6 +34,10 @@
           <PidControllerFragment />
         </div>
 
+        <div v-if="config.brewgraph_url && status.brewgraph" class="col-md-4">
+          <IntegrationStatusCard :name="t('brewgraph.title')" :status="status.brewgraph" />
+        </div>
+
         <template v-if="global.feature.ble_sensor">
           <template v-for="device in status.temperature_device" :key="device.device">
             <div class="col-md-4">
@@ -170,6 +174,7 @@ import { status, config, global } from '@/modules/pinia'
 import { tempToF } from '@mp-se/espframework-ui-components'
 import PidControllerFragment from '@/fragments/PidControllerFragment.vue'
 import PidTemperatureFragment from '@/fragments/PidTemperatureFragment.vue'
+import IntegrationStatusCard from '@/fragments/IntegrationStatusCard.vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()

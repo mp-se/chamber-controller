@@ -63,6 +63,10 @@ export const useStatusStore = defineStore('status', {
 
       temperature_device: [],
 
+      // Outbound integrations use the shared Kegmon-compatible push status
+      // contract when configured.
+      brewgraph: {},
+
       connected: true
     }
   },
@@ -116,6 +120,12 @@ export const useStatusStore = defineStore('status', {
               temp: (Math.round(device.temp * 100) / 100).toFixed(2)
             }
           })
+        }
+
+        if (Object.prototype.hasOwnProperty.call(json, 'brewgraph')) {
+          this.brewgraph = json.brewgraph
+        } else {
+          this.brewgraph = {}
         }
 
         logInfo('statusStore:load()', 'Fetching /api/status completed')
