@@ -20,6 +20,7 @@
 #include <FS.h>
 #include <LittleFS.h>
 #include <Wire.h>
+#include <esp_task_wdt.h>
 
 #include <cstdio>
 #include <display.hpp>
@@ -400,6 +401,8 @@ void btnDownEventHandler(lv_event_t* e) {
 void lvgl_loop_handler(void* parameter) {
   LoopTimer taskLoop(500);
 
+  esp_task_wdt_add(NULL);  // Watch this task, a stalled UI reboots the device
+
   for (;;) {
     if (taskLoop.hasExpired()) {
       taskLoop.reset();
@@ -412,6 +415,7 @@ void lvgl_loop_handler(void* parameter) {
     chamber_controller_loop();
 
     lv_tick_inc(5);
+    esp_task_wdt_reset();  // Only reached if LVGL and the SPI driver returned
     delay(5);
   }
 }

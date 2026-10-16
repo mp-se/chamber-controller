@@ -19,11 +19,16 @@
 #ifndef SRC_MAIN_HPP_
 #define SRC_MAIN_HPP_
 
+#include <cstdint>
+
 enum RunMode {
   pidMode = 0,
   wifiSetupMode = 1,
 };
 extern RunMode runMode;
+
+// Task watchdog, reboots the device if the main loop or the LVGL task stalls
+constexpr uint32_t WDT_TIMEOUT_S = 60;
 
 void configureTempControl();
 void validateTempControl();

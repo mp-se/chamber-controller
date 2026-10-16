@@ -17,6 +17,7 @@
  *
  */
 #include <OneWire.h>
+#include <esp_task_wdt.h>
 
 #include <ActuatorDigitalPin.hpp>
 #include <Config.hpp>
@@ -90,6 +91,10 @@ void setup() {
   delay(2000);
 
   Log.notice(F("Main: Started setup." CR));
+  Log.notice(F("Main: Reset reason %d." CR), static_cast<int>(esp_reset_reason()));
+
+  // Must be configured before the LVGL task subscribes in createUI()
+  esp_task_wdt_init(WDT_TIMEOUT_S, true);
 
   myConfig.checkFileSystem();
   myConfig.loadFile();
@@ -162,6 +167,7 @@ void setup() {
 #if defined(ENABLE_BLE)
   bleSender.init();
 #endif
+  esp_task_wdt_add(NULL);  // Watch the Arduino loop task
   Log.notice(F("Main: Setup is completed." CR));
 }
 
@@ -449,6 +455,8 @@ void setNewControllerMode(char mode, float temp) {
 }
 
 void loop() {
+  esp_task_wdt_reset();
+
   switch (runMode) {
     case RunMode::pidMode:
       runLoop();
