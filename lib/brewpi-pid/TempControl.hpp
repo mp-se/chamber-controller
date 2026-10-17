@@ -49,6 +49,7 @@ constexpr uint8_t WAITING_TO_HEAT = 5;  //!< Waiting to heat. (Compressor delay)
 constexpr uint8_t WAITING_FOR_PEAK_DETECT = 6;  //!< Waiting for peak detection
 constexpr uint8_t COOLING_MIN_TIME = 7;         // 8
 constexpr uint8_t HEATING_MIN_TIME = 8;         // 9
+constexpr uint8_t COOLING_SAFETY_COOLDOWN = 9;  //!< Max cooling time reached
 };  // namespace ControllerState
 
 extern ValueActuator defaultActuator;
@@ -145,6 +146,8 @@ class TempControl {
         return "Cooling min time";
       case ControllerState::HEATING_MIN_TIME:
         return "Heating min time";
+      case ControllerState::COOLING_SAFETY_COOLDOWN:
+        return "Cooling safety cooldown";
     }
     return "Unknown state";
   }

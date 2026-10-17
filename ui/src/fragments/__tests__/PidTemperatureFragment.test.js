@@ -250,6 +250,14 @@ describe('PidTemperatureFragment', () => {
       expect(wrapper.text()).toContain('Heating min time')
     })
 
+    it('returns Cooling safety cooldown for state case 9', async () => {
+      status.pid_state = 9
+      status.pid_wait_time = 900
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('Cooling safety cooldown')
+    })
+
     it('returns Unknown status for unrecognized state', async () => {
       status.pid_state = 99
       const wrapper = createWrapper()

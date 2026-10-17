@@ -106,6 +106,9 @@ const state = computed(() => {
 
     case 8: // HEATING MIN TIME
       return t('pid.heating_min', { time: formatTime(status.pid_time_since_idle) })
+
+    case 9: // COOLING SAFETY COOLDOWN
+      return t('pid.cooling_safety_cooldown', { time: formatTime(status.pid_wait_time) })
   }
 
   return t('pid.unknown')

@@ -381,6 +381,13 @@ void TempControl::updateState() {
           ControllerState::COOLING;  // set to cooling here, so the display of
                                      // COOLING/COOLING_MIN_TIME is correct
 
+      if (sinceIdle >= _minTimes.MAX_COOL_ON_TIME) {
+        Log.warning(F("BREW: Maximum cooling time reached; forcing compressor "
+                      "cooldown." CR));
+        _state = ControllerState::COOLING_SAFETY_COOLDOWN;
+        break;
+      }
+
       // stop cooling when estimated fridge temp peak lands on target or if beer
       // is already too cold (1/2 sensor bit idle zone)
       if (_cv.estimatedPeak <= _cs.fridgeSetting ||
@@ -396,6 +403,14 @@ void TempControl::updateState() {
           break;
         }
       }
+    } break;
+    case ControllerState::COOLING_SAFETY_COOLDOWN: {
+      // Keep the compressor off for the full safety cooldown even if the
+      // chamber remains above its target. _lastCoolTime was updated while
+      // cooling, so it is the start point for this enforced pause.
+      resetWaitTime();
+      updateWaitTime(_minTimes.COOLING_SAFETY_COOLDOWN, sinceCooling);
+      if (getWaitTime() == 0) _state = ControllerState::IDLE;
     } break;
     case ControllerState::HEATING:
     case ControllerState::HEATING_MIN_TIME: {

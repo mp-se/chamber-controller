@@ -337,6 +337,7 @@
     "waiting_for_peek": "Waiting for peek detect {time}",
     "cooling_min": "Cooling min time {time}",
     "heating_min": "Heating min time {time}",
+    "cooling_safety_cooldown": "Cooling safety cooldown {time}",
     "chamber_constant": "Chamber constant, target {temp}",
     "beer_constant": "Beer constant, target {temp}",
     "control_constants": "Control Constants",

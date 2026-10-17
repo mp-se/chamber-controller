@@ -324,6 +324,7 @@ void runLoop() {
 
       case ControllerState::WAITING_TO_HEAT:
       case ControllerState::WAITING_TO_COOL:
+      case ControllerState::COOLING_SAFETY_COOLDOWN:
       case ControllerState::WAITING_FOR_PEAK_DETECT: {
         if (tempControl.timeSinceIdle() > 3600)
           snprintf(state, sizeof(state), "Waiting %02dh %02dm",

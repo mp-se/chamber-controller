@@ -35,6 +35,8 @@ constexpr auto KEY_MIN_HEAT_ON_TIME = "min_heat_on_time";
 constexpr auto KEY_MIN_COOL_OFF_TIME_FRIDGE_CONSTANT =
     "min_cool_off_time_fridge_constant";
 constexpr auto KEY_MIN_SWITCH_TIME = "min_switch_time";
+constexpr auto KEY_MAX_COOL_ON_TIME = "max_cool_on_time";
+constexpr auto KEY_COOLING_SAFETY_COOLDOWN = "cooling_safety_cooldown";
 constexpr auto KEY_COOL_PEAK_DETECT_TIME = "cool_peak_detect_time";
 constexpr auto KEY_HEAT_PEAK_DETECT_TIME = "heat_peak_detect_time";
 
@@ -56,6 +58,8 @@ void MinTimes::setDefaults(MinTimesSettingsChoice choise) {
 
     MIN_COOL_OFF_TIME_FRIDGE_CONSTANT = 600;
     MIN_SWITCH_TIME = 600;
+    MAX_COOL_ON_TIME = 7200;
+    COOLING_SAFETY_COOLDOWN = 900;
     COOL_PEAK_DETECT_TIME = 1800;
     HEAT_PEAK_DETECT_TIME = 900;
   } else if (settingsChoice == MIN_TIMES_LOW_DELAY) {
@@ -66,6 +70,8 @@ void MinTimes::setDefaults(MinTimesSettingsChoice choise) {
 
     MIN_COOL_OFF_TIME_FRIDGE_CONSTANT = 60;
     MIN_SWITCH_TIME = 600;
+    MAX_COOL_ON_TIME = 7200;
+    COOLING_SAFETY_COOLDOWN = 900;
     COOL_PEAK_DETECT_TIME = 1800;
     HEAT_PEAK_DETECT_TIME = 900;
   }
@@ -78,6 +84,8 @@ void MinTimes::setDefaults(MinTimesSettingsChoice choise) {
 
     MIN_COOL_OFF_TIME_FRIDGE_CONSTANT = 20;
     MIN_SWITCH_TIME = 60;
+    MAX_COOL_ON_TIME = 60;
+    COOLING_SAFETY_COOLDOWN = 20;
     COOL_PEAK_DETECT_TIME = 180;
     HEAT_PEAK_DETECT_TIME = 90;
   }
@@ -130,6 +138,8 @@ void MinTimes::toJsonReadable(JsonObject& doc) const {
   doc[KEY_MIN_COOL_OFF_TIME_FRIDGE_CONSTANT] =
       MIN_COOL_OFF_TIME_FRIDGE_CONSTANT;
   doc[KEY_MIN_SWITCH_TIME] = MIN_SWITCH_TIME;
+  doc[KEY_MAX_COOL_ON_TIME] = MAX_COOL_ON_TIME;
+  doc[KEY_COOLING_SAFETY_COOLDOWN] = COOLING_SAFETY_COOLDOWN;
   doc[KEY_COOL_PEAK_DETECT_TIME] = COOL_PEAK_DETECT_TIME;
   doc[KEY_HEAT_PEAK_DETECT_TIME] = HEAT_PEAK_DETECT_TIME;
 }
@@ -152,6 +162,10 @@ void MinTimes::fromJsonReadable(JsonObject& doc) {
         doc[KEY_MIN_COOL_OFF_TIME_FRIDGE_CONSTANT];
   if (doc[KEY_MIN_SWITCH_TIME].is<int>())
     MIN_SWITCH_TIME = doc[KEY_MIN_SWITCH_TIME];
+  if (doc[KEY_MAX_COOL_ON_TIME].is<int>())
+    MAX_COOL_ON_TIME = doc[KEY_MAX_COOL_ON_TIME];
+  if (doc[KEY_COOLING_SAFETY_COOLDOWN].is<int>())
+    COOLING_SAFETY_COOLDOWN = doc[KEY_COOLING_SAFETY_COOLDOWN];
   if (doc[KEY_COOL_PEAK_DETECT_TIME].is<int>())
     COOL_PEAK_DETECT_TIME = doc[KEY_COOL_PEAK_DETECT_TIME];
   if (doc[KEY_HEAT_PEAK_DETECT_TIME].is<int>())
