@@ -673,6 +673,17 @@ void TempControl::initFilters() {
   _fridgeSensor->setFastFilterCoefficients(_cc.fridgeFastFilter);
   _fridgeSensor->setSlowFilterCoefficients(_cc.fridgeSlowFilter);
   _fridgeSensor->setSlopeFilterCoefficients(_cc.fridgeSlopeFilter);
+
+  // A beer probe without a fridge probe also drives the fridge side of the PID,
+  // which needs the lighter fridge filters (the slow beer slope filter makes
+  // that loop hunt).
+  if (isDefaultFridgeSensor()) {
+    _beerSensor->setFastFilterCoefficients(_cc.fridgeFastFilter);
+    _beerSensor->setSlowFilterCoefficients(_cc.fridgeSlowFilter);
+    _beerSensor->setSlopeFilterCoefficients(_cc.fridgeSlopeFilter);
+    return;
+  }
+
   _beerSensor->setFastFilterCoefficients(_cc.beerFastFilter);
   _beerSensor->setSlowFilterCoefficients(_cc.beerSlowFilter);
   _beerSensor->setSlopeFilterCoefficients(_cc.beerSlopeFilter);

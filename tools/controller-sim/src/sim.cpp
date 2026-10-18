@@ -123,6 +123,11 @@ struct Scenario {
 // nothing, a default sensor is never connected.
 enum Without { NO_HEATER = 1, NO_COOLER = 2, NO_FRIDGE_PROBE = 4, NO_BEER_PROBE = 8 };
 
+// Time constant of the beer towards the fridge air. A fermenter holds many litres of liquid and follows the
+// air in hours; the configured filters (beer slow and slope b = 4) are made for that. With 30 minutes the
+// beer is faster than the slope filter delay allows and the loop oscillates (see README).
+static const double kBeerTau = 7200.0;
+
 // a small chamber: compressor about 1 C/min, heater about 0.5 C/min
 static const Scenario kScenarios[] = {
     {"fridge_cool", ControllerMode::fridgeConstant, 10, 22, 20, 0, 0, 6, -1, 0, -1, 0, 0.016, 0.008, 0},
@@ -143,10 +148,11 @@ static const Scenario kScenarios[] = {
     {"nh_beer_step", ControllerMode::beerConstant, 15, 20, 20, 0.00003, 0, 24, 8, 19, -1, 0, 0.016, 0, NO_HEATER},
     {"nh_fridge_disconnect", ControllerMode::fridgeConstant, 8, 22, 18, 0, 0, 6, -1, 0, 120, 12, 0.016, 0, NO_HEATER},
     // the beer probe (a BLE sensor) stops updating for hours: the controller has to keep the beer near the
-    // target with the fridge probe until it is back. boot: the sensor is not heard for the first 4 hours.
+    // target with the fridge probe until it is back. boot: the sensor is not heard for the first 10 hours (the beer needs
+    // hours to follow the fridge, see kBeerTau).
     {"ble_beer_cool", ControllerMode::beerConstant, 12, 22, 20, 0.00004, 0, 24, -1, 0, -1, 0, 0.016, 0.008, 0, 480, 360},
     {"ble_beer_heat", ControllerMode::beerConstant, 18, 10, 10, 0.00002, 0, 24, -1, 0, -1, 0, 0.016, 0.008, 0, 480, 360},
-    {"ble_beer_boot", ControllerMode::beerConstant, 12, 22, 20, 0.00004, 0, 24, -1, 0, -1, 0, 0.016, 0.008, 0, 0, 240},
+    {"ble_beer_boot", ControllerMode::beerConstant, 12, 22, 20, 0.00004, 0, 24, -1, 0, -1, 0, 0.016, 0.008, 0, 0, 600},
     {"nh_ble_beer_cool", ControllerMode::beerConstant, 12, 22, 20, 0.00004, 0, 24, -1, 0, -1, 0, 0.016, 0, NO_HEATER, 480, 360},
     {"nc_ble_beer_heat", ControllerMode::beerConstant, 18, 10, 10, 0.00002, 0, 24, -1, 0, -1, 0, 0.016, 0.008, NO_COOLER, 480, 360},
     // heater only (nc_ = no cooler): a cold room, the chamber is warmed
@@ -262,7 +268,7 @@ static void run(const Scenario& s, const char* traceFile, double perturb) {
     if (cooler.isActive()) q -= s.coolRate;
     if (heater.isActive()) q += s.heatRate;
     Tf += q + (Ta - Tf) / 3000.0 + (Tb - Tf) / 2500.0;
-    Tb += (Tf - Tb) / 1800.0 + s.ferment;
+    Tb += (Tf - Tb) / kBeerTau + s.ferment;
 
     tempControl.loop();
 

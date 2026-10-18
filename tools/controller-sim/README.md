@@ -101,6 +101,8 @@ Known and expected when the reference is the fixed point library (`60ff56d`, the
 
 ## Limits
 
+- The sensors run the filter coefficients of the control constants (fridge 1/4/3, beer 3/4/4), as on the device.
+  Those are made for a beer that follows the fridge in hours: with `kBeerTau` = 1800 s the loop oscillates.
 - One simple thermal model (fridge, beer, ambient, first order), no real sensor noise spectrum, no BLE or
   OneWire, no sensor timing. It shows that the numerics and the control logic behave as before, not that the
   tuning is good for a given chamber.

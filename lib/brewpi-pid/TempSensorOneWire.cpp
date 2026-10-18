@@ -41,6 +41,10 @@ bool OneWireTempSensor::init() {
     _sensor = new DallasTemperature(_oneWire);
     if (_sensor == NULL) {
       Log.error(F("BREW: Failed to create DallasTempSensor ." CR));
+    } else {
+      // The control loop reads the previous conversion and then starts the
+      // next one. Never wait up to 750 ms for a DS18B20 conversion here.
+      _sensor->setWaitForConversion(false);
     }
   }
 

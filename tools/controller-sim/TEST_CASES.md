@@ -85,8 +85,9 @@ The controller (`TempControl`, `TempSensor`, PID, state machine) runs against a 
 second, boot at 5 s. One process per scenario, because the controller keeps state (PID integral, a static
 counter in `updatePID`).
 
-Model: fridge air `Tf += q + (Ta - Tf)/3000 + (Tb - Tf)/2500`, beer `Tb += (Tf - Tb)/1800 + fermentation`,
-where `q` is -0.016 C/s while the compressor runs (about 1 C/min) and +0.008 C/s while the heater runs
+Model: fridge air `Tf += q + (Ta - Tf)/3000 + (Tb - Tf)/2500`, beer `Tb += (Tf - Tb)/7200 + fermentation`
+(`kBeerTau`: a fermenter follows the air in hours; with 1800 s the beer is faster than the configured beer slope
+filter allows and the loop oscillates, which is a property of the model and not of the controller), where `q` is -0.016 C/s while the compressor runs (about 1 C/min) and +0.008 C/s while the heater runs
 (about 0.5 C/min). Sensors round to 1/16 C like a DS18B20; the noisy scenarios add +-0.03 C of deterministic
 noise. Fridge and beer start at the start temperature. A lost probe gives no reading (like a BLE sensor
 that is out of range).
@@ -103,37 +104,37 @@ only, no prefix = heater and cooler, both probes.
 
 | Scenario | Device | Mode, target C | Room / start C | Hours | Event | What it shows | coolSw / heatSw | reach (min) | meanDev C | lostDev C |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `fridge_cool` | heater + cooler | fridge, 10 | 22 / 20 | 6 | - | Cools the fridge from 20 to 10 and holds it inside the +-1 C idle band. | 26 / 0 | 38.7 | 0.88 | 0.00 |
-| `beer_cool` | heater + cooler | beer, 12 | 22 / 20 | 24 | - | Cools the beer from 20 to 12 (fermentation heat, ambient 22) and holds it. | 94 / 0 | 76.8 | 0.05 | 0.00 |
-| `beer_heat` | heater + cooler | beer, 18 | 10 / 10 | 24 | - | Heats the beer from 10 to 18 in a cold room (ambient 10) and holds it. | 0 / 91 | 101.1 | 0.03 | 0.00 |
-| `beer_step` | heater + cooler | beer, 15 | 20 / 20 | 24 | target 19 at 8 h | Beer held at 15, target raised to 19 after 8 h: heats to the new target, then holds it. | 47 / 45 | 50.3 | 0.17 | 0.00 |
-| `beer_cool_noisy` | heater + cooler | beer, 12 | 22 / 20 | 24 | noise +-0.03 | Same as beer_cool with +-0.03 C sensor noise: no chattering, same result. | 86 / 0 | 76.8 | 0.06 | 0.00 |
-| `fridge_disconnect` | heater + cooler | fridge, 8 | 22 / 18 | 6 | fridge probe lost 120 min, 12 min | Fridge sensor gone for 12 minutes after 2 h: idles, then resumes control when it is back (filters restart at the new reading). | 24 / 0 | 40.6 | 1.11 | 0.00 |
-| `beer_heat_noisy` | heater + cooler | beer, 20 | 8 / 12 | 24 | noise +-0.03 | Heats 12 to 20 with sensor noise. | 0 / 99 | 113.4 | 0.04 | 0.00 |
-| `nh_fridge_cool` | cooler only | fridge, 10 | 22 / 20 | 6 | - | No heater: same as fridge_cool; never enters a heating state. | 26 / 0 | 38.7 | 0.88 | 0.00 |
-| `nh_beer_cool` | cooler only | beer, 12 | 22 / 20 | 24 | - | No heater: cools and holds; never enters a heating state. | 98 / 0 | 76.8 | 0.04 | 0.00 |
-| `nh_beer_cool_noisy` | cooler only | beer, 12 | 22 / 20 | 24 | noise +-0.03 | No heater, noisy sensors. | 92 / 0 | 76.8 | 0.05 | 0.00 |
-| `nh_beer_warm` | cooler only | beer, 18 | 10 / 10 | 24 | - | Target 18 in a 10 C room, nothing to heat with: cannot be reached, the controller must idle and not use the missing heater. | 0 / 0 | never | 7.92 | 0.00 |
-| `nh_beer_cold_room` | cooler only | beer, 12 | 8 / 14 | 24 | - | Cooled to 12 in an 8 C room, then drifts colder: cannot be corrected, must idle. | 1 / 0 | 24.9 | 3.92 | 0.00 |
-| `nh_beer_step` | cooler only | beer, 15 | 20 / 20 | 24 | target 19 at 8 h | Target raised from 15 to 19 in a 20 C room: reached by drifting, no heating state. | 27 / 0 | 151.2 | 0.37 | 0.00 |
-| `nh_fridge_disconnect` | cooler only | fridge, 8 | 22 / 18 | 6 | fridge probe lost 120 min, 12 min | No heater, 12 minute fridge sensor loss. | 24 / 0 | 40.6 | 1.11 | 0.00 |
-| `ble_beer_cool` | heater + cooler | beer, 12 | 22 / 20 | 24 | beer probe lost from min 480, 360 min | Beer sensor (BLE) silent for 6 h from hour 8: the chamber is controlled on the chamber sensor and the beer stays near 12; PID takes over when the sensor is back. | 92 / 0 | 76.8 | 0.15 | 0.67 |
-| `ble_beer_heat` | heater + cooler | beer, 18 | 10 / 10 | 24 | beer probe lost from min 480, 360 min | Same for heating (target 18, room 10). | 0 / 96 | 101.1 | 0.06 | 0.21 |
-| `ble_beer_boot` | heater + cooler | beer, 12 | 22 / 20 | 24 | beer probe lost from min 0, 240 min | BLE sensor not heard during the first 4 h after boot: chamber sensor controls (fridge aimed at the beer target), then PID takes over. | 96 / 0 | 158.4 | 0.05 | 0.32 |
-| `nh_ble_beer_cool` | cooler only | beer, 12 | 22 / 20 | 24 | beer probe lost from min 480, 360 min | BLE outage with a cooler only. | 94 / 0 | 76.8 | 0.21 | 0.99 |
-| `nc_ble_beer_heat` | heater only | beer, 18 | 10 / 10 | 24 | beer probe lost from min 480, 360 min | BLE outage with a heater only. | 0 / 98 | 101.1 | 0.07 | 0.29 |
-| `nc_fridge_heat` | heater only | fridge, 18 | 8 / 10 | 6 | - | No cooler: fridge from 10 to 18 in an 8 C room; never enters a cooling state. | 0 / 29 | 39.0 | 0.51 | 0.00 |
-| `nc_beer_heat` | heater only | beer, 18 | 10 / 10 | 24 | - | No cooler: heats beer 10 to 18 and holds it. | 0 / 93 | 101.1 | 0.03 | 0.00 |
-| `nc_beer_heat_noisy` | heater only | beer, 20 | 8 / 12 | 24 | noise +-0.03 | No cooler, noisy sensors, 12 to 20. | 0 / 99 | 113.4 | 0.04 | 0.00 |
-| `nc_beer_cool` | heater only | beer, 12 | 22 / 20 | 24 | - | Target 12 in a 22 C room, nothing to cool with: cannot be reached, must idle. | 0 / 0 | never | 10.16 | 0.00 |
-| `nc_beer_step` | heater only | beer, 15 | 8 / 10 | 24 | target 19 at 8 h | No cooler: target raised from 15 to 19 after 8 h, heats to it. | 0 / 101 | 76.8 | 0.05 | 0.00 |
-| `nc_fridge_disconnect` | heater only | fridge, 18 | 8 / 12 | 6 | fridge probe lost 120 min, 12 min | No cooler, 12 minute fridge sensor loss. | 0 / 29 | 32.5 | 0.51 | 0.00 |
-| `fp_fridge_cool` | fridge probe only | fridge, 10 | 22 / 20 | 6 | - | Only a fridge probe, fridge mode: works like the two probe case. | 26 / 0 | 38.7 | 0.88 | 0.00 |
-| `fp_fridge_heat` | fridge probe only | fridge, 18 | 8 / 10 | 6 | - | Only a fridge probe, heating. | 0 / 29 | 39.0 | 0.51 | 0.00 |
-| `fp_beer_cool` | fridge probe only | beer, 12 | 22 / 20 | 24 | - | Only a fridge probe, beer mode: the fridge probe is used as the beer probe. Reaches the target, +-1 C band of the fridge air applies. | 112 / 0 | 52.2 | 0.90 | 0.00 |
-| `bp_beer_cool` | beer probe only | beer, 12 | 22 / 20 | 24 | - | Only a beer probe, beer mode: the beer probe is used for both roles. | 54 / 21 | 83.7 | 0.39 | 0.00 |
-| `bp_beer_heat` | beer probe only | beer, 18 | 10 / 10 | 24 | - | Only a beer probe, heating. | 0 / 77 | 94.7 | 0.06 | 0.00 |
-| `bp_fridge_cool` | beer probe only | fridge, 10 | 22 / 20 | 6 | - | Only a beer probe, fridge mode: the beer probe is used as the fridge probe. | 8 / 0 | 49.6 | 0.52 | 0.00 |
+| `fridge_cool` | heater + cooler | fridge, 10 | 22 / 20 | 6 | - | Cools the fridge from 20 to 10 and holds it inside the +-1 C idle band. | 24 / 0 | 39.9 | 1.12 | 0.00 |
+| `beer_cool` | heater + cooler | beer, 12 | 22 / 20 | 24 | - | Cools the beer from 20 to 12 (fermentation heat, ambient 22) and holds it. | 75 / 0 | 159.3 | 0.03 | 0.00 |
+| `beer_heat` | heater + cooler | beer, 18 | 10 / 10 | 24 | - | Heats the beer from 10 to 18 in a cold room (ambient 10) and holds it. | 0 / 51 | 188.6 | 0.03 | 0.00 |
+| `beer_step` | heater + cooler | beer, 15 | 20 / 20 | 24 | target 19 at 8 h | Beer held at 15, target raised to 19 after 8 h: heats to the new target, then holds it. | 48 / 30 | 108.0 | 0.04 | 0.00 |
+| `beer_cool_noisy` | heater + cooler | beer, 12 | 22 / 20 | 24 | noise +-0.03 | Same as beer_cool with +-0.03 C sensor noise: no chattering, same result. | 72 / 0 | 159.8 | 0.03 | 0.00 |
+| `fridge_disconnect` | heater + cooler | fridge, 8 | 22 / 18 | 6 | fridge probe lost 120 min, 12 min | Fridge sensor gone for 12 minutes after 2 h: idles, then resumes control when it is back (filters restart at the new reading). | 23 / 0 | 58.3 | 1.28 | 0.00 |
+| `beer_heat_noisy` | heater + cooler | beer, 20 | 8 / 12 | 24 | noise +-0.03 | Heats 12 to 20 with sensor noise. | 0 / 50 | 214.7 | 0.04 | 0.00 |
+| `nh_fridge_cool` | cooler only | fridge, 10 | 22 / 20 | 6 | - | No heater: same as fridge_cool; never enters a heating state. | 24 / 0 | 39.9 | 1.12 | 0.00 |
+| `nh_beer_cool` | cooler only | beer, 12 | 22 / 20 | 24 | - | No heater: cools and holds; never enters a heating state. | 75 / 0 | 159.3 | 0.03 | 0.00 |
+| `nh_beer_cool_noisy` | cooler only | beer, 12 | 22 / 20 | 24 | noise +-0.03 | No heater, noisy sensors. | 72 / 0 | 159.8 | 0.03 | 0.00 |
+| `nh_beer_warm` | cooler only | beer, 18 | 10 / 10 | 24 | - | Target 18 in a 10 C room, nothing to heat with: cannot be reached, the controller must idle and not use the missing heater. | 0 / 0 | never | 7.69 | 0.00 |
+| `nh_beer_cold_room` | cooler only | beer, 12 | 8 / 14 | 24 | - | Cooled to 12 in an 8 C room, then drifts colder: cannot be corrected, must idle. | 1 / 0 | 47.2 | 3.54 | 0.00 |
+| `nh_beer_step` | cooler only | beer, 15 | 20 / 20 | 24 | target 19 at 8 h | Target raised from 15 to 19 in a 20 C room: reached by drifting, no heating state. | 26 / 0 | 355.6 | 0.18 | 0.00 |
+| `nh_fridge_disconnect` | cooler only | fridge, 8 | 22 / 18 | 6 | fridge probe lost 120 min, 12 min | No heater, 12 minute fridge sensor loss. | 23 / 0 | 58.3 | 1.28 | 0.00 |
+| `ble_beer_cool` | heater + cooler | beer, 12 | 22 / 20 | 24 | beer probe lost from min 480, 360 min | Beer sensor (BLE) silent for 6 h from hour 8: the chamber is controlled on the chamber sensor and the beer stays near 12; PID takes over when the sensor is back. | 95 / 0 | 159.3 | 0.11 | 0.47 |
+| `ble_beer_heat` | heater + cooler | beer, 18 | 10 / 10 | 24 | beer probe lost from min 480, 360 min | Same for heating (target 18, room 10). | 0 / 75 | 188.6 | 0.06 | 0.17 |
+| `ble_beer_boot` | heater + cooler | beer, 12 | 22 / 20 | 24 | beer probe lost from min 0, 600 min | BLE sensor not heard during the first 10 h after boot: chamber sensor controls (fridge aimed at the beer target), then PID takes over. | 87 / 0 | 611.5 | 0.03 | 0.60 |
+| `nh_ble_beer_cool` | cooler only | beer, 12 | 22 / 20 | 24 | beer probe lost from min 480, 360 min | BLE outage with a cooler only. | 95 / 0 | 159.3 | 0.11 | 0.47 |
+| `nc_ble_beer_heat` | heater only | beer, 18 | 10 / 10 | 24 | beer probe lost from min 480, 360 min | BLE outage with a heater only. | 0 / 75 | 188.6 | 0.06 | 0.17 |
+| `nc_fridge_heat` | heater only | fridge, 18 | 8 / 10 | 6 | - | No cooler: fridge from 10 to 18 in an 8 C room; never enters a cooling state. | 0 / 31 | 42.1 | 0.51 | 0.00 |
+| `nc_beer_heat` | heater only | beer, 18 | 10 / 10 | 24 | - | No cooler: heats beer 10 to 18 and holds it. | 0 / 51 | 188.6 | 0.03 | 0.00 |
+| `nc_beer_heat_noisy` | heater only | beer, 20 | 8 / 12 | 24 | noise +-0.03 | No cooler, noisy sensors, 12 to 20. | 0 / 50 | 214.7 | 0.04 | 0.00 |
+| `nc_beer_cool` | heater only | beer, 12 | 22 / 20 | 24 | - | Target 12 in a 22 C room, nothing to cool with: cannot be reached, must idle. | 0 / 0 | never | 10.54 | 0.00 |
+| `nc_beer_step` | heater only | beer, 15 | 8 / 10 | 24 | target 19 at 8 h | No cooler: target raised from 15 to 19 after 8 h, heats to it. | 0 / 55 | 133.9 | 0.04 | 0.00 |
+| `nc_fridge_disconnect` | heater only | fridge, 18 | 8 / 12 | 6 | fridge probe lost 120 min, 12 min | No cooler, 12 minute fridge sensor loss. | 0 / 31 | 33.5 | 0.50 | 0.00 |
+| `fp_fridge_cool` | fridge probe only | fridge, 10 | 22 / 20 | 6 | - | Only a fridge probe, fridge mode: works like the two probe case. | 24 / 0 | 39.9 | 1.12 | 0.00 |
+| `fp_fridge_heat` | fridge probe only | fridge, 18 | 8 / 10 | 6 | - | Only a fridge probe, heating. | 0 / 31 | 42.1 | 0.51 | 0.00 |
+| `fp_beer_cool` | fridge probe only | beer, 12 | 22 / 20 | 24 | - | Only a fridge probe, beer mode: the fridge probe is used as the beer probe. Reaches the target, +-1 C band of the fridge air applies. | 116 / 0 | 30.7 | 0.96 | 0.00 |
+| `bp_beer_cool` | beer probe only | beer, 12 | 22 / 20 | 24 | - | Only a beer probe, beer mode: the beer probe is used for both roles. | 27 / 16 | 108.9 | 0.20 | 0.00 |
+| `bp_beer_heat` | beer probe only | beer, 18 | 10 / 10 | 24 | - | Only a beer probe, heating. | 9 / 24 | 146.6 | 0.28 | 0.00 |
+| `bp_fridge_cool` | beer probe only | fridge, 10 | 22 / 20 | 6 | - | Only a beer probe, fridge mode: the beer probe is used as the fridge probe. | 4 / 0 | 112.3 | 0.60 | 0.00 |
 
 The three scenarios that cannot reach their target by physics (`nh_beer_warm`, `nh_beer_cold_room`,
 `nc_beer_cool`) are there to show that the controller idles and does not use the actuator it does not have.
@@ -184,7 +185,7 @@ To see that the checks can fail, the library was broken on a copy and `run.sh te
 
 ## 6. Not covered by the simulator
 
-- Real hardware: relays, compressor protection, OneWire timing (`requestTemperaturesByAddress` blocks), BLE
+- Real hardware: relays, compressor protection, OneWire timing (conversions are started without waiting, the next loop reads them), BLE
   reception. One thermal model only; it shows that the control logic behaves as before and in each
   configuration, not that the tuning fits a given chamber.
 - Two probes where one fails for good (only the beer probe outage and the 12 minute fridge probe loss are run).
@@ -195,6 +196,10 @@ To see that the checks can fail, the library was broken on a copy and `run.sh te
 - The rule that a BLE beer sensor needs a chamber sensor (`configureTempControl`, the two mode handlers in
   `pidwebserver.cpp`): it is only built, not run. The UI side is covered by four tests in
   `ui/src/views/__tests__/DeviceHardwareView.test.js`.
-- Filter coefficients from the constants (finding 1: only the placeholder default sensors get them). The sensors in
-  the simulator run with the default b = 2, like the real ones, so the simulator matches the device, but a
-  device with the constants applied would behave differently and is not tested.
+- Filter coefficients from the constants are applied to the sensors by `TempControl::initFilters()` (called from
+  `setBeerSensor`/`setFridgeSensor`), so the simulator runs the configured filters (fridge 1/4/3, beer 3/4/4). A
+  beer probe without a fridge probe gets the fridge filters, because it also drives the fridge side of the PID
+  (with the beer slope filter at b = 4 that loop hunts: `bp_beer_heat` mean deviation 0.58 against 0.28). Before this
+  the sensors ran with the default b = 2 on the device and in the simulator; the baseline was regenerated for the
+  filters and for the slower beer (`kBeerTau`). Fridge mode limit 1.0 -> 1.25 and single probe compressor ratio
+  1.5 -> 2.0 in `check_control.py` follow from that slower beer, see the comments there.
