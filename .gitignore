@@ -2,3 +2,4 @@
 .vscode
 .DS_Store
 graphify-out/
+src_docs/_build/

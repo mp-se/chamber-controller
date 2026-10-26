@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Chamber Controller">
+  <rect width="128" height="128" rx="26" fill="#102943"/>
+  <path d="M35 25h58v77H35z" fill="none" stroke="#f3f7fa" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M42 25v-7h44v7M42 102l-7 10m51-10 7 10" fill="none" stroke="#f3f7fa" stroke-width="5" stroke-linecap="round"/>
+  <path d="M62 44a9 9 0 0 1 18 0v28a16 16 0 1 1-18 0z" fill="#102943" stroke="#12b8c6" stroke-width="5"/>
+  <path d="M71 48v38" stroke="#12b8c6" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="71" cy="91" r="9" fill="#12b8c6"/>
+  <path d="M27 52c-8 7-8 18 0 25m74-25c8 7 8 18 0 25" fill="none" stroke="#f3ad3b" stroke-width="4" stroke-linecap="round"/>
+  <path d="M23 35v10m-5-5h10m68 45 7 7m0-7-7 7" stroke="#12b8c6" stroke-width="3" stroke-linecap="round"/>
+</svg>
