@@ -211,8 +211,13 @@ void pollBrewgraph() {
 void runLoop() {
   if (!myWifi.isConnected()) {
     Log.notice(F("Loop: No wifi connection, attempting to reconnect." CR));
+    // connect() makes up to three attempts of the connection timeout (30 s
+    // default), longer than the watchdog. The library bounds it, so do not
+    // watch this task meanwhile.
+    esp_task_wdt_delete(NULL);
     myWifi.connect();
     myWifi.timeSync();
+    esp_task_wdt_add(NULL);
   }
 
 #if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
