@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#ifndef SRC_CHAMBERREPORT_HPP_
-#define SRC_CHAMBERREPORT_HPP_
+#ifndef SRC_BREWGRAPHPROTOCOL_HPP_
+#define SRC_BREWGRAPHPROTOCOL_HPP_
 
 #include <ArduinoJson.h>
 
@@ -65,6 +65,6 @@ ChamberDecision decideChamberAction(const ChamberReply& reply,
                                     float currentTarget, float minTarget,
                                     float maxTarget);
 
-#endif  // SRC_CHAMBERREPORT_HPP_
+#endif  // SRC_BREWGRAPHPROTOCOL_HPP_
 
 // EOF

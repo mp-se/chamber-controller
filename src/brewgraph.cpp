@@ -19,20 +19,28 @@
 #include <espframework.hpp>
 #include <log.hpp>
 #include <pidconfig.hpp>
-#include <pidpush.hpp>
+#include <brewgraph.hpp>
 
-PidPush::PidPush(PidConfig* config) : BasePush(config) { _pidConfig = config; }
+BrewGraphPush::BrewGraphPush(PidConfig* config) : BasePush(config) {
+  _pidConfig = config;
+}
 
-bool PidPush::pollChamber(const ChamberReport& report, ChamberReply& reply) {
+bool BrewGraphPush::pollChamber(const ChamberReport& report,
+                                ChamberReply& reply) {
   JsonDocument doc;
   if (!buildChamberPayload(report, doc)) {
-    Log.info(F("PUSH: BrewGraph, no temperature to report." CR));
+    Log.info(F("BREW: No temperature to report." CR));
     return false;
   }
 
-  // The body holds the device token, it is not logged
   String body;
   serializeJson(doc, body);
+
+  // The body holds the device token, so log a copy with it masked
+  if (!doc["token"].isNull()) doc["token"] = "***";
+  String logBody;
+  serializeJson(doc, logBody);
+  Log.info(F("BREW: Request: %s" CR), logBody.c_str());
 
   String response =
       sendHttpPost(body, _pidConfig->getBrewgraphUrl(),
@@ -40,13 +48,15 @@ bool PidPush::pollChamber(const ChamberReport& report, ChamberReply& reply) {
   _brewgraphStatus.update(*this, response);
 
   if (!wasLastSuccessful()) {
-    Log.warning(F("PUSH: BrewGraph poll failed, response code %d." CR),
+    Log.warning(F("BREW: Poll failed, response code %d." CR),
                 getLastResponseCode());
     return false;
   }
 
+  Log.info(F("BREW: Reply: %s" CR), response.c_str());
+
   if (!parseChamberReply(response.c_str(), reply)) {
-    Log.warning(F("PUSH: BrewGraph reply not understood." CR));
+    Log.warning(F("BREW: Reply not understood." CR));
     return false;
   }
 

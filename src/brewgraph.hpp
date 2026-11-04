@@ -16,21 +16,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#ifndef SRC_PIDPUSH_HPP_
-#define SRC_PIDPUSH_HPP_
+#ifndef SRC_BREWGRAPH_HPP_
+#define SRC_BREWGRAPH_HPP_
 
 #include <basepush.hpp>
-#include <chamberreport.hpp>
+#include <brewgraphprotocol.hpp>
 #include <integrationstatus.hpp>
 #include <pidconfig.hpp>
 
-class PidPush : public BasePush {
+class BrewGraphPush : public BasePush {
  private:
   PidConfig* _pidConfig;
   IntegrationStatus _brewgraphStatus;
 
  public:
-  explicit PidPush(PidConfig* config);
+  explicit BrewGraphPush(PidConfig* config);
 
   // POST the report to brewgraph_url (used as it is) and read the reply.
   // Returns false if there is nothing to report, the request failed or the
@@ -42,6 +42,6 @@ class PidPush : public BasePush {
   }
 };
 
-#endif  // SRC_PIDPUSH_HPP_
+#endif  // SRC_BREWGRAPH_HPP_
 
 // EOF

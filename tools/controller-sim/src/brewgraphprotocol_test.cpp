@@ -1,6 +1,6 @@
-// The BrewGraph poll without the HTTP part (src/chamberreport.cpp): the request body, reading the reply and
+// The BrewGraph poll without the HTTP part (src/brewgraphprotocol.cpp): the request body, reading the reply and
 // deciding what to do with it. Built against the real ArduinoJson, see run.sh.
-#include <chamberreport.hpp>
+#include <brewgraphprotocol.hpp>
 
 #include <cmath>
 #include <cstdio>

@@ -24,11 +24,11 @@
 
 #include <basewebserver.hpp>
 #include <list>
-#include <pidpush.hpp>
+#include <brewgraph.hpp>
 
 class PidWebServer : public BaseWebServer {
  private:
-  PidPush* _push;
+  BrewGraphPush* _push;
   volatile bool _sensorScanTask = false;
   volatile bool _tempControllerInitTask = false;
   std::list<String> _sensors;
@@ -50,7 +50,7 @@ class PidWebServer : public BaseWebServer {
   void webHandleMinTimes(AsyncWebServerRequest* request);
 
  public:
-  explicit PidWebServer(WebConfigInterface* config, PidPush* push);
+  explicit PidWebServer(WebConfigInterface* config, BrewGraphPush* push);
 
   void loop();
 };

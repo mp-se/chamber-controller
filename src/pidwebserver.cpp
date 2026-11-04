@@ -27,7 +27,7 @@
 #include <main.hpp>
 #include <measurement.hpp>
 #include <pidconfig.hpp>
-#include <pidpush.hpp>
+#include <brewgraph.hpp>
 #include <pidwebserver.hpp>
 #include <remotecontrol.hpp>
 #include <uptime.hpp>
@@ -97,7 +97,7 @@ constexpr auto PARAM_UPDATE_TIME = "update_time";
 
 extern OneWire oneWire;
 
-PidWebServer::PidWebServer(WebConfigInterface* config, PidPush* push)
+PidWebServer::PidWebServer(WebConfigInterface* config, BrewGraphPush* push)
     : BaseWebServer(config) {
   _push = push;
 }

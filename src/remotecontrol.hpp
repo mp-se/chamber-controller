@@ -21,7 +21,7 @@
 
 #include <Arduino.h>
 
-#include <chamberreport.hpp>
+#include <brewgraphprotocol.hpp>
 
 // BrewGraph controls the controller mode through replies to its periodic poll.
 

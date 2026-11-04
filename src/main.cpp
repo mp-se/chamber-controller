@@ -35,7 +35,7 @@
 #include <main.hpp>
 #include <measurement.hpp>
 #include <pidconfig.hpp>
-#include <pidpush.hpp>
+#include <brewgraph.hpp>
 #include <pidwebserver.hpp>
 #include <remotecontrol.hpp>
 #include <serialws.hpp>
@@ -45,7 +45,7 @@
 SerialDebug mySerial(115200L);
 PidConfig myConfig("chamber", "/chamber.cfg");
 WifiConnection myWifi(&myConfig, "chamber", "password", "chamber", "", "");
-PidPush myPush(&myConfig);
+BrewGraphPush myPush(&myConfig);
 
 PidWebServer myWebServer(&myConfig, &myPush);
 SerialWebSocket mySerialWebSocket;

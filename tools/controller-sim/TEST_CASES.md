@@ -51,9 +51,9 @@ current baseline (`expected/metrics.txt`), not hand written.
 | T5 | `millis()` rollover: 9095 ms across it, and a timestamp 1 ms before it | 9, 1 |
 | T6 | `wait.seconds(2)` and `wait.seconds(70)` | `delay(2000)` and `delay(70000)` |
 
-### 1.5 BrewGraph poll (`chamberreport_test.cpp`)
+### 1.5 BrewGraph poll (`brewgraphprotocol_test.cpp`)
 
-The part of the poll that has no HTTP and no globals (`src/chamberreport.cpp`), built against the real
+The part of the poll that has no HTTP and no globals (`src/brewgraphprotocol.cpp`), built against the real
 ArduinoJson from `.pio/libdeps` (run the firmware build once with `pio`, or set `ARDUINOJSON`). Limits for the
 decision are 1 ... 30 C, like the controller.
 
@@ -190,7 +190,7 @@ To see that the checks can fail, the library was broken on a copy and `run.sh te
   configuration, not that the tuning fits a given chamber.
 - Two probes where one fails for good (only the beer probe outage and the 12 minute fridge probe loss are run).
 - Beer probe and fridge probe outage at the same time (the controller idles, by design).
-- The HTTP part of the poll (`PidPush::pollChamber`), the 15 minute timer, and `applyRemoteCommand`/`applyChamberReply`
+- The HTTP part of the poll (`BrewGraphPush::pollChamber`), the 15 minute timer, and `applyRemoteCommand`/`applyChamberReply`
   (they use the config, the controller and the web server, not the host). `/api/remote` was refactored to use the
   same function and is not run either; both need the test device.
 - The rule that a BLE beer sensor needs a chamber sensor (`configureTempControl`, the two mode handlers in
