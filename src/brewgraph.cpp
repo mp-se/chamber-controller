@@ -36,10 +36,7 @@ bool BrewGraphPush::pollChamber(const ChamberReport& report,
   String body;
   serializeJson(doc, body);
 
-  // The body holds the device token, so log a copy with it masked
-  String logBody;
-  serializeJson(doc, logBody);
-  Log.info(F("BREW: Request: %s" CR), logBody.c_str());
+  Log.info(F("BREW: Request: %s" CR), body.c_str());
 
   String response =
       sendHttpPost(body, _pidConfig->getBrewgraphUrl(),
