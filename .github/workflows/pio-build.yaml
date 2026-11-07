@@ -10,22 +10,41 @@ on:
 jobs:
   pio-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-      - uses: actions/checkout@v7
-    
+      - name: Checkout
+        uses: actions/checkout@v7
+
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
+
+      - name: Build UI version info
+        working-directory: ui
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git fetch --tags
+          REV=`git rev-parse HEAD | rev | cut -c 1-6 | rev`
+          TAG=`git tag --sort=creatordate | tail -1`
+          echo "VITE_APP_BUILD=..$REV" >> .env
+          echo "VITE_APP_VERSION=$TAG" >> .env
+          cat .env
 
       - name: Build UI
         working-directory: ui
         run: |
+          rm -rf node_modules package-lock.json
           npm install
           npm run build
-          cd ..
-          ./copy_ui.sh
+
+      - name: Copy UI to html
+        run: |
+          cp ui/dist/assets/style.css.gz html/app.css.gz
+          cp ui/dist/assets/index.js.gz html/app.js.gz
+
 
       - name: Setup Python
         uses: actions/setup-python@v7
