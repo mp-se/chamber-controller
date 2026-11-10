@@ -16,7 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+#include <Config.hpp>
 #include <DallasTemperature.h>
+#include <esp_chip_info.h>
 #include <LittleFS.h>
 #include <OneWire.h>
 
@@ -86,6 +88,21 @@ constexpr auto PARAM_NEW_TEMPERATURE = "new_temperature";
 
 constexpr auto PARAM_SENSORS = "sensors";
 
+// Hardware scan (same layout as GravityMon's /api/hardware/status)
+constexpr auto PARAM_CHIP = "chip";
+constexpr auto PARAM_REVISION = "revision";
+constexpr auto PARAM_CORES = "cores";
+constexpr auto PARAM_FAMILY = "family";
+constexpr auto PARAM_FEATURES = "features";
+constexpr auto PARAM_ONEWIRE = "onewire";
+constexpr auto PARAM_PIN = "pin";
+constexpr auto PARAM_COUNT = "count";
+constexpr auto PARAM_ADDRESS = "address";
+constexpr auto PARAM_VALID = "valid";
+constexpr auto PARAM_ROLE = "role";
+constexpr auto PARAM_CONFIGURED = "configured";
+constexpr auto PARAM_DETECTED = "detected";
+
 // Ble sensors
 constexpr auto PARAM_TEMPERATURE_DEVICE = "temperature_device";
 constexpr auto PARAM_DEVICE = "device";
@@ -142,6 +159,14 @@ void PidWebServer::setupWebHandlers() {
   _server->on("/api/sensor", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleListSensor(request);
   });
+  _server->on("/api/hardware/status", HTTP_GET,
+              [this](AsyncWebServerRequest* request) {
+                this->webHandleHardwareScanStatus(request);
+              });
+  _server->on("/api/hardware", HTTP_GET,
+              [this](AsyncWebServerRequest* request) {
+                this->webHandleHardwareScan(request);
+              });
   _server->on("/api/pid/cc", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleControlConstants(request);
   });
@@ -599,5 +624,123 @@ void PidWebServer::loop() {
 
     _sensorScanTask = false;
   }
+
+  if (_hardwareScanTask) {
+    runHardwareScan();
+  }
+}
+
+void PidWebServer::webHandleHardwareScan(AsyncWebServerRequest* request) {
+  if (!isAuthenticated(request)) {
+    return;
+  }
+
+  Log.notice(F("WEB : webServer callback for /api/hardware." CR));
+  _hardwareScanData = "";
+  _hardwareScanTask = true;
+
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
+  JsonObject obj = response->getRoot().as<JsonObject>();
+  obj[PARAM_SUCCESS] = true;
+  obj[PARAM_MESSAGE] = "Scheduled hardware scanning";
+  response->setLength();
+  request->send(response);
+}
+
+void PidWebServer::webHandleHardwareScanStatus(
+    AsyncWebServerRequest* request) {
+  if (!isAuthenticated(request)) {
+    return;
+  }
+
+  Log.notice(F("WEB : webServer callback for /api/hardware/status." CR));
+
+  if (_hardwareScanTask || !_hardwareScanData.length()) {
+    AsyncJsonResponse* response = new AsyncJsonResponse(false);
+    JsonObject obj = response->getRoot().as<JsonObject>();
+    obj[PARAM_STATUS] = static_cast<bool>(_hardwareScanTask);
+    obj[PARAM_SUCCESS] = false;
+    obj[PARAM_MESSAGE] =
+        _hardwareScanTask ? "Hardware scanning running" : "No scanning running";
+    obj[PARAM_MESSAGE_CODE] = ESPFWK_WEB_ERR(_hardwareScanTask
+                                                 ? "HARDWARE_SCAN_RUNNING"
+                                                 : "HARDWARE_SCAN_NOT_RUNNING");
+    response->setLength();
+    request->send(response);
+  } else {
+    request->send(200, "application/json", _hardwareScanData);
+  }
+}
+
+// Same envelope as GravityMon's /api/hardware/status (status/success/message,
+// chip) with the sensor data this device cares about: every DS18B20 on the
+// one-wire bus with a live reading and its configured role.
+void PidWebServer::runHardwareScan() {
+  Log.notice(F("WEB : Scanning hardware." CR));
+
+  JsonDocument doc;
+  JsonObject obj = doc.to<JsonObject>();
+  obj[PARAM_STATUS] = false;
+  obj[PARAM_SUCCESS] = true;
+  obj[PARAM_MESSAGE] = "";
+
+  JsonObject cpu = obj[PARAM_CHIP].to<JsonObject>();
+  esp_chip_info_t chipInfo;
+  esp_chip_info(&chipInfo);
+  cpu[PARAM_REVISION] = chipInfo.revision;
+  cpu[PARAM_CORES] = chipInfo.cores;
+  cpu[PARAM_FAMILY] = ESP.getChipModel();
+
+  JsonArray feature = cpu[PARAM_FEATURES].to<JsonArray>();
+  if (chipInfo.features & CHIP_FEATURE_EMB_FLASH) feature.add("Embedded flash");
+  if (chipInfo.features & CHIP_FEATURE_WIFI_BGN) feature.add("2.4Ghz WIFI");
+  if (chipInfo.features & CHIP_FEATURE_BLE) feature.add("Bluetooth LE");
+  if (chipInfo.features & CHIP_FEATURE_BT) feature.add("Bluetooth Classic");
+  if (chipInfo.features & CHIP_FEATURE_EMB_PSRAM) feature.add("Embedded PSRAM");
+
+  JsonObject ow = obj[PARAM_ONEWIRE].to<JsonObject>();
+  ow[PARAM_PIN] = Config::Pins::oneWirePin;
+
+  DallasTemperature ds(&oneWire);
+  ds.begin();
+  ow[PARAM_COUNT] = ds.getDS18Count();
+  ds.requestTemperatures();  // Blocks until conversion is done
+
+  JsonArray sensors = ow[PARAM_SENSORS].to<JsonArray>();
+  for (int i = 0; i < ds.getDS18Count(); i++) {
+    DeviceAddress da;
+    if (!ds.getAddress(da, i)) continue;
+
+    char buf[17];
+    printBytes(da, 8, buf);
+    float c = ds.getTempC(da);
+    bool valid = c != DEVICE_DISCONNECTED_C;
+
+    JsonObject s = sensors.add<JsonObject>();
+    s[PARAM_ADDRESS] = buf;
+    s[PARAM_VALID] = valid;
+    if (valid) s[PARAM_TEMP] = c;
+    s[PARAM_ROLE] = strcmp(buf, myConfig.getFridgeSensorId()) == 0 ? "fridge"
+                    : strcmp(buf, myConfig.getBeerSensorId()) == 0   ? "beer"
+                                                                        : "";
+  }
+
+  // Configured sensors that were not found on the bus
+  JsonObject cfg = ow[PARAM_CONFIGURED].to<JsonObject>();
+  auto detected = [&](const char* id) {
+    for (JsonObject s : sensors)
+      if (strcmp(s[PARAM_ADDRESS] | "", id) == 0) return true;
+    return false;
+  };
+  JsonObject f = cfg["fridge"].to<JsonObject>();
+  f[PARAM_ID] = myConfig.getFridgeSensorId();
+  f[PARAM_DETECTED] = detected(myConfig.getFridgeSensorId());
+  JsonObject b = cfg["beer"].to<JsonObject>();
+  b[PARAM_ID] = myConfig.getBeerSensorId();
+  b[PARAM_DETECTED] = detected(myConfig.getBeerSensorId());
+
+  serializeJson(obj, _hardwareScanData);
+  Log.notice(F("WEB : Scan complete %s." CR), _hardwareScanData.c_str());
+  _hardwareScanTask = false;
 }
 // EOF

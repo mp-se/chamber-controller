@@ -31,7 +31,9 @@ class PidWebServer : public BaseWebServer {
   BrewGraphPush* _push;
   volatile bool _sensorScanTask = false;
   volatile bool _tempControllerInitTask = false;
+  volatile bool _hardwareScanTask = false;
   std::list<String> _sensors;
+  String _hardwareScanData;
 
   void setupWebHandlers();
   void webHandleStatus(AsyncWebServerRequest* request);
@@ -43,6 +45,9 @@ class PidWebServer : public BaseWebServer {
   void webHandleMode(AsyncWebServerRequest* request, JsonVariant& json);
   void webHandleListSensor(AsyncWebServerRequest* request);
   void webHandleListSensorStatus(AsyncWebServerRequest* request);
+  void webHandleHardwareScan(AsyncWebServerRequest* request);
+  void webHandleHardwareScanStatus(AsyncWebServerRequest* request);
+  void runHardwareScan();
 
   void webHandleControlConstants(AsyncWebServerRequest* request);
   void webHandleControlSettings(AsyncWebServerRequest* request);

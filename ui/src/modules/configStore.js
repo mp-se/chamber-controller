@@ -341,6 +341,50 @@ export const useConfigStore = defineStore('config', {
         global.disabled = false
       }
     },
+    async sendHardwareScan() {
+      logInfo('configStore.sendHardwareScan()', 'Sending /api/hardware')
+      try {
+        await http.request('api/hardware')
+        return true
+      } catch (err) {
+        logError('configStore.sendHardwareScan()', err)
+        return false
+      }
+    },
+    async getHardwareScanStatus() {
+      logInfo('configStore.getHardwareScanStatus()', 'Fetching /api/hardware/status')
+      try {
+        const json = await http.getJson('api/hardware/status')
+        logDebug('configStore.getHardwareScanStatus()', json)
+        return { success: true, data: json }
+      } catch (err) {
+        logError('configStore.getHardwareScanStatus()', err)
+        return { success: false, data: null }
+      }
+    },
+    async runHardwareScan() {
+      const global = await getGlobalStore()
+      global.disabled = true
+      logInfo('configStore.runHardwareScan()', 'Starting hardware scan')
+
+      try {
+        if (!(await this.sendHardwareScan())) return { success: false }
+
+        while (true) {
+          const statusRes = await this.getHardwareScanStatus()
+          if (!statusRes.success) return { success: false }
+
+          if (statusRes.data.status) {
+            await new Promise((r) => setTimeout(r, 2000))
+            continue
+          }
+
+          return { success: statusRes.data.success, data: statusRes.data }
+        }
+      } finally {
+        global.disabled = false
+      }
+    },
     async runSensorScan() {
       const global = await getGlobalStore()
       global.disabled = true
