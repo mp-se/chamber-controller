@@ -127,8 +127,8 @@ void Display::clear(uint32_t color) {
 void Display::updateButtons(bool beerEnabled, bool chamberEnabled) {
 #if defined(ENABLE_LVGL)
   // Update button visibility using new API
-  Log.notice(F("DISP: Updating button visibility: Beer=%d, Chamber=%d" CR),
-             beerEnabled, chamberEnabled);
+  // Log.notice(F("DISP: Updating button visibility: Beer=%d, Chamber=%d" CR),
+  //            beerEnabled, chamberEnabled);
   chamber_controller_set_beer_button_visible(beerEnabled);
   chamber_controller_set_chamber_button_visible(chamberEnabled);
 #endif

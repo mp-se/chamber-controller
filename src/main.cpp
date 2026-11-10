@@ -235,8 +235,8 @@ void runLoop() {
 
     uint32_t up = myUptime.getHours() * 60 + myUptime.getMinutes();
 
-    Log.notice(F("Loop: Checking restart timer %d, %d." CR), up,
-               myConfig.getRestartInterval());
+    // Log.notice(F("Loop: Checking restart timer %d, %d." CR), up,
+    //            myConfig.getRestartInterval());
 
     if (myConfig.getRestartInterval() > 0 &&
         up > myConfig.getRestartInterval()) {
@@ -360,7 +360,7 @@ void runLoop() {
                            tempControl.getCoolingActuator()->isActive();
       bool heatingActive = tempControl.getHeatingActuator() &&
                            tempControl.getHeatingActuator()->isActive();
-      Log.notice(F("Main: Fan actuator %s." CR), (coolingActive || heatingActive) ? "active" : "inactive");
+      // Log.notice(F("Main: Fan actuator %s." CR), (coolingActive || heatingActive) ? "active" : "inactive");
       actuatorFan->setActive(coolingActive || heatingActive);
     }
 
