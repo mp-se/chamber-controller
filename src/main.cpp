@@ -342,12 +342,15 @@ void runLoop() {
       } break;
     }
 
+    // Make it visible on the display when BrewGraph is in control
+    const char* remote = myConfig.getRemoteControlActive() ? "REMOTE | " : "";
+
     if (!myWifi.isConnected()) {
-      snprintf(statusBar, sizeof(statusBar), "Not connected");
+      snprintf(statusBar, sizeof(statusBar), "%sNot connected", remote);
     } else {
-      snprintf(statusBar, sizeof(statusBar), "ssid: %s ip: %s, rssi: %d",
-               WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(),
-               WiFi.RSSI());
+      snprintf(statusBar, sizeof(statusBar), "%sssid: %s ip: %s, rssi: %d",
+               remote, WiFi.SSID().c_str(),
+               WiFi.localIP().toString().c_str(), WiFi.RSSI());
     }
 
     myDisplay.updateTemperatures(mode, state, statusBar, beer, fridge,
