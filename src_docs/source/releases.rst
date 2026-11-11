@@ -6,13 +6,20 @@ Release notes
 0.9.0
 =====
 
-* Added BrewGraph integration, including configuration, chamber reporting, and integration status in the web interface.
+* Added BrewGraph integration. The controller reports beer and chamber temperature, mode and target to BrewGraph at a configurable interval (5, 10, 15 or 20 minutes) and can optionally let BrewGraph set the mode and target temperature (remote control).
+* Added integration status for BrewGraph on the home page, showing the result of the last request.
+* Remote control is now clearly indicated. The web interface shows a Remote badge and an explanation in the controller card, and the TFT status bar starts with REMOTE while BrewGraph is in control.
+* Added a hardware test on the support page. It returns a JSON document with chip information and every DS18B20 sensor on the one-wire bus, with live temperature, assigned role (fridge or beer) and whether the configured sensors were found.
+* Updated the support page with links, version and feature information, device log viewer and error code help.
 * Added fan actuator support and status views.
 * Added a cooling safety cooldown to protect the compressor between cooling cycles.
-* Added task watchdog handling to help prevent display and UI stalls.
+* Added task watchdog handling to help prevent display and UI stalls, including during WiFi reconnection.
+* Changed the scheduled restart interval to 25 hours.
 * Refined temperature control, sensor handling, and control metrics.
-* Refactored the BrewPi PID library to use floating point math for easier maintenance .
-* Updated the BrewPi PID library and added a simulator for comparing controller behavior.
+* Refactored the BrewPi PID library to use floating point math for easier maintenance.
+* Updated the BrewPi PID library and added a simulator for comparing controller behavior against the original BrewPi implementation.
+* Updated dependencies and LVGL deprecated methods, and added documentation built with Sphinx.
+* (Bug) Fixed timer overflow in the BrewPi PID library.
 
 0.8.0
 =====
