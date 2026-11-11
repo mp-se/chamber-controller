@@ -114,6 +114,8 @@ describe('PidControllerFragment', () => {
       await wrapper.vm.$nextTick()
 
       expect(wrapper.text()).toContain('BrewGraph control is active')
+      expect(wrapper.text()).toContain('controlled by BrewGraph')
+      expect(wrapper.find('.badge').text()).toBe('Remote')
       expect(wrapper.find('button').exists()).toBe(false)
       expect(wrapper.vm.disableRemoteControl).toBeUndefined()
     })

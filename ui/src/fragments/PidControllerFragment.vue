@@ -62,9 +62,13 @@
   </div>
 
   <div class="card h-100" v-else>
-    <div class="card-header bg-success-subtle">{{ t('pid.controller_title') }}</div>
+    <div class="card-header bg-warning-subtle">
+      {{ t('pid.controller_title') }}
+      <span class="badge bg-warning text-dark ms-2">{{ t('pid.remote_badge') }}</span>
+    </div>
     <div class="card-body">
-      <p class="text-center">{{ t('pid.remote_active') }}</p>
+      <div class="alert alert-warning" role="alert">{{ t('pid.remote_banner') }}</div>
+      <p class="text-center small text-muted">{{ t('pid.remote_active') }}</p>
     </div>
   </div>
 </template>

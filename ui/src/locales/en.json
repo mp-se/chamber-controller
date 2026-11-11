@@ -325,6 +325,8 @@
     "change_mode": "Change mode",
     "target_temp": "Target temperature",
     "set": "Set",
+    "remote_badge": "Remote",
+    "remote_banner": "This chamber is controlled by BrewGraph. Mode and target temperature are set remotely and cannot be changed here.",
     "remote_active": "BrewGraph control is active. Disable BrewGraph in its settings to return to local control.",
     "off": "Off",
     "reload": "Reload",

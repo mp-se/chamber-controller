@@ -18,7 +18,12 @@
 
 <template>
   <div class="card h-100">
-    <div class="card-header bg-success-subtle">{{ t('pid.controller_title') }}</div>
+    <div class="card-header bg-success-subtle">
+      {{ t('pid.controller_title') }}
+      <span v-if="status.remote_control_active" class="badge bg-warning text-dark ms-2">{{
+        t('pid.remote_badge')
+      }}</span>
+    </div>
     <div class="card-body">
       <div class="row text-start">
         <div class="col-md-2">{{ t('pid.mode') }}</div>
