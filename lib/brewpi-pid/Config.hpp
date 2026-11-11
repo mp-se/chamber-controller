@@ -27,14 +27,17 @@ namespace Pins {
 #if defined(ESP32S2)
 constexpr auto heatingPin = 5;
 constexpr auto coolingPin = 7;
+constexpr auto fanPin = 3;
 constexpr auto oneWirePin = 9;
 #elif defined(ESP32S3)
 constexpr auto heatingPin = 4;
 constexpr auto coolingPin = 12;
+constexpr auto fanPin = 2;
 constexpr auto oneWirePin = 13;
 #elif defined(ESP32)
 constexpr auto heatingPin = 25;
 constexpr auto coolingPin = 26;
+constexpr auto fanPin = 15;
 constexpr auto oneWirePin = 13;
 #else
 #error "Unknown target"
@@ -48,10 +51,6 @@ constexpr auto tempDecimals = 1;
 constexpr auto fixedPointDecimals = 3;
 // Decimal places for a temperature difference
 constexpr auto tempDiffDecimals = 3;
-// Length to use for conversion buffers
-constexpr auto bufferLen = 12;
-// Maximum length of a temp string
-constexpr auto maxLength = 9;
 };  // namespace TempFormat
 
 namespace DeviceConfigManager {

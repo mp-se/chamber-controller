@@ -32,17 +32,14 @@ class OneWireTempSensor : public BasicTempSensor {
  public:
   OneWireTempSensor(OneWire* bus, DeviceAddress address,
                     float calibrationOffsetC, String name) {
-    // Log.verbose(F("TEMP: Creating OneWireTempSensor with offset %d." CR),
+    // Log.verbose(F("TEMP: Creating OneWireTempSensor with offset %F." CR),
     //             calibrationOffsetC);
-    char buff[10];
-    dtostrf(calibrationOffsetC, 4, 6, buff);
-
     _oneWire = bus;
     _sensor = NULL;
     _name = name;
     _connected = true;
     memcpy(_sensorAddress, address, sizeof(DeviceAddress));
-    _calibrationOffset = fixed4_4(stringToTempDiff(buff) >> (TEMP_FIXED_POINT_BITS - TEMP_CALIBRATION_OFFSET_PRECISION));
+    _calibrationOffset = isnan(calibrationOffsetC) ? 0 : calibrationOffsetC;
   }
 
   ~OneWireTempSensor();
@@ -54,17 +51,15 @@ class OneWireTempSensor : public BasicTempSensor {
   String getName() const { return _name; }
   
  private:
-  constexpr static uint8_t _sensorPrecision = 4;
-
   void setConnected(bool connected);
   bool requestConversion();
   void waitForConversion() { wait.millis(750); }
-  temperature readAndConstrainTemp();
+  temperature readTemp();
 
   OneWire* _oneWire;
   DallasTemperature* _sensor;
   DeviceAddress _sensorAddress;
-  fixed4_4 _calibrationOffset;
+  temperature _calibrationOffset;  // Celsius, added to every reading
   bool _connected;
   String _name;
 };

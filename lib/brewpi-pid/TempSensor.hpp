@@ -26,17 +26,14 @@
 #include <TempSensorBasic.hpp>
 
 typedef CascadedFilter TempSensorFilter;
-// typedef FixedFilter TempSensorFilter;
 
 enum TempSensorType { TEMP_SENSOR_TYPE_FRIDGE = 1, TEMP_SENSOR_TYPE_BEER };
 
 /**
  * \brief General interface for all temperature sensor devices.
  *
- * Wraps up a BasicTempSensor and processes the values through several filters.
- * The filters are either CascadedFilter or FixedFilter implementations,
- * depending on the compile time value of the TEMP_SENSOR_CASCADED_FILTER
- * macro.
+ * Wraps up a BasicTempSensor and processes the values through several
+ * CascadedFilter filters.
  */
 class TempSensor {
  public:
@@ -71,17 +68,19 @@ class TempSensor {
   String getSensorName() const;
 
  private:
+  void initFilters(temperature temp);
+
   BasicTempSensor* _sensor = NULL;
   TempSensorFilter fastFilter;
   TempSensorFilter slowFilter;
   TempSensorFilter slopeFilter;
   unsigned char updateCounter;
-  temperature_precise prevOutputForSlope;
+  temperature prevOutputForSlope = 0;
 
   // An indication of how stale the data is in the filters.
-  // Each time a read fails, this value is incremented.  It's used to reset
-  // the filters after a large enough disconnect delay, and on the first
-  // init.
+  // Each time a read fails, this value is incremented and a successful read
+  // sets it back to 0. It's used to reset the filters after a large enough
+  // disconnect delay, and on the first valid reading.
   // `-1` for uninitialized, `>=0` afterwards.
   int8_t failedReadCount;
 

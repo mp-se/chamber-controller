@@ -217,7 +217,7 @@ bool BleScanner::scan() {
              _activeScan ? "ACTIVE" : "PASSIVE");
   _bleScan->setActiveScan(_activeScan);
   _bleScan->start(_scanTime * 1000, false, true);
-  Log.notice(F("BLE : Scanning completed." CR));
+  // Log.notice(F("BLE : Scanning completed." CR));
   return true;
 }
 

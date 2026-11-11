@@ -28,8 +28,6 @@
 constexpr auto FILENAME_CONTROL_CONSTANTS = "/controlConstants.json";
 
 // JSON Keys
-constexpr auto KEY_SETTINGS_CHOICE = "settings_choice";
-
 constexpr auto KEY_TEMP_SETTING_MIN = "temp_setting_min";
 constexpr auto KEY_TEMP_SETTING_MAX = "temp_setting_max";
 constexpr auto KEY_KP = "kp";
@@ -51,39 +49,37 @@ constexpr auto KEY_BEER_FILTER_FAST = "beer_fast_filter";
 constexpr auto KEY_BEER_FILTER_SLOW = "beer_slow_filter";
 constexpr auto KEY_BEER_FILTER_SLOPE = "beer_slope_filter";
 constexpr auto KEY_PID_MAX = "pid_max";
-constexpr auto KEY_TEMP_FORMAT = "temp_format";
 
 ControlConstants::ControlConstants() { setDefaults(); }
 
 void ControlConstants::setDefaults() {
   Log.verbose(F("BREW: Using default ControlConstants." CR));
 
-  tempSettingMin = intToTemp(1);   // +1 deg Celsius
-  tempSettingMax = intToTemp(30);  // +30 deg Celsius
+  tempSettingMin = 1;   // +1 deg Celsius
+  tempSettingMax = 30;  // +30 deg Celsius
 
-  // control defines, also in fixed point format (7 int bits, 9 frac bits), so
-  // multiplied by 2^9=512
-  Kp = intToTempDiff(5);              // +5
-  Ki = intToTempDiff(1) / 4;          // +0.25
-  Kd = intToTempDiff(-3) / 2;         // -1.5
-  iMaxError = intToTempDiff(5) / 10;  // 0.5 deg
+  // control parameters
+  Kp = 5;
+  Ki = 0.25;
+  Kd = -1.5;
+  iMaxError = 0.5;  // 0.5 deg
 
   // Stay Idle when fridge temperature is in this range
-  idleRangeHigh = intToTempDiff(1);  // +1 deg Celsius
-  idleRangeLow = intToTempDiff(-1);  // -1 deg Celsius
+  idleRangeHigh = 1;   // +1 deg Celsius
+  idleRangeLow = -1;   // -1 deg Celsius
 
   // when peak falls between these limits, its good.
-  heatingTargetUpper = intToTempDiff(3) / 10;   // +0.3 deg Celsius
-  heatingTargetLower = intToTempDiff(-2) / 10;  // -0.2 deg Celsius
-  coolingTargetUpper = intToTempDiff(2) / 10;   // +0.2 deg Celsius
-  coolingTargetLower = intToTempDiff(-3) / 10;  // -0.3 deg Celsius
+  heatingTargetUpper = 0.3;   // +0.3 deg Celsius
+  heatingTargetLower = -0.2;  // -0.2 deg Celsius
+  coolingTargetUpper = 0.2;   // +0.2 deg Celsius
+  coolingTargetLower = -0.3;  // -0.3 deg Celsius
 
   // maximum history to take into account, in seconds
   maxHeatTimeForEstimate = 600;
   maxCoolTimeForEstimate = 1200;
 
-  // Set filter coefficients. This is the b value. See FilterFixed.h for delay
-  // times. The delay time is 3.33 * 2^b * number of cascades
+  // Set filter coefficients. This is the b value. See FilterCascaded.hpp for
+  // delay times. The delay time is 3.33 * 2^b * number of cascades
   fridgeFastFilter = 1u;
   fridgeSlowFilter = 4u;
   fridgeSlopeFilter = 3u;
@@ -91,36 +87,14 @@ void ControlConstants::setDefaults() {
   beerSlowFilter = 4u;
   beerSlopeFilter = 4u;
 
-  pidMax = intToTempDiff(10);  // +/- 10 deg Celsius
-  tempFormat = 'C';
+  pidMax = 10;  // +/- 10 deg Celsius
 }
 
 bool ControlConstants::save() {
 #if defined(BREWPI_ENABLE_SAVE)
   JsonDocument doc;
-
-  doc[KEY_TEMP_SETTING_MIN] = tempSettingMin;
-  doc[KEY_TEMP_SETTING_MAX] = tempSettingMax;
-  doc[KEY_KP] = Kp;
-  doc[KEY_KI] = Ki;
-  doc[KEY_KD] = Kd;
-  doc[KEY_MAX_ERROR] = iMaxError;
-  doc[KEY_IDLE_RANGE_HIGH] = idleRangeHigh;
-  doc[KEY_IDLE_RANGE_LOW] = idleRangeLow;
-  doc[KEY_HEATING_TARGET_UPPER] = heatingTargetUpper;
-  doc[KEY_HEATING_TARGET_LOWER] = heatingTargetLower;
-  doc[KEY_COOLING_TARGET_UPPER] = coolingTargetUpper;
-  doc[KEY_COOLING_TARGET_LOWER] = coolingTargetLower;
-  doc[KEY_MAX_HEAT_EST] = maxHeatTimeForEstimate;
-  doc[KEY_MAX_COOL_EST] = maxCoolTimeForEstimate;
-  doc[KEY_FRIDGE_FILTER_FAST] = fridgeFastFilter;
-  doc[KEY_FRIDGE_FILTER_SLOW] = fridgeSlowFilter;
-  doc[KEY_FRIDGE_FILTER_SLOPE] = fridgeSlopeFilter;
-  doc[KEY_BEER_FILTER_FAST] = beerFastFilter;
-  doc[KEY_BEER_FILTER_SLOW] = beerSlowFilter;
-  doc[KEY_BEER_FILTER_SLOPE] = beerSlopeFilter;
-  doc[KEY_PID_MAX] = pidMax;
-  doc[KEY_TEMP_FORMAT] = String(tempFormat);
+  JsonObject obj = doc.to<JsonObject>();
+  toJsonReadable(obj);
 
   JsonFileSystemHelper file(FILENAME_CONTROL_CONSTANTS);
   return file.saveJson(doc);
@@ -148,32 +122,28 @@ bool ControlConstants::load() {
 }
 
 void ControlConstants::toJsonReadable(JsonObject& doc) const {
-  doc[KEY_TEMP_FORMAT] = String(tempFormat);
-
   doc[KEY_TEMP_SETTING_MIN] =
-      tempToDouble(tempSettingMin, Config::TempFormat::tempDecimals);
+      roundTo(tempSettingMin, Config::TempFormat::tempDecimals);
   doc[KEY_TEMP_SETTING_MAX] =
-      tempToDouble(tempSettingMax, Config::TempFormat::tempDecimals);
-  doc[KEY_PID_MAX] =
-      tempDiffToDouble(pidMax, Config::TempFormat::tempDiffDecimals);
-  doc[KEY_KP] = fixedPointToDouble(Kp, Config::TempFormat::fixedPointDecimals);
-  doc[KEY_KI] = fixedPointToDouble(Ki, Config::TempFormat::fixedPointDecimals);
-  doc[KEY_KD] = fixedPointToDouble(Kd, Config::TempFormat::fixedPointDecimals);
+      roundTo(tempSettingMax, Config::TempFormat::tempDecimals);
+  doc[KEY_PID_MAX] = roundTo(pidMax, Config::TempFormat::tempDiffDecimals);
+  doc[KEY_KP] = roundTo(Kp, Config::TempFormat::fixedPointDecimals);
+  doc[KEY_KI] = roundTo(Ki, Config::TempFormat::fixedPointDecimals);
+  doc[KEY_KD] = roundTo(Kd, Config::TempFormat::fixedPointDecimals);
 
-  doc[KEY_MAX_ERROR] =
-      tempDiffToDouble(iMaxError, Config::TempFormat::tempDiffDecimals);
+  doc[KEY_MAX_ERROR] = roundTo(iMaxError, Config::TempFormat::tempDiffDecimals);
   doc[KEY_IDLE_RANGE_HIGH] =
-      tempDiffToDouble(idleRangeHigh, Config::TempFormat::tempDiffDecimals);
+      roundTo(idleRangeHigh, Config::TempFormat::tempDiffDecimals);
   doc[KEY_IDLE_RANGE_LOW] =
-      tempDiffToDouble(idleRangeLow, Config::TempFormat::tempDiffDecimals);
-  doc[KEY_HEATING_TARGET_UPPER] = tempDiffToDouble(
-      heatingTargetUpper, Config::TempFormat::tempDiffDecimals);
-  doc[KEY_HEATING_TARGET_LOWER] = tempDiffToDouble(
-      heatingTargetLower, Config::TempFormat::tempDiffDecimals);
-  doc[KEY_COOLING_TARGET_UPPER] = tempDiffToDouble(
-      coolingTargetUpper, Config::TempFormat::tempDiffDecimals);
-  doc[KEY_COOLING_TARGET_LOWER] = tempDiffToDouble(
-      coolingTargetLower, Config::TempFormat::tempDiffDecimals);
+      roundTo(idleRangeLow, Config::TempFormat::tempDiffDecimals);
+  doc[KEY_HEATING_TARGET_UPPER] =
+      roundTo(heatingTargetUpper, Config::TempFormat::tempDiffDecimals);
+  doc[KEY_HEATING_TARGET_LOWER] =
+      roundTo(heatingTargetLower, Config::TempFormat::tempDiffDecimals);
+  doc[KEY_COOLING_TARGET_UPPER] =
+      roundTo(coolingTargetUpper, Config::TempFormat::tempDiffDecimals);
+  doc[KEY_COOLING_TARGET_LOWER] =
+      roundTo(coolingTargetLower, Config::TempFormat::tempDiffDecimals);
   doc[KEY_MAX_HEAT_EST] = maxHeatTimeForEstimate;
   doc[KEY_MAX_COOL_EST] = maxCoolTimeForEstimate;
   doc[KEY_FRIDGE_FILTER_FAST] = fridgeFastFilter;
@@ -185,24 +155,25 @@ void ControlConstants::toJsonReadable(JsonObject& doc) const {
 }
 
 void ControlConstants::fromJsonReadable(JsonObject& doc) {
-  if (doc[KEY_TEMP_SETTING_MIN].is<int>())
+  if (doc[KEY_TEMP_SETTING_MIN].is<double>())
     tempSettingMin = doc[KEY_TEMP_SETTING_MIN];
-  if (doc[KEY_TEMP_SETTING_MAX].is<int>())
+  if (doc[KEY_TEMP_SETTING_MAX].is<double>())
     tempSettingMax = doc[KEY_TEMP_SETTING_MAX];
-  if (doc[KEY_KP].is<int>()) Kp = doc[KEY_KP];
-  if (doc[KEY_KI].is<int>()) Ki = doc[KEY_KI];
-  if (doc[KEY_KD].is<int>()) Kd = doc[KEY_KD];
-  if (doc[KEY_MAX_ERROR].is<int>()) iMaxError = doc[KEY_MAX_ERROR];
-  if (doc[KEY_IDLE_RANGE_HIGH].is<int>())
+  if (doc[KEY_KP].is<double>()) Kp = doc[KEY_KP];
+  if (doc[KEY_KI].is<double>()) Ki = doc[KEY_KI];
+  if (doc[KEY_KD].is<double>()) Kd = doc[KEY_KD];
+  if (doc[KEY_MAX_ERROR].is<double>()) iMaxError = doc[KEY_MAX_ERROR];
+  if (doc[KEY_IDLE_RANGE_HIGH].is<double>())
     idleRangeHigh = doc[KEY_IDLE_RANGE_HIGH];
-  if (doc[KEY_IDLE_RANGE_LOW].is<int>()) idleRangeLow = doc[KEY_IDLE_RANGE_LOW];
-  if (doc[KEY_HEATING_TARGET_UPPER].is<int>())
+  if (doc[KEY_IDLE_RANGE_LOW].is<double>())
+    idleRangeLow = doc[KEY_IDLE_RANGE_LOW];
+  if (doc[KEY_HEATING_TARGET_UPPER].is<double>())
     heatingTargetUpper = doc[KEY_HEATING_TARGET_UPPER];
-  if (doc[KEY_HEATING_TARGET_LOWER].is<int>())
+  if (doc[KEY_HEATING_TARGET_LOWER].is<double>())
     heatingTargetLower = doc[KEY_HEATING_TARGET_LOWER];
-  if (doc[KEY_COOLING_TARGET_UPPER].is<int>())
+  if (doc[KEY_COOLING_TARGET_UPPER].is<double>())
     coolingTargetUpper = doc[KEY_COOLING_TARGET_UPPER];
-  if (doc[KEY_COOLING_TARGET_LOWER].is<int>())
+  if (doc[KEY_COOLING_TARGET_LOWER].is<double>())
     coolingTargetLower = doc[KEY_COOLING_TARGET_LOWER];
   if (doc[KEY_MAX_HEAT_EST].is<int>())
     maxHeatTimeForEstimate = doc[KEY_MAX_HEAT_EST];
@@ -220,9 +191,5 @@ void ControlConstants::fromJsonReadable(JsonObject& doc) {
     beerSlowFilter = doc[KEY_BEER_FILTER_SLOW];
   if (doc[KEY_BEER_FILTER_SLOPE].is<int>())
     beerSlopeFilter = doc[KEY_BEER_FILTER_SLOPE];
-  if (doc[KEY_PID_MAX].is<int>()) pidMax = doc[KEY_PID_MAX];
-  if (doc[KEY_TEMP_FORMAT].is<int>())
-    tempFormat = doc[KEY_TEMP_FORMAT].as<String>().charAt(0);
+  if (doc[KEY_PID_MAX].is<double>()) pidMax = doc[KEY_PID_MAX];
 }
-
-// EOF

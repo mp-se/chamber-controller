@@ -51,7 +51,6 @@ class ControlConstants {
   uint8_t beerSlowFilter;     //!< for on/off control algorithm
   uint8_t beerSlopeFilter;    //!< for PID calculation
   temperature pidMax;
-  char tempFormat;
 
   void setDefaults();
   bool save();

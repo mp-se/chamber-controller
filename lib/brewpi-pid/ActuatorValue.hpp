@@ -30,7 +30,7 @@ class ValueActuator : public Actuator {
     _state = false;
   }
   explicit ValueActuator(bool initial) {
-    Log.verbose(F("BREW: Creating ValueActuator state=&s." CR),
+    Log.verbose(F("BREW: Creating ValueActuator state=%s." CR),
                 initial ? "true" : "false");
     _state = initial;
   }

@@ -20,6 +20,7 @@
 #include <FS.h>
 #include <LittleFS.h>
 #include <Wire.h>
+#include <esp_task_wdt.h>
 
 #include <cstdio>
 #include <display.hpp>
@@ -126,8 +127,8 @@ void Display::clear(uint32_t color) {
 void Display::updateButtons(bool beerEnabled, bool chamberEnabled) {
 #if defined(ENABLE_LVGL)
   // Update button visibility using new API
-  Log.notice(F("DISP: Updating button visibility: Beer=%d, Chamber=%d" CR),
-             beerEnabled, chamberEnabled);
+  // Log.notice(F("DISP: Updating button visibility: Beer=%d, Chamber=%d" CR),
+  //            beerEnabled, chamberEnabled);
   chamber_controller_set_beer_button_visible(beerEnabled);
   chamber_controller_set_chamber_button_visible(chamberEnabled);
 #endif
@@ -144,13 +145,16 @@ void Display::updateTemperatures(const char* mode, const char* state,
   // Update the new UI using chamber_controller API
   chamber_controller_set_mode(mode);
   chamber_controller_set_state(state);
-  chamber_controller_set_beer_temp(beerTemp, myConfig.getTempFormat());
-  chamber_controller_set_chamber_temp(chamberTemp, myConfig.getTempFormat());
+  // The controller works in Celsius, convert for display only
+  chamber_controller_set_beer_temp(toDisplayTemp(beerTemp, tempFormat),
+                                   tempFormat);
+  chamber_controller_set_chamber_temp(toDisplayTemp(chamberTemp, tempFormat),
+                                      tempFormat);
   chamber_controller_set_status(statusBar);
 
   // Update target temp
-  chamber_controller_set_target_temp(_targetTemperature,
-                                     myConfig.getTempFormat());
+  chamber_controller_set_target_temp(
+      toDisplayTemp(_targetTemperature, tempFormat), tempFormat);
 
   // Update theme if changed
   chamber_controller_set_theme(darkmode);
@@ -397,6 +401,8 @@ void btnDownEventHandler(lv_event_t* e) {
 void lvgl_loop_handler(void* parameter) {
   LoopTimer taskLoop(500);
 
+  esp_task_wdt_add(NULL);  // Watch this task, a stalled UI reboots the device
+
   for (;;) {
     if (taskLoop.hasExpired()) {
       taskLoop.reset();
@@ -409,6 +415,7 @@ void lvgl_loop_handler(void* parameter) {
     chamber_controller_loop();
 
     lv_tick_inc(5);
+    esp_task_wdt_reset();  // Only reached if LVGL and the SPI driver returned
     delay(5);
   }
 }

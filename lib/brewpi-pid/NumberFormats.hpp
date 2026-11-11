@@ -22,7 +22,8 @@
 
 #include <stdint.h>
 
-void parseBytes(uint8_t *data, const char *s, uint8_t len);
+// Returns false (and clears data) unless s is exactly 2 * len hex digits
+bool parseBytes(uint8_t *data, const char *s, uint8_t len);
 void printBytes(const uint8_t *data, uint8_t len, char *buf);
 
 #endif  // SRC_NUMBERFORMATS_HPP_

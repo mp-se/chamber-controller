@@ -329,17 +329,17 @@ void chamber_controller_loop(void) {
 
   if (g_state.btn_beer) {
     if (g_state.flg_beerbtn_visible) {
-      lv_obj_clear_flag(g_state.btn_beer, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_set_hidden(g_state.btn_beer, false);
     } else {
-      lv_obj_add_flag(g_state.btn_beer, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_set_hidden(g_state.btn_beer, true);
     }
   }
 
   if (g_state.btn_chamber) {
     if (g_state.flg_chamberbtn_visible) {
-      lv_obj_clear_flag(g_state.btn_chamber, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_set_hidden(g_state.btn_chamber, false);
     } else {
-      lv_obj_add_flag(g_state.btn_chamber, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_set_hidden(g_state.btn_chamber, true);
     }
   }
 

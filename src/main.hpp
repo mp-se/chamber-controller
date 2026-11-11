@@ -19,11 +19,16 @@
 #ifndef SRC_MAIN_HPP_
 #define SRC_MAIN_HPP_
 
+#include <cstdint>
+
 enum RunMode {
   pidMode = 0,
   wifiSetupMode = 1,
 };
 extern RunMode runMode;
+
+// Task watchdog, reboots the device if the main loop or the LVGL task stalls
+constexpr uint32_t WDT_TIMEOUT_S = 60;
 
 void configureTempControl();
 void validateTempControl();
@@ -36,6 +41,7 @@ constexpr auto PARAM_CONTROLLER_MODE = "controller_mode";
 constexpr auto PARAM_TARGET_TEMPERATURE = "target_temperature";
 constexpr auto PARAM_ENABLE_COOLING = "enable_cooling";
 constexpr auto PARAM_ENABLE_HEATING = "enable_heating";
+constexpr auto PARAM_ENABLE_FAN = "enable_fan";
 constexpr auto PARAM_INVERT_PINS = "invert_pins";
 constexpr auto PARAM_RESTART_INTERVAL = "restart_interval";
 constexpr auto PARAM_BLE_ENABLED =
@@ -53,6 +59,12 @@ constexpr auto PARAM_REMOTE_PREVIOUS_BLE_SENSOR_ID =
 constexpr auto PARAM_REMOTE_PREVIOUS_MODE = "remote_previous_mode";
 constexpr auto PARAM_REMOTE_PREVIOUS_TARGET_TEMP =
     "remote_previous_target_temp";
+
+constexpr auto PARAM_BREWGRAPH_TOKEN = "brewgraph_token";
+constexpr auto PARAM_BREWGRAPH_URL = "brewgraph_url";
+constexpr auto PARAM_BREWGRAPH_INTERVAL = "brewgraph_interval";  // minutes
+constexpr auto PARAM_BREWGRAPH_REMOTE_CONTROL_ENABLED =
+    "brewgraph_remote_control_enabled";
 
 #define DECIMALS_TEMP 2
 

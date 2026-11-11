@@ -45,6 +45,7 @@ void PidConfig::createJson(JsonObject& doc) const {
       serialized(String(getTargetTemperature(), DECIMALS_TEMP));
   doc[PARAM_ENABLE_COOLING] = isCoolingEnabled();
   doc[PARAM_ENABLE_HEATING] = isHeatingEnabled();
+  doc[PARAM_ENABLE_FAN] = isFanEnabled();
   doc[PARAM_INVERT_PINS] = isPinsInverted();
   doc[PARAM_RESTART_INTERVAL] = getRestartInterval();
   // doc[PARAM_BLE_ENABLED] = isBlePushEnabled(); // This variable is the same
@@ -57,6 +58,11 @@ void PidConfig::createJson(JsonObject& doc) const {
   doc[PARAM_REMOTE_PREVIOUS_MODE] = String(getRemotePreviousMode());
   doc[PARAM_REMOTE_PREVIOUS_TARGET_TEMP] =
       serialized(String(getRemotePreviousTargetTemp(), DECIMALS_TEMP));
+  doc[PARAM_BREWGRAPH_TOKEN] = getBrewgraphToken();
+  doc[PARAM_BREWGRAPH_URL] = getBrewgraphUrl();
+  doc[PARAM_BREWGRAPH_INTERVAL] = getBrewgraphInterval();
+  doc[PARAM_BREWGRAPH_REMOTE_CONTROL_ENABLED] =
+      isBrewgraphRemoteControlEnabled();
 }
 
 void PidConfig::parseJson(JsonObject& doc) {
@@ -87,6 +93,8 @@ void PidConfig::parseJson(JsonObject& doc) {
     setCoolingEnabled(doc[PARAM_ENABLE_COOLING].as<bool>());
   if (!doc[PARAM_ENABLE_HEATING].isNull())
     setHeatingEnabled(doc[PARAM_ENABLE_HEATING].as<bool>());
+  if (!doc[PARAM_ENABLE_FAN].isNull())
+    setFanEnabled(doc[PARAM_ENABLE_FAN].as<bool>());
   if (!doc[PARAM_INVERT_PINS].isNull())
     setPinsInverted(doc[PARAM_INVERT_PINS].as<bool>());
   if (!doc[PARAM_RESTART_INTERVAL].isNull())
@@ -115,6 +123,15 @@ void PidConfig::parseJson(JsonObject& doc) {
   if (!doc[PARAM_REMOTE_PREVIOUS_TARGET_TEMP].isNull())
     setRemotePreviousTargetTemp(
         doc[PARAM_REMOTE_PREVIOUS_TARGET_TEMP].as<float>());
+  if (!doc[PARAM_BREWGRAPH_TOKEN].isNull())
+    setBrewgraphToken(doc[PARAM_BREWGRAPH_TOKEN]);
+  if (!doc[PARAM_BREWGRAPH_URL].isNull())
+    setBrewgraphUrl(doc[PARAM_BREWGRAPH_URL]);
+  if (!doc[PARAM_BREWGRAPH_INTERVAL].isNull())
+    setBrewgraphInterval(doc[PARAM_BREWGRAPH_INTERVAL].as<int>());
+  if (!doc[PARAM_BREWGRAPH_REMOTE_CONTROL_ENABLED].isNull())
+    setBrewgraphRemoteControlEnabled(
+        doc[PARAM_BREWGRAPH_REMOTE_CONTROL_ENABLED].as<bool>());
 }
 
 // EOF

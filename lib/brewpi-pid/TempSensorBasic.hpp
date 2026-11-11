@@ -20,9 +20,12 @@
 #ifndef SRC_TEMPSENSORBASIC_HPP_
 #define SRC_TEMPSENSORBASIC_HPP_
 
+#include <Arduino.h>
+
 #include <TemperatureFormats.hpp>
 
-constexpr auto TEMP_SENSOR_DISCONNECTED = INVALID_TEMP;
+// What read() returns when there is no reading, test with isnan()
+constexpr temperature TEMP_SENSOR_DISCONNECTED = NAN;
 
 class BasicTempSensor {
  public:
@@ -30,7 +33,7 @@ class BasicTempSensor {
   virtual ~BasicTempSensor() {}
   virtual bool isConnected() const = 0;
   virtual bool init() = 0;
-  virtual temperature read() = 0;
+  virtual temperature read() = 0;  // in Celsius, NAN if there is no reading
   virtual String getName() const = 0;
 };
 

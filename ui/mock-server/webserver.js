@@ -1,6 +1,6 @@
 /*
- * Chamber Controller
- * Copyright (c) 2024-2026 Magnus
+ * Chamber Controller UI
+ * Copyright (c) 2021-2026 Magnus
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#include <espframework.hpp>
-#include <pidconfig.hpp>
-#include <pidpush.hpp>
 
-PidPush::PidPush(PidConfig* config) : BasePush(config) { _pidConfig = config; }
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+const express = require('express')
 
-// EOF
+const app = express()
+const port = 3000
+
+app.use(express.json())
+
+app.use('/', express.static('dist'))
+
+app.listen(port, () => {
+  console.log(`Simple web server port ${port}`)
+})

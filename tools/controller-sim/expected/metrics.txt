@@ -1,0 +1,31 @@
+fridge_cool        coolSw= 24 heatSw=  0 cool%= 30.6 heat%=  0.0 reachMin=  39.9 meanDev= 1.122 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.0430  states(s): 5711 0 0 6611 9278 0 0 0 0
+beer_cool          coolSw= 75 heatSw=  0 cool%= 24.9 heat%=  0.0 reachMin= 159.3 meanDev= 0.030 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.0000  states(s): 63672 0 0 20735 1203 0 0 790 0
+beer_heat          coolSw=  0 heatSw= 51 cool%=  0.0 heat%= 37.3 reachMin= 188.6 meanDev= 0.032 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 53486 0 32201 0 0 713 0 0 0
+beer_step          coolSw= 48 heatSw= 30 cool%= 11.6 heat%= 10.7 reachMin= 108.0 meanDev= 0.035 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.9710  states(s): 62855 0 9187 7699 2336 1992 0 2301 30
+beer_cool_noisy    coolSw= 72 heatSw=  0 cool%= 25.0 heat%=  0.0 reachMin= 159.8 meanDev= 0.025 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.0000  states(s): 63604 0 0 20827 1203 0 0 766 0
+fridge_disconnect  coolSw= 23 heatSw=  0 cool%= 34.3 heat%=  0.0 reachMin=  58.3 meanDev= 1.281 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.0430  states(s): 5227 0 0 7419 8941 0 13 0 0
+beer_heat_noisy    coolSw=  0 heatSw= 50 cool%=  0.0 heat%= 53.6 reachMin= 214.7 meanDev= 0.042 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 38853 0 46269 0 0 1278 0 0 0
+nh_fridge_cool     coolSw= 24 heatSw=  0 cool%= 30.6 heat%=  0.0 reachMin=  39.9 meanDev= 1.122 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.0430  states(s): 5711 0 0 6611 9278 0 0 0 0
+nh_beer_cool       coolSw= 75 heatSw=  0 cool%= 24.9 heat%=  0.0 reachMin= 159.3 meanDev= 0.030 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.0000  states(s): 63672 0 0 20735 1203 0 0 790 0
+nh_beer_cool_noisy coolSw= 72 heatSw=  0 cool%= 25.0 heat%=  0.0 reachMin= 159.8 meanDev= 0.025 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.0000  states(s): 63604 0 0 20827 1203 0 0 766 0
+nh_beer_warm       coolSw=  0 heatSw=  0 cool%=  0.0 heat%=  0.0 reachMin=  -1.0 meanDev= 7.693 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 86400 0 0 0 0 0 0 0 0
+nh_beer_cold_room  coolSw=  1 heatSw=  0 cool%=  0.7 heat%=  0.0 reachMin=  47.2 meanDev= 3.545 lostDev= 0.000  heatEst= 0.2000 coolEst= 4.0000  states(s): 85207 0 0 593 600 0 0 0 0
+nh_beer_step       coolSw= 26 heatSw=  0 cool%=  7.0 heat%=  0.0 reachMin= 355.6 meanDev= 0.176 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.9710  states(s): 79483 0 0 4853 899 0 0 1165 0
+nh_fridge_disconnect coolSw= 23 heatSw=  0 cool%= 34.3 heat%=  0.0 reachMin=  58.3 meanDev= 1.281 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.0430  states(s): 5227 0 0 7419 8941 0 13 0 0
+nc_fridge_heat     coolSw=  0 heatSw= 31 cool%=  0.0 heat%= 53.6 reachMin=  42.1 meanDev= 0.508 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 8756 0 11586 0 0 1258 0 0 0
+nc_beer_heat       coolSw=  0 heatSw= 51 cool%=  0.0 heat%= 37.3 reachMin= 188.6 meanDev= 0.032 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 53486 0 32201 0 0 713 0 0 0
+nc_beer_heat_noisy coolSw=  0 heatSw= 50 cool%=  0.0 heat%= 53.6 reachMin= 214.7 meanDev= 0.042 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 38853 0 46269 0 0 1278 0 0 0
+nc_beer_cool       coolSw=  0 heatSw=  0 cool%=  0.0 heat%=  0.0 reachMin=  -1.0 meanDev=10.545 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 86400 0 0 0 0 0 0 0 0
+nc_beer_step       coolSw=  0 heatSw= 55 cool%=  0.0 heat%= 44.6 reachMin= 133.9 meanDev= 0.041 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 46700 0 38509 0 0 1191 0 0 0
+nc_fridge_disconnect coolSw=  0 heatSw= 31 cool%=  0.0 heat%= 49.5 reachMin=  33.5 meanDev= 0.500 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 9885 0 10696 0 0 1019 0 0 0
+fp_fridge_cool     coolSw= 24 heatSw=  0 cool%= 30.6 heat%=  0.0 reachMin=  39.9 meanDev= 1.122 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.0430  states(s): 5711 0 0 6611 9278 0 0 0 0
+fp_fridge_heat     coolSw=  0 heatSw= 31 cool%=  0.0 heat%= 53.6 reachMin=  42.1 meanDev= 0.508 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 8756 0 11586 0 0 1258 0 0 0
+fp_beer_cool       coolSw=116 heatSw=  0 cool%= 25.1 heat%=  0.0 reachMin=  30.7 meanDev= 0.957 lostDev= 0.000  heatEst= 0.2000 coolEst= 0.0010  states(s): 27482 0 0 7533 1736 35534 0 14115 0
+bp_beer_cool       coolSw= 27 heatSw= 16 cool%= 28.0 heat%=  6.0 reachMin= 108.9 meanDev= 0.202 lostDev= 0.000  heatEst= 0.2000 coolEst= 1.8550  states(s): 21507 0 5176 24169 7219 6778 21551 0 0
+bp_beer_heat       coolSw=  9 heatSw= 24 cool%=  2.7 heat%= 41.0 reachMin= 146.6 meanDev= 0.281 lostDev= 0.000  heatEst= 0.2000 coolEst= 5.0000  states(s): 26373 0 35384 2364 5173 3893 13213 0 0
+bp_fridge_cool     coolSw=  4 heatSw=  0 cool%= 35.9 heat%=  0.0 reachMin= 112.3 meanDev= 0.601 lostDev= 0.000  heatEst= 0.2000 coolEst= 2.2350  states(s): 12850 0 0 7758 992 0 0 0 0
+ble_beer_cool      coolSw= 95 heatSw=  0 cool%= 25.0 heat%=  0.0 reachMin= 159.3 meanDev= 0.113 lostDev= 0.466  heatEst= 0.2000 coolEst= 0.0010  states(s): 54557 0 0 19669 9970 256 0 1948 0
+ble_beer_heat      coolSw=  0 heatSw= 75 cool%=  0.0 heat%= 37.1 reachMin= 188.6 meanDev= 0.057 lostDev= 0.174  heatEst= 0.2000 coolEst= 5.0000  states(s): 53590 0 32066 0 0 713 0 0 31
+ble_beer_boot      coolSw= 87 heatSw=  0 cool%= 23.5 heat%=  0.0 reachMin= 611.5 meanDev= 0.030 lostDev= 0.601  heatEst= 0.2000 coolEst= 0.0000  states(s): 57109 0 0 18605 8350 630 0 1706 0
+nh_ble_beer_cool   coolSw= 95 heatSw=  0 cool%= 25.1 heat%=  0.0 reachMin= 159.3 meanDev= 0.113 lostDev= 0.466  heatEst= 0.2000 coolEst= 0.0010  states(s): 54754 0 0 19710 9979 0 0 1957 0
+nc_ble_beer_heat   coolSw=  0 heatSw= 75 cool%=  0.0 heat%= 37.1 reachMin= 188.6 meanDev= 0.057 lostDev= 0.174  heatEst= 0.2000 coolEst= 5.0000  states(s): 53590 0 32066 0 0 713 0 0 31

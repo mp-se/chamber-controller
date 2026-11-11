@@ -32,9 +32,10 @@ class PidConfig : public BaseConfig {
   float _targetTemperature = 5;
   float _fridgeSensorOffset = 0.0;
   float _beerSensorOffset = 0.0;
-  int _restartInterval = 60 * 4;  // in minutes
+  int _restartInterval = 60 * 24;  // in minutes
   bool _enableCooling = false;
   bool _enableHeating = false;
+  bool _enableFan = false;
   bool _invertPins = false;
 
   // BLE settings
@@ -44,11 +45,17 @@ class PidConfig : public BaseConfig {
   int _bleScanTime = 3;
   int _bleSensorValidTime = 15;
 
-  // Params for remote control via brewlogger
+  // Saved local settings while BrewGraph has temporary control
   bool _remoteControlActive = false;
   String _remotePreviousBleSensorId = "";
   char _remotePreviousMode = ControllerMode::off;
   float _remotePreviousTargetTemp = 5.0;
+
+  // Params for brewgraph integration
+  String _brewgraphToken = "";
+  String _brewgraphUrl = "";
+  int _brewgraphInterval = 15;  // minutes between reports
+  bool _brewgraphRemoteControlEnabled = false;
 
  public:
   PidConfig(String baseMDNS, String fileName);
@@ -73,6 +80,16 @@ class PidConfig : public BaseConfig {
     _saveNeeded = true;
   }
   bool isBeerBleSensorEnabled() const { return _beerBleSensorId.length() != 0; }
+
+  // A BLE beer sensor is not always heard. While it is silent the controller
+  // keeps the chamber at its setting with the chamber sensor, so a BLE beer
+  // sensor is only accepted together with a chamber sensor.
+  bool isBeerBleSensorUsed() const {
+    return isBeerBleSensorEnabled() && isBleScanEnabled();
+  }
+  bool isBleBeerSensorWithoutChamberSensor() const {
+    return isBeerBleSensorUsed() && !isFridgeSensorEnabled();
+  }
 
   float getFridgeSensorOffset() const { return _fridgeSensorOffset; }
   void setFridgeSensorOffset(float t) {
@@ -101,6 +118,12 @@ class PidConfig : public BaseConfig {
   bool isHeatingEnabled() const { return _enableHeating; }
   void setHeatingEnabled(bool b) {
     _enableHeating = b;
+    _saveNeeded = true;
+  }
+
+  bool isFanEnabled() const { return _enableFan; }
+  void setFanEnabled(bool b) {
+    _enableFan = b;
     _saveNeeded = true;
   }
 
@@ -189,6 +212,33 @@ class PidConfig : public BaseConfig {
   }
   void setRemotePreviousTargetTemp(float f) {
     _remotePreviousTargetTemp = f;
+    _saveNeeded = true;
+  }
+
+  const char* getBrewgraphToken() const { return _brewgraphToken.c_str(); }
+  void setBrewgraphToken(String s) {
+    _brewgraphToken = s;
+    _saveNeeded = true;
+  }
+
+  const char* getBrewgraphUrl() const { return _brewgraphUrl.c_str(); }
+  void setBrewgraphUrl(String s) {
+    _brewgraphUrl = s;
+    _saveNeeded = true;
+  }
+  bool isBrewgraphEnabled() const { return _brewgraphUrl.length() != 0; }
+
+  int getBrewgraphInterval() const { return _brewgraphInterval; }
+  void setBrewgraphInterval(int i) {
+    _brewgraphInterval = i;
+    _saveNeeded = true;
+  }
+
+  bool isBrewgraphRemoteControlEnabled() const {
+    return _brewgraphRemoteControlEnabled;
+  }
+  void setBrewgraphRemoteControlEnabled(bool enabled) {
+    _brewgraphRemoteControlEnabled = enabled;
     _saveNeeded = true;
   }
 

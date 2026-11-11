@@ -17,6 +17,7 @@
  *
  */
 #include <OneWire.h>
+#include <esp_task_wdt.h>
 
 #include <ActuatorDigitalPin.hpp>
 #include <Config.hpp>
@@ -34,8 +35,9 @@
 #include <main.hpp>
 #include <measurement.hpp>
 #include <pidconfig.hpp>
-#include <pidpush.hpp>
+#include <brewgraph.hpp>
 #include <pidwebserver.hpp>
+#include <remotecontrol.hpp>
 #include <serialws.hpp>
 #include <uptime.hpp>
 #include <wificonnection.hpp>
@@ -43,7 +45,7 @@
 SerialDebug mySerial(115200L);
 PidConfig myConfig("chamber", "/chamber.cfg");
 WifiConnection myWifi(&myConfig, "chamber", "password", "chamber", "", "");
-PidPush myPush(&myConfig);
+BrewGraphPush myPush(&myConfig);
 
 PidWebServer myWebServer(&myConfig, &myPush);
 SerialWebSocket mySerialWebSocket;
@@ -54,6 +56,7 @@ MeasurementList myMeasurementList;
 OneWire oneWire;
 DigitalPinActuator* actuatorCooling = nullptr;
 DigitalPinActuator* actuatorHeating = nullptr;
+DigitalPinActuator* actuatorFan = nullptr;
 OneWireTempSensor* oneWireFridge = nullptr;
 OneWireTempSensor* oneWireBeer = nullptr;
 #if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
@@ -70,10 +73,28 @@ LoopTimer tempControlLoop(1000);
 LoopTimer validateLoop(10000);
 LoopTimer pushLoop(30000);
 
+// One request reports the temperatures and returns the setpoint. First poll
+// shortly after boot, then every brewgraph_interval minutes (5, 10, 15 or 20 in
+// the UI), also after a failed poll.
+constexpr uint32_t BREWGRAPH_FIRST_POLL_MS = 20 * 1000;
+LoopTimer brewgraphLoop(BREWGRAPH_FIRST_POLL_MS);
+bool brewgraphPolled = false;
+
+// The BrewGraph server accepts one request per 5 minutes per device, so never
+// faster than that, whatever is stored.
+uint32_t brewgraphIntervalMs() {
+  return static_cast<uint32_t>(constrain(myConfig.getBrewgraphInterval(), 5, 20)) *
+         60 * 1000;
+}
+
 void setup() {
   delay(2000);
 
   Log.notice(F("Main: Started setup." CR));
+  Log.notice(F("Main: Reset reason %d." CR), static_cast<int>(esp_reset_reason()));
+
+  // Must be configured before the LVGL task subscribes in createUI()
+  esp_task_wdt_init(WDT_TIMEOUT_S, true);
 
   myConfig.checkFileSystem();
   myConfig.loadFile();
@@ -129,6 +150,14 @@ void setup() {
       myDisplay.createUI();
       myDisplay.setTargetTemperature(myConfig.getTargetTemperature());
       myDisplay.setMode(myConfig.getControllerMode());
+
+      // Older configurations may have saved remote control as active. Remote
+      // control is now opt-in, so return to the saved local state on boot.
+      if (!myConfig.isBrewgraphRemoteControlEnabled() &&
+          myConfig.getRemoteControlActive()) {
+        Log.notice(F("Main: BrewGraph control is disabled, restoring local control." CR));
+        applyRemoteCommand('r', NAN, "");
+      }
       break;
 
     case RunMode::wifiSetupMode:
@@ -138,14 +167,57 @@ void setup() {
 #if defined(ENABLE_BLE)
   bleSender.init();
 #endif
+  esp_task_wdt_add(NULL);  // Watch the Arduino loop task
   Log.notice(F("Main: Setup is completed." CR));
+}
+
+// Temperatures of the sensors that give data, NAN for the others
+void readSensors(float& beer, float& fridge) {
+  beer = NAN;
+  fridge = NAN;
+
+  if (!tempControl.isDefaultBeerSensor() && tempControl.getBeerSensor() &&
+      tempControl.getBeerSensor()->isConnected()) {
+    beer = tempControl.getBeerTemperature();
+  }
+
+  if (!tempControl.isDefaultFridgeSensor() && tempControl.getFridgeSensor() &&
+      tempControl.getFridgeSensor()->isConnected()) {
+    fridge = tempControl.getFridgeTemperature();
+  }
+}
+
+// Report to BrewGraph and apply the mode and target it answers with
+void pollBrewgraph() {
+  if (!myWifi.isConnected()) return;
+
+  ChamberReport report;
+  readSensors(report.beer, report.fridge);
+  report.token = myConfig.getBrewgraphToken();
+  report.id = myConfig.getID();
+  report.mode = tempControl.getMode();
+  report.target = (report.mode == ControllerMode::beerConstant ||
+                   report.mode == ControllerMode::fridgeConstant)
+                      ? myConfig.getTargetTemperature()
+                      : NAN;
+  report.rssi = WiFi.RSSI();
+
+  Log.info(F("Main: Polling BrewGraph." CR));
+
+  ChamberReply reply;
+  if (myPush.pollChamber(report, reply)) applyChamberReply(reply);
 }
 
 void runLoop() {
   if (!myWifi.isConnected()) {
     Log.notice(F("Loop: No wifi connection, attempting to reconnect." CR));
+    // connect() makes up to three attempts of the connection timeout (30 s
+    // default), longer than the watchdog. The library bounds it, so do not
+    // watch this task meanwhile.
+    esp_task_wdt_delete(NULL);
     myWifi.connect();
     myWifi.timeSync();
+    esp_task_wdt_add(NULL);
   }
 
 #if defined(ENABLE_BLE) && defined(ENABLE_BLE_SENSOR)
@@ -163,8 +235,8 @@ void runLoop() {
 
     uint32_t up = myUptime.getHours() * 60 + myUptime.getMinutes();
 
-    Log.notice(F("Loop: Checking restart timer %d, %d." CR), up,
-               myConfig.getRestartInterval());
+    // Log.notice(F("Loop: Checking restart timer %d, %d." CR), up,
+    //            myConfig.getRestartInterval());
 
     if (myConfig.getRestartInterval() > 0 &&
         up > myConfig.getRestartInterval()) {
@@ -188,36 +260,29 @@ void runLoop() {
       myDisplay.updateButtons(beerConnected, fridgeConnected);
     }
 
-    float beer = NAN, fridge = NAN;
-
-    if (!tempControl.isDefaultBeerSensor() && tempControl.getBeerSensor() &&
-        tempControl.getBeerSensor()->isConnected()) {
-      beer = tempControl.getBeerTemperature();
-    }
-
-    if (!tempControl.isDefaultFridgeSensor() && tempControl.getFridgeSensor() &&
-        tempControl.getFridgeSensor()->isConnected()) {
-      fridge = tempControl.getFridgeTemperature();
-    }
+    float beer, fridge;
+    readSensors(beer, fridge);
 
     char state[40] = "", mode[40] = "Off", statusBar[80] = "";
 
     switch (tempControl.getMode()) {
       case ControllerMode::beerConstant:
         snprintf(mode, sizeof(mode), "Beer -> %.1F°%c",
-                 tempControl.getBeerTemperatureSetting(),
+                 toDisplayTemp(tempControl.getBeerTemperatureSetting(),
+                               myConfig.getTempFormat()),
                  myConfig.getTempFormat());
         break;
       case ControllerMode::fridgeConstant:
         snprintf(mode, sizeof(mode), "Chamber -> %.1F°%c",
-                 tempControl.getFridgeTemperatureSetting(),
+                 toDisplayTemp(tempControl.getFridgeTemperatureSetting(),
+                               myConfig.getTempFormat()),
                  myConfig.getTempFormat());
         break;
     }
 
     switch (tempControl.getState()) {
       case ControllerState::IDLE: {
-        uint16_t t =
+        ticks_seconds_t t =
             tempControl.timeSinceCooling() < tempControl.timeSinceHeating()
                 ? tempControl.timeSinceCooling()
                 : tempControl.timeSinceHeating();
@@ -264,6 +329,7 @@ void runLoop() {
 
       case ControllerState::WAITING_TO_HEAT:
       case ControllerState::WAITING_TO_COOL:
+      case ControllerState::COOLING_SAFETY_COOLDOWN:
       case ControllerState::WAITING_FOR_PEAK_DETECT: {
         if (tempControl.timeSinceIdle() > 3600)
           snprintf(state, sizeof(state), "Waiting %02dh %02dm",
@@ -276,18 +342,30 @@ void runLoop() {
       } break;
     }
 
+    // Make it visible on the display when BrewGraph is in control
+    const char* remote = myConfig.getRemoteControlActive() ? "REMOTE | " : "";
+
     if (!myWifi.isConnected()) {
-      snprintf(statusBar, sizeof(statusBar), "Not connected");
+      snprintf(statusBar, sizeof(statusBar), "%sNot connected", remote);
     } else {
-      snprintf(statusBar, sizeof(statusBar), "ssid: %s ip: %s, rssi: %d",
-               WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(),
-               WiFi.RSSI());
+      snprintf(statusBar, sizeof(statusBar), "%sssid: %s ip: %s, rssi: %d",
+               remote, WiFi.SSID().c_str(),
+               WiFi.localIP().toString().c_str(), WiFi.RSSI());
     }
 
     myDisplay.updateTemperatures(mode, state, statusBar, beer, fridge,
                                  myConfig.getTempFormat(),
                                  myConfig.getDarkMode());
     tempControl.loop();
+
+    if (myConfig.isFanEnabled() && actuatorFan) {
+      bool coolingActive = tempControl.getCoolingActuator() &&
+                           tempControl.getCoolingActuator()->isActive();
+      bool heatingActive = tempControl.getHeatingActuator() &&
+                           tempControl.getHeatingActuator()->isActive();
+      // Log.notice(F("Main: Fan actuator %s." CR), (coolingActive || heatingActive) ? "active" : "inactive");
+      actuatorFan->setActive(coolingActive || heatingActive);
+    }
 
 #if defined(ENABLE_BLE)
     if (myConfig.isBlePushEnabled()) {
@@ -353,6 +431,18 @@ void runLoop() {
       myPush.sendInfluxDb2(s);
     }
   }
+
+  if (myConfig.isBrewgraphEnabled()) {
+    // A changed setting applies to the running timer
+    if (brewgraphPolled) brewgraphLoop.setInterval(brewgraphIntervalMs());
+
+    if (brewgraphLoop.hasExpired()) {
+      brewgraphPolled = true;
+      brewgraphLoop.setInterval(brewgraphIntervalMs());
+      brewgraphLoop.reset();
+      pollBrewgraph();
+    }
+  }
 }
 
 void setNewControllerMode(char mode, float temp) {
@@ -362,6 +452,10 @@ void setNewControllerMode(char mode, float temp) {
   myConfig.setTargetTemperature(temp);
   myConfig.saveFile();
 
+  // The touch display keeps its own copy, keep it in step with the controller
+  myDisplay.setMode(mode);
+  myDisplay.setTargetTemperature(temp);
+
   tempControl.setMode(mode);
   if (mode == ControllerMode::beerConstant)
     tempControl.setBeerTargetTemperature(temp);
@@ -370,6 +464,8 @@ void setNewControllerMode(char mode, float temp) {
 }
 
 void loop() {
+  esp_task_wdt_reset();
+
   switch (runMode) {
     case RunMode::pidMode:
       runLoop();
@@ -458,13 +554,22 @@ void configureTempControl() {
     return;
   }
 
+  if (myConfig.isBleBeerSensorWithoutChamberSensor()) {
+    Log.error(
+        F("Main: A BLE beer sensor needs a chamber sensor to fall back on, "
+          "unable to configure Temp Controller." CR));
+    return;
+  }
+
   // Create the temperature sensors
   if (myConfig.isFridgeSensorEnabled()) {
     Log.info(F("Main: Configuring fridge sensor %s." CR),
              myConfig.getFridgeSensorId());
 
     DeviceAddress daFridge;
-    parseBytes(daFridge, myConfig.getFridgeSensorId(), sizeof(daFridge));
+    if (!parseBytes(daFridge, myConfig.getFridgeSensorId(), sizeof(daFridge)))
+      Log.error(F("Main: Invalid fridge sensor id %s." CR),
+                myConfig.getFridgeSensorId());
 
     if (oneWireFridge) {
       delete oneWireFridge;
@@ -508,7 +613,9 @@ void configureTempControl() {
                myConfig.getBeerSensorId());
 
       DeviceAddress daBeer;
-      parseBytes(daBeer, myConfig.getBeerSensorId(), sizeof(daBeer));
+      if (!parseBytes(daBeer, myConfig.getBeerSensorId(), sizeof(daBeer)))
+        Log.error(F("Main: Invalid beer sensor id %s." CR),
+                  myConfig.getBeerSensorId());
 
       if (oneWireBeer) {
         delete oneWireBeer;
@@ -541,6 +648,11 @@ void configureTempControl() {
                                              myConfig.isPinsInverted());
   }
 
+  if (!actuatorFan) {
+    actuatorFan = new DigitalPinActuator(Config::Pins::fanPin,
+                                         myConfig.isPinsInverted());
+  }
+
   if (myConfig.isCoolingEnabled()) {
     Log.info(F("Main: Configuring cooling actuator." CR));
     tempControl.setCoolingActuator(actuatorCooling);
@@ -549,6 +661,11 @@ void configureTempControl() {
   if (myConfig.isHeatingEnabled()) {
     Log.info(F("Main: Configuring cooling actuator." CR));
     tempControl.setHeatingActuator(actuatorHeating);
+  }
+
+  if (myConfig.isFanEnabled()) {
+    Log.info(F("Main: Configuring fan actuator." CR));
+    tempControl.setFanActuator(actuatorFan);
   }
 
   if (myConfig.isControllerFridgeConstant()) {

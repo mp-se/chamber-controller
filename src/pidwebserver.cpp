@@ -16,7 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+#include <Config.hpp>
 #include <DallasTemperature.h>
+#include <esp_chip_info.h>
 #include <LittleFS.h>
 #include <OneWire.h>
 
@@ -27,10 +29,12 @@
 #include <main.hpp>
 #include <measurement.hpp>
 #include <pidconfig.hpp>
-#include <pidpush.hpp>
+#include <brewgraph.hpp>
 #include <pidwebserver.hpp>
+#include <remotecontrol.hpp>
 #include <uptime.hpp>
 #include <utils.hpp>
+#include <looptimer.hpp>
 
 // These are parameters that the example ui app uses. Part of the status
 // response.
@@ -50,6 +54,15 @@ constexpr auto PARAM_FIRMWARE_FILE = "firmware_file";
 constexpr auto PARAM_FEATURE_BLE_SUPPORTED = "ble";
 constexpr auto PARAM_FEATURE_BLE_SENSOR = "ble_sensor";
 
+// Integration status fields. Kept compatible with Kegmon's /api/status
+// contract so integration cards can share the same UI model.
+constexpr auto PARAM_BREWGRAPH = "brewgraph";
+constexpr auto PARAM_PUSH_USED = "push_used";
+constexpr auto PARAM_PUSH_AGE = "push_age";
+constexpr auto PARAM_PUSH_STATUS = "push_status";
+constexpr auto PARAM_PUSH_CODE = "push_code";
+constexpr auto PARAM_PUSH_RESPONSE = "push_response";
+
 // Pid related params
 constexpr auto PARAM_PID_MODE = "pid_mode";
 constexpr auto PARAM_PID_STATE = "pid_state";
@@ -65,17 +78,30 @@ constexpr auto PARAM_PID_COOLING_ACTUATOR_ACTIVE =
     "pid_cooling_actuator_active";
 constexpr auto PARAM_PID_HEATING_ACTUATOR_ACTIVE =
     "pid_heating_actuator_active";
+constexpr auto PARAM_PID_FAN_ACTUATOR_ACTIVE = "pid_fan_actuator_active";
 constexpr auto PARAM_PID_WAIT_TIME = "pid_wait_time";
 constexpr auto PARAM_PID_TIME_SINCE_COOLING = "pid_time_since_cooling";
 constexpr auto PARAM_PID_TIME_SINCE_HEATING = "pid_time_since_heating";
 constexpr auto PARAM_PID_TIME_SINCE_IDLE = "pid_time_since_idle";
-constexpr auto PARAM_BLE_SENSOR = "ble_sensor";
-
 constexpr auto PARAM_NEW_MODE = "new_mode";
 constexpr auto PARAM_NEW_TEMPERATURE = "new_temperature";
-constexpr auto PARAM_NEW_BLE_SENSOR = "new_ble_sensor";
 
 constexpr auto PARAM_SENSORS = "sensors";
+
+// Hardware scan (same layout as GravityMon's /api/hardware/status)
+constexpr auto PARAM_CHIP = "chip";
+constexpr auto PARAM_REVISION = "revision";
+constexpr auto PARAM_CORES = "cores";
+constexpr auto PARAM_FAMILY = "family";
+constexpr auto PARAM_FEATURES = "features";
+constexpr auto PARAM_ONEWIRE = "onewire";
+constexpr auto PARAM_PIN = "pin";
+constexpr auto PARAM_COUNT = "count";
+constexpr auto PARAM_ADDRESS = "address";
+constexpr auto PARAM_VALID = "valid";
+constexpr auto PARAM_ROLE = "role";
+constexpr auto PARAM_CONFIGURED = "configured";
+constexpr auto PARAM_DETECTED = "detected";
 
 // Ble sensors
 constexpr auto PARAM_TEMPERATURE_DEVICE = "temperature_device";
@@ -88,7 +114,7 @@ constexpr auto PARAM_UPDATE_TIME = "update_time";
 
 extern OneWire oneWire;
 
-PidWebServer::PidWebServer(WebConfigInterface* config, PidPush* push)
+PidWebServer::PidWebServer(WebConfigInterface* config, BrewGraphPush* push)
     : BaseWebServer(config) {
   _push = push;
 }
@@ -126,11 +152,6 @@ void PidWebServer::setupWebHandlers() {
         this->webHandleMode(request, json);
       });
   _server->addHandler(handler);
-  handler = new AsyncCallbackJsonWebHandler(
-      "/api/remote", [this](AsyncWebServerRequest* request, JsonVariant& json) {
-        this->webHandleRemoteMode(request, json);
-      });
-  _server->addHandler(handler);
   _server->on("/api/sensor/status", HTTP_GET,
               [this](AsyncWebServerRequest* request) {
                 this->webHandleListSensorStatus(request);
@@ -138,6 +159,14 @@ void PidWebServer::setupWebHandlers() {
   _server->on("/api/sensor", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleListSensor(request);
   });
+  _server->on("/api/hardware/status", HTTP_GET,
+              [this](AsyncWebServerRequest* request) {
+                this->webHandleHardwareScanStatus(request);
+              });
+  _server->on("/api/hardware", HTTP_GET,
+              [this](AsyncWebServerRequest* request) {
+                this->webHandleHardwareScan(request);
+              });
   _server->on("/api/pid/cc", HTTP_GET, [this](AsyncWebServerRequest* request) {
     this->webHandleControlConstants(request);
   });
@@ -204,15 +233,29 @@ void PidWebServer::webHandleConfigWrite(AsyncWebServerRequest* request,
 
   Log.notice(F("WEB : webServer callback for /api/config(write)." CR));
   JsonObject obj = json.as<JsonObject>();
+  const bool brewgraphWasEnabled = myConfig.isBrewgraphEnabled();
+  const bool brewgraphRemoteControlWasEnabled =
+      myConfig.isBrewgraphRemoteControlEnabled();
   _webConfig->parseJson(obj);
   _webConfig->saveFile();
+
+  // Disabling the integration or its control permission must immediately
+  // return the chamber to the settings saved before BrewGraph took over.
+  if (((brewgraphWasEnabled && !myConfig.isBrewgraphEnabled()) ||
+       (brewgraphRemoteControlWasEnabled &&
+        !myConfig.isBrewgraphRemoteControlEnabled())) &&
+      myConfig.getRemoteControlActive()) {
+    Log.notice(F("WEB : BrewGraph control disabled, restoring local control." CR));
+    applyRemoteCommand('r', NAN, "");
+  }
 
   // If the hardware setup is changed we need to reinit the temperature
   // controller.
   if (!obj[PARAM_FRIDGE_SENSOR_ID].isNull() ||
       !obj[PARAM_BEER_SENSOR_ID].isNull() ||
       !obj[PARAM_ENABLE_COOLING].isNull() ||
-      !obj[PARAM_ENABLE_HEATING].isNull() || !obj[PARAM_TEMP_FORMAT].isNull()) {
+      !obj[PARAM_ENABLE_HEATING].isNull() || !obj[PARAM_ENABLE_FAN].isNull() ||
+      !obj[PARAM_TEMP_FORMAT].isNull()) {
     // TODO: Check probe delta
     _tempControllerInitTask = true;
   }
@@ -244,6 +287,19 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest* request) {
   obj[PARAM_UPTIME_HOURS] = myUptime.getHours();
   obj[PARAM_UPTIME_DAYS] = myUptime.getDays();
 
+  if (myConfig.isBrewgraphEnabled()) {
+    JsonObject brewgraph = obj[PARAM_BREWGRAPH].to<JsonObject>();
+    const IntegrationStatus& integration = _push->getBrewgraphStatus();
+    brewgraph[PARAM_PUSH_USED] = integration.hasRun();
+    brewgraph[PARAM_PUSH_AGE] =
+        integration.hasRun()
+            ? LoopTimer::elapsedMillis(integration.getLastTimestamp())
+            : 0;
+    brewgraph[PARAM_PUSH_STATUS] = integration.getLastStatus();
+    brewgraph[PARAM_PUSH_CODE] = integration.getLastError();
+    brewgraph[PARAM_PUSH_RESPONSE] = integration.getLastResponse();
+  }
+
   // Pid controller
   if (runMode == RunMode::pidMode) {
     obj[PARAM_REMOTE_CONTROL_ACTIVE] = myConfig.getRemoteControlActive();
@@ -264,8 +320,8 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest* request) {
         String(tempControl.getBeerTemperatureSetting(), DECIMALS_TEMP));
     obj[PARAM_PID_FRIDGE_TARGET_TEMP] = serialized(
         String(tempControl.getFridgeTemperatureSetting(), DECIMALS_TEMP));
-    obj[PARAM_PID_TEMP_FORMAT] =
-        String(tempControl.getControlConstants().tempFormat);
+    // The controller only works in Celsius, the UI converts when displaying
+    obj[PARAM_PID_TEMP_FORMAT] = "C";
     obj[PARAM_PID_COOLING_ACTUATOR_ACTIVE] =
         tempControl.getCoolingActuator()
             ? tempControl.getCoolingActuator()->isActive()
@@ -274,6 +330,10 @@ void PidWebServer::webHandleStatus(AsyncWebServerRequest* request) {
         tempControl.getHeatingActuator()
             ? tempControl.getHeatingActuator()->isActive()
             : false;
+
+    obj[PARAM_PID_FAN_ACTUATOR_ACTIVE] =
+        tempControl.getFanActuator() ? tempControl.getFanActuator()->isActive()
+                                     : false;
     obj[PARAM_PID_WAIT_TIME] = tempControl.getWaitTime();
     obj[PARAM_PID_TIME_SINCE_COOLING] = tempControl.timeSinceCooling();
     obj[PARAM_PID_TIME_SINCE_HEATING] = tempControl.timeSinceHeating();
@@ -355,8 +415,7 @@ void PidWebServer::webHandleTemps(AsyncWebServerRequest* request) {
     obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
     obj[PARAM_PID_FRIDGE_TARGET_TEMP] =
         tempControl.getFridgeTemperatureSetting();
-    obj[PARAM_PID_TEMP_FORMAT] =
-        String(tempControl.getControlConstants().tempFormat);
+    obj[PARAM_PID_TEMP_FORMAT] = "C";
   }
 
   response->setLength();
@@ -387,9 +446,12 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest* request,
 
   switch (newMode) {
     case ControllerMode::beerConstant:
-      if ((myConfig.isBeerSensorEnabled() ||
-           myConfig.isBeerBleSensorEnabled()) &&
-          (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
+      if (myConfig.isBleBeerSensorWithoutChamberSensor()) {
+        success = false;
+        message = "A BLE beer sensor needs a chamber sensor";
+      } else if ((myConfig.isBeerSensorEnabled() ||
+                  myConfig.isBeerBleSensorEnabled()) &&
+                 (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
         setNewControllerMode(ControllerMode::beerConstant, newTemp);
         success = true;
         message = "Mode updated to Beer Constant";
@@ -429,166 +491,6 @@ void PidWebServer::webHandleMode(AsyncWebServerRequest* request,
   obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
   obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
   obj[PARAM_MESSAGE] = message;
-  response->setLength();
-  request->send(response);
-}
-
-void PidWebServer::webHandleRemoteMode(AsyncWebServerRequest* request,
-                                       JsonVariant& json) {
-  if (!isAuthenticated(request) || runMode != RunMode::pidMode) {
-    return;
-  }
-
-  Log.notice(F("WEB : webServer callback for /api/remote." CR));
-
-  /*
-   * This endpoint is for brewlogger to remotely set the controller mode and
-   * block manual control. Via this endpoint its also possible to set and use
-   * gravitymon device as temperature sensor.
-   *
-   * Mode options; F - Fridge constant, B - Beer constant, O - Off, R - Restore
-   * previous
-   *
-   * { "new_mode": "B", "new_temperature": 20.0, "new_ble_sensor": "ABC123" }
-   */
-
-  JsonObject obj = json.as<JsonObject>();
-  bool success = false;
-  String message;
-  String newBleSensorId = "";
-  float newTemp = NAN;
-
-  if (obj[PARAM_NEW_MODE].isNull() ||
-      obj[PARAM_NEW_MODE].as<String>().length() != 1) {
-    request->send(400);
-    return;
-  }
-
-  if (!obj[PARAM_NEW_TEMPERATURE].isNull()) {
-    newTemp = obj[PARAM_NEW_TEMPERATURE].as<float>();
-  }
-
-  char newMode = tolower(obj[PARAM_NEW_MODE].as<String>().charAt(0));
-
-  if (!obj[PARAM_NEW_BLE_SENSOR].isNull() && myConfig.isBleScanEnabled()) {
-    newBleSensorId = obj[PARAM_NEW_BLE_SENSOR].as<String>();
-  }
-
-  if (myConfig.getRemoteControlActive()) {
-    if (newMode == 'r') {  // If mode is = R then we restore the saved setttings
-                           // and leave remote mode
-
-      Log.notice(
-          F("WEB : Restoring previous settings and leaving remote mode." CR));
-
-      // Use saved settings
-      newMode = myConfig.getRemotePreviousMode();
-      newTemp = myConfig.getRemotePreviousTargetTemp();
-      if (myConfig.isBleScanEnabled()) {
-        // Only restore ble sensor if beer ble sensor is enabled, otherwise
-        // ignore since it might cause issues if user has disabled beer ble
-        // sensor after activating remote mode
-        newBleSensorId = myConfig.getRemotePreviousBleSensorId();
-      }
-      // Inactivate remote mode
-      myConfig.setRemotePreviousMode(ControllerMode::off);
-      myConfig.setRemotePreviousTargetTemp(10.0);
-      myConfig.setRemotePreviousBleSensorId("");
-      myConfig.setRemoteControlActive(false);
-      myConfig.saveFile();
-    }
-
-    // Continue with main loop to set the new mode and temp
-
-  } else {
-    if (newMode == 'r') {  // If mode is = R then ignore, not valid since we are
-                           // not in remote mode
-      request->send(400);
-      return;
-    }
-
-    if (obj[PARAM_NEW_TEMPERATURE].isNull()) {
-      request->send(400);
-      return;
-    }
-
-    // If remote control is not enabled we store the settings so we can restore
-    // them later.
-    if (!myConfig.getRemoteControlActive()) {
-      myConfig.setRemotePreviousMode(myConfig.getControllerMode());
-      myConfig.setRemotePreviousTargetTemp(myConfig.getTargetTemperature());
-      if (myConfig.isBleScanEnabled() && newBleSensorId.length() > 0) {
-        myConfig.setRemotePreviousBleSensorId(myConfig.getBeerBleSensorId());
-      }
-    }
-
-    // Activate remote mode
-    myConfig.setRemoteControlActive(true);
-
-    if (myConfig.isBleScanEnabled() &&
-        newBleSensorId.length() >
-            0) {  // Only restore ble sensor if beer ble sensor is enabled,
-                  // otherwise ignore since it might cause issues if user has
-                  // disabled beer ble sensor after activating remote mode
-      myConfig.setBeerBleSensorId(newBleSensorId);
-    }
-
-    myConfig.saveFile();
-  }
-
-  Log.notice(F("WEB : Target mode %c, temp %F, sensor %s." CR), newMode,
-             newTemp, newBleSensorId.c_str());
-
-  if (isnan(newTemp)) {
-    request->send(400);
-    return;
-  }
-
-  switch (newMode) {
-    case ControllerMode::beerConstant:
-      if ((myConfig.isBeerSensorEnabled() ||
-           myConfig.isBeerBleSensorEnabled()) &&
-          (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
-        setNewControllerMode(ControllerMode::beerConstant, newTemp);
-        success = true;
-        message = "Set mode to Beer Constant";
-      } else {
-        success = false;
-        message = "Lack beer sensor or cooling/heating actuator";
-      }
-      break;
-
-    case ControllerMode::fridgeConstant:
-      if (myConfig.isFridgeSensorEnabled() &&
-          (myConfig.isCoolingEnabled() || myConfig.isHeatingEnabled())) {
-        setNewControllerMode(ControllerMode::fridgeConstant, newTemp);
-        success = true;
-        message = "Set mode to Fridge Constant";
-      } else {
-        success = false;
-        message = "Lack chamber sensor or cooling/heating actuator";
-      }
-      break;
-
-    case ControllerMode::off:
-      setNewControllerMode(ControllerMode::off, newTemp);
-      success = true;
-      message = "Turning off controller";
-      break;
-
-    default:
-      request->send(400);
-      break;
-  }
-
-  AsyncJsonResponse* response = new AsyncJsonResponse(false);
-  obj = response->getRoot().as<JsonObject>();
-  obj[PARAM_SUCCESS] = success;
-  obj[PARAM_PID_MODE] = String(tempControl.getMode());
-  obj[PARAM_PID_BEER_TARGET_TEMP] = tempControl.getBeerTemperatureSetting();
-  obj[PARAM_PID_FRIDGE_TARGET_TEMP] = tempControl.getFridgeTemperatureSetting();
-  obj[PARAM_MESSAGE] = message;
-  obj[PARAM_BLE_SENSOR] = myConfig.getBeerBleSensorId();
   response->setLength();
   request->send(response);
 }
@@ -722,5 +624,123 @@ void PidWebServer::loop() {
 
     _sensorScanTask = false;
   }
+
+  if (_hardwareScanTask) {
+    runHardwareScan();
+  }
+}
+
+void PidWebServer::webHandleHardwareScan(AsyncWebServerRequest* request) {
+  if (!isAuthenticated(request)) {
+    return;
+  }
+
+  Log.notice(F("WEB : webServer callback for /api/hardware." CR));
+  _hardwareScanData = "";
+  _hardwareScanTask = true;
+
+  AsyncJsonResponse* response = new AsyncJsonResponse(false);
+  JsonObject obj = response->getRoot().as<JsonObject>();
+  obj[PARAM_SUCCESS] = true;
+  obj[PARAM_MESSAGE] = "Scheduled hardware scanning";
+  response->setLength();
+  request->send(response);
+}
+
+void PidWebServer::webHandleHardwareScanStatus(
+    AsyncWebServerRequest* request) {
+  if (!isAuthenticated(request)) {
+    return;
+  }
+
+  Log.notice(F("WEB : webServer callback for /api/hardware/status." CR));
+
+  if (_hardwareScanTask || !_hardwareScanData.length()) {
+    AsyncJsonResponse* response = new AsyncJsonResponse(false);
+    JsonObject obj = response->getRoot().as<JsonObject>();
+    obj[PARAM_STATUS] = static_cast<bool>(_hardwareScanTask);
+    obj[PARAM_SUCCESS] = false;
+    obj[PARAM_MESSAGE] =
+        _hardwareScanTask ? "Hardware scanning running" : "No scanning running";
+    obj[PARAM_MESSAGE_CODE] = ESPFWK_WEB_ERR(_hardwareScanTask
+                                                 ? "HARDWARE_SCAN_RUNNING"
+                                                 : "HARDWARE_SCAN_NOT_RUNNING");
+    response->setLength();
+    request->send(response);
+  } else {
+    request->send(200, "application/json", _hardwareScanData);
+  }
+}
+
+// Same envelope as GravityMon's /api/hardware/status (status/success/message,
+// chip) with the sensor data this device cares about: every DS18B20 on the
+// one-wire bus with a live reading and its configured role.
+void PidWebServer::runHardwareScan() {
+  Log.notice(F("WEB : Scanning hardware." CR));
+
+  JsonDocument doc;
+  JsonObject obj = doc.to<JsonObject>();
+  obj[PARAM_STATUS] = false;
+  obj[PARAM_SUCCESS] = true;
+  obj[PARAM_MESSAGE] = "";
+
+  JsonObject cpu = obj[PARAM_CHIP].to<JsonObject>();
+  esp_chip_info_t chipInfo;
+  esp_chip_info(&chipInfo);
+  cpu[PARAM_REVISION] = chipInfo.revision;
+  cpu[PARAM_CORES] = chipInfo.cores;
+  cpu[PARAM_FAMILY] = ESP.getChipModel();
+
+  JsonArray feature = cpu[PARAM_FEATURES].to<JsonArray>();
+  if (chipInfo.features & CHIP_FEATURE_EMB_FLASH) feature.add("Embedded flash");
+  if (chipInfo.features & CHIP_FEATURE_WIFI_BGN) feature.add("2.4Ghz WIFI");
+  if (chipInfo.features & CHIP_FEATURE_BLE) feature.add("Bluetooth LE");
+  if (chipInfo.features & CHIP_FEATURE_BT) feature.add("Bluetooth Classic");
+  if (chipInfo.features & CHIP_FEATURE_EMB_PSRAM) feature.add("Embedded PSRAM");
+
+  JsonObject ow = obj[PARAM_ONEWIRE].to<JsonObject>();
+  ow[PARAM_PIN] = Config::Pins::oneWirePin;
+
+  DallasTemperature ds(&oneWire);
+  ds.begin();
+  ow[PARAM_COUNT] = ds.getDS18Count();
+  ds.requestTemperatures();  // Blocks until conversion is done
+
+  JsonArray sensors = ow[PARAM_SENSORS].to<JsonArray>();
+  for (int i = 0; i < ds.getDS18Count(); i++) {
+    DeviceAddress da;
+    if (!ds.getAddress(da, i)) continue;
+
+    char buf[17];
+    printBytes(da, 8, buf);
+    float c = ds.getTempC(da);
+    bool valid = c != DEVICE_DISCONNECTED_C;
+
+    JsonObject s = sensors.add<JsonObject>();
+    s[PARAM_ADDRESS] = buf;
+    s[PARAM_VALID] = valid;
+    if (valid) s[PARAM_TEMP] = c;
+    s[PARAM_ROLE] = strcmp(buf, myConfig.getFridgeSensorId()) == 0 ? "fridge"
+                    : strcmp(buf, myConfig.getBeerSensorId()) == 0   ? "beer"
+                                                                        : "";
+  }
+
+  // Configured sensors that were not found on the bus
+  JsonObject cfg = ow[PARAM_CONFIGURED].to<JsonObject>();
+  auto detected = [&](const char* id) {
+    for (JsonObject s : sensors)
+      if (strcmp(s[PARAM_ADDRESS] | "", id) == 0) return true;
+    return false;
+  };
+  JsonObject f = cfg["fridge"].to<JsonObject>();
+  f[PARAM_ID] = myConfig.getFridgeSensorId();
+  f[PARAM_DETECTED] = detected(myConfig.getFridgeSensorId());
+  JsonObject b = cfg["beer"].to<JsonObject>();
+  b[PARAM_ID] = myConfig.getBeerSensorId();
+  b[PARAM_DETECTED] = detected(myConfig.getBeerSensorId());
+
+  serializeJson(obj, _hardwareScanData);
+  Log.notice(F("WEB : Scan complete %s." CR), _hardwareScanData.c_str());
+  _hardwareScanTask = false;
 }
 // EOF

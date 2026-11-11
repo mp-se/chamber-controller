@@ -23,24 +23,15 @@
 HardwareTicks ticks = HardwareTicks();
 HardwareDelay wait = HardwareDelay();
 
-inline ticks_seconds_t timeSince(ticks_seconds_t currentTime,
-                                 ticks_seconds_t previousTime) {
-  if (currentTime >= previousTime) {
-    return currentTime - previousTime;
-  } else {
-    return (currentTime + 1440) -
-           (previousTime + 1440);  // add a day to both for calculation
-  }
-}
-
-ticks_seconds_t HardwareTicks::timeSince(ticks_seconds_t previousTime) {
-  ticks_seconds_t currentTime = ticks.seconds();
-  return ::timeSince(currentTime, previousTime);
+ticks_seconds_t HardwareTicks::secondsSince(ticks_millis_t timeStamp) {
+  // Unsigned subtraction gives the right answer across the millis() rollover
+  ticks_millis_t elapsed = ::millis() - timeStamp;
+  return elapsed / 1000;
 }
 
 ticks_seconds_t HardwareTicks::seconds() { return ::millis() / 1000; }
 
 void HardwareDelay::millis(uint16_t millis) { ::delay(millis); }
-void HardwareDelay::seconds(uint16_t seconds) { millis(seconds << 10); }
+void HardwareDelay::seconds(uint16_t seconds) { ::delay(seconds * 1000UL); }
 
 // EOF

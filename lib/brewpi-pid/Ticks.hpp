@@ -24,7 +24,8 @@
 
 typedef uint32_t ticks_millis_t;
 typedef uint32_t ticks_micros_t;
-typedef uint16_t ticks_seconds_t;
+// Was uint16_t, which wrapped after 18h12m and made long durations wrong.
+typedef uint32_t ticks_seconds_t;
 typedef uint8_t ticks_seconds_tiny_t;
 
 class HardwareTicks {
@@ -33,7 +34,9 @@ class HardwareTicks {
   ticks_millis_t millis() { return ::millis(); }
   ticks_micros_t micros() { return ::micros(); }
   ticks_seconds_t seconds();
-  ticks_seconds_t timeSince(ticks_seconds_t timeStamp);
+  // Seconds elapsed since a timestamp taken with millis(). Correct across the
+  // millis() rollover, valid for durations up to about 49 days.
+  ticks_seconds_t secondsSince(ticks_millis_t timeStamp);
 };
 
 class HardwareDelay {

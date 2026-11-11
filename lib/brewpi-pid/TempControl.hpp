@@ -49,6 +49,7 @@ constexpr uint8_t WAITING_TO_HEAT = 5;  //!< Waiting to heat. (Compressor delay)
 constexpr uint8_t WAITING_FOR_PEAK_DETECT = 6;  //!< Waiting for peak detection
 constexpr uint8_t COOLING_MIN_TIME = 7;         // 8
 constexpr uint8_t HEATING_MIN_TIME = 8;         // 9
+constexpr uint8_t COOLING_SAFETY_COOLDOWN = 9;  //!< Max cooling time reached
 };  // namespace ControllerState
 
 extern ValueActuator defaultActuator;
@@ -102,9 +103,17 @@ class TempControl {
   const Actuator* getCoolingActuator() { return _cooler; }
   bool isDefaultCoolingActator() { return _cooler == &defaultActuator; }
 
+  void setFanActuator(Actuator* actuator) {
+    Log.verbose(F("BREW: TempControl new fanActuator %x" CR), actuator);
+    _fan = actuator;
+  }
+  const Actuator* getFanActuator() { return _fan; }
+  bool isDefaultFanActator() { return _fan == &defaultActuator; }
+
   void setBeerSensor(TempSensor* sensor) {
     Log.verbose(F("BREW: TempControl new beerSensor %x" CR), sensor);
     _beerSensor = sensor;
+    initFilters();
   }
   bool isDefaultBeerSensor() { return _beerSensor == &defaultBeerSensor; }
   const TempSensor* getBeerSensor() { return _beerSensor; }
@@ -112,6 +121,7 @@ class TempControl {
   void setFridgeSensor(TempSensor* sensor) {
     Log.verbose(F("BREW: TempControl new fridgeSensor %x" CR), sensor);
     _fridgeSensor = sensor;
+    initFilters();
   }
   bool isDefaultFridgeSensor() { return _fridgeSensor == &defaultFridgeSensor; }
   const TempSensor* getFridgeSensor() { return _fridgeSensor; }
@@ -138,43 +148,45 @@ class TempControl {
         return "Cooling min time";
       case ControllerState::HEATING_MIN_TIME:
         return "Heating min time";
+      case ControllerState::COOLING_SAFETY_COOLDOWN:
+        return "Cooling safety cooldown";
     }
     return "Unknown state";
   }
 
   uint16_t getWaitTime() { return _waitTime; }
-  uint16_t timeSinceCooling();
-  uint16_t timeSinceHeating();
-  uint16_t timeSinceIdle();
+  ticks_seconds_t timeSinceCooling();
+  ticks_seconds_t timeSinceHeating();
+  ticks_seconds_t timeSinceIdle();
 
   bool stateIsCooling();
   bool stateIsHeating();
   bool modeIsBeer() { return (_cs.mode == ControllerMode::beerConstant); }
 
-  // Public function to ensure we map temperatures between human readable and
-  // internal temperature formats
+  // Public functions for the outside: Celsius rounded to the number of decimals
+  // used for display, 0 when there is no value (no sensor, no target)
   double getBeerTemperature() {
-    return tempToDouble(getBeerTemp(), Config::TempFormat::tempDecimals);
+    return roundTo(getBeerTemp(), Config::TempFormat::tempDecimals);
   }
   double getBeerTemperatureSetting() {
-    return tempToDouble(getBeerSetting(), Config::TempFormat::tempDecimals);
+    return roundTo(getBeerSetting(), Config::TempFormat::tempDecimals);
   }
   double getFridgeTemperature() {
-    return tempToDouble(getFridgeTemp(), Config::TempFormat::tempDecimals);
+    return roundTo(getFridgeTemp(), Config::TempFormat::tempDecimals);
   }
   double getFridgeTemperatureSetting() {
-    return tempToDouble(getFridgeSetting(), Config::TempFormat::tempDecimals);
+    return roundTo(getFridgeSetting(), Config::TempFormat::tempDecimals);
   }
   void setBeerTargetTemperature(double newTemp) {
     Log.info(F("BREW: Setting new beer target temperature to %F" CR), newTemp);
 
-    setBeerTemp(doubleToTemp(newTemp));
+    setBeerTemp(newTemp);
   }
   void setFridgeTargetTemperature(double newTemp) {
     Log.info(F("BREW: Setting new fridge target temperature to %F" CR),
              newTemp);
 
-    setFridgeTemp(doubleToTemp(newTemp));
+    setFridgeTemp(newTemp);
   }
 
   // Public function to gain insights into the internal data
@@ -202,11 +214,20 @@ class TempControl {
   temperature getFridgeSetting();
   void setFridgeTemp(temperature newTemp);
 
+  // The control logic needs a beer and a fridge temperature. With a single probe that probe is both, so
+  // the device works with either probe on its own. The getters above and the display keep showing only
+  // the probes that exist.
+  TempSensor* beerControl() { return isDefaultBeerSensor() ? _fridgeSensor : _beerSensor; }
+  TempSensor* fridgeControl() { return isDefaultFridgeSensor() ? _beerSensor : _fridgeSensor; }
+
   // Sensors and Actuators
   TempSensor* _beerSensor;    //!< Temp sensor monitoring beer
   TempSensor* _fridgeSensor;  //!< Temp sensor monitoring fridge
   Actuator* _heater;          //!< Actuator used to call for heat
   Actuator* _cooler;          //!< Actuator used to call for cool
+  Actuator* _fan;             //!< Actuator used to run the fan
+  bool _beerLost = false;     //!< Beer mode, but the beer sensor gives no data
+  bool _pidValid = false;     //!< The PID has run, its integral term is meaningful
 
   // Control parameters
   ControlConstants _cc;
@@ -222,7 +243,7 @@ class TempControl {
 
   void resetWaitTime() { _waitTime = 0; }
 
-  void updateWaitTime(uint16_t newTimeLimit, uint16_t newTimeSince) {
+  void updateWaitTime(uint16_t newTimeLimit, ticks_seconds_t newTimeSince) {
     if (newTimeSince < newTimeLimit) {
       uint16_t newWaitTime = newTimeLimit - newTimeSince;
       if (newWaitTime > _waitTime) {
@@ -237,16 +258,16 @@ class TempControl {
   void decreaseEstimator(temperature* estimator, temperature error);
 
   void updateEstimatedPeak(uint16_t estimate, temperature estimator,
-                           uint16_t sinceIdle);
+                           ticks_seconds_t sinceIdle);
 
   void updateSensor(TempSensor* sensor);
 
-  temperature _storedBeerSetting;
+  temperature _storedBeerSetting = NAN;
 
-  // Timers
-  uint16_t _lastIdleTime;  //!< Last time the controller was idle
-  uint16_t _lastHeatTime;  //!< Last time that the controller was heating
-  uint16_t _lastCoolTime;  //!< Last time that the controller was cooling
+  // Timers, the timestamps are millis() values (see HardwareTicks::secondsSince)
+  ticks_millis_t _lastIdleTime;  //!< Last time the controller was idle
+  ticks_millis_t _lastHeatTime;  //!< Last time that the controller was heating
+  ticks_millis_t _lastCoolTime;  //!< Last time that the controller was cooling
   uint16_t _waitTime;
 
   // State variables

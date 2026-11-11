@@ -1,0 +1,130 @@
+<!--
+  Chamber Controller UI
+  Copyright (c) 2021-2026 Magnus
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<template>
+  <div class="card h-100">
+    <div class="card-header bg-success-subtle">
+      {{ t('pid.controller_title') }}
+      <span v-if="status.remote_control_active" class="badge bg-warning text-dark ms-2">{{
+        t('pid.remote_badge')
+      }}</span>
+    </div>
+    <div class="card-body">
+      <div class="row text-start">
+        <div class="col-md-2">{{ t('pid.mode') }}</div>
+        <div class="col-md-10">
+          <label class="h4">{{ mode }}</label>
+        </div>
+      </div>
+      <div class="row text-start">
+        <div class="col-md-2">{{ t('pid.state') }}</div>
+        <div class="col-md-10">
+          <label class="h4">{{ state }}</label>
+        </div>
+      </div>
+      <div class="row text-start">
+        <div class="col-md-2">{{ t('pid.beer') }}</div>
+        <div class="col-md-10">
+          <label class="h4">{{ beerTemp }}</label>
+        </div>
+      </div>
+      <div class="row text-start">
+        <div class="col-md-2">{{ t('pid.chamber') }}</div>
+        <div class="col-md-10">
+          <label class="h4">{{ fridgeTemp }}</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue'
+import { status, config } from '@/modules/pinia'
+import { formatTime } from '@mp-se/espframework-ui-components'
+import { displayTemp } from '@/modules/temperature'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
+// The device reports Celsius, convert to the configured temp format for display
+const formatTemp = (celsius) => displayTemp(celsius, config.temp_format) + '°' + config.temp_format
+
+const beerTemp = computed(() => {
+  // if (config.beer_sensor_id == '') return '--' + '°' + config.temp_format
+  if (!status.pid_beer_temp_connected) return '--' + '°' + config.temp_format
+  return formatTemp(status.pid_beer_temp)
+})
+
+const fridgeTemp = computed(() => {
+  // if (config.fridge_sensor_id == '') return '--' + '°' + config.temp_format
+  if (!status.pid_fridge_temp_connected) return '--' + '°' + config.temp_format
+  return formatTemp(status.pid_fridge_temp)
+})
+
+const state = computed(() => {
+  switch (status.pid_state) {
+    case 0: // IDLE, min time since heating or cooling
+      return t('pid.idle_for', {
+        time: formatTime(
+          status.pid_time_since_cooling < status.pid_time_since_heating
+            ? status.pid_time_since_cooling
+            : status.pid_time_since_heating
+        )
+      })
+
+    case 1: // OFF
+      return t('pid.off')
+
+    case 2: // HEATING
+      return t('pid.heating_for', { time: formatTime(status.pid_time_since_idle) })
+
+    case 3: // COOLING
+      return t('pid.cooling_for', { time: formatTime(status.pid_time_since_idle) })
+
+    case 4: // WAITING TO COOL
+      return t('pid.waiting_to_cool', { time: formatTime(status.pid_wait_time) })
+
+    case 5: // WAITING TO HEAT
+      return t('pid.waiting_to_heat', { time: formatTime(status.pid_wait_time) })
+
+    case 6: // WAITING FOR PEEK DETECT
+      return t('pid.waiting_for_peek', { time: formatTime(status.pid_wait_time) })
+
+    case 7: // COOLING MIN TIME
+      return t('pid.cooling_min', { time: formatTime(status.pid_time_since_idle) })
+
+    case 8: // HEATING MIN TIME
+      return t('pid.heating_min', { time: formatTime(status.pid_time_since_idle) })
+
+    case 9: // COOLING SAFETY COOLDOWN
+      return t('pid.cooling_safety_cooldown', { time: formatTime(status.pid_wait_time) })
+  }
+
+  return t('pid.unknown')
+})
+
+const mode = computed(() => {
+  if (status.pid_mode == 'f')
+    return t('pid.chamber_constant', { temp: formatTemp(status.pid_fridge_target_temp) })
+  if (status.pid_mode == 'b')
+    return t('pid.beer_constant', { temp: formatTemp(status.pid_beer_target_temp) })
+
+  return t('pid.off')
+})
+</script>
